@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace School_Yathu.DTOs
 {
-    public class MarksEntryDTO
+    public class MarksEntryDTOs
     {
         [Required]
         public int StudentId { get; set; }
