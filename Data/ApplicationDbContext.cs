@@ -15,6 +15,10 @@ namespace School_Yathu.Data
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Marks> Marks { get; set; }
         public DbSet<TeacherSubject> TeacherSubjects { get; set; }
+        public DbSet<Class> Classes { get; set; }
+        public DbSet<ClassSubject> ClassSubjects { get; set; }
+        public DbSet<Exam> Exams { get; set; }
+        public DbSet<ExamResult> ExamResults { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,13 +32,21 @@ namespace School_Yathu.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
             
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.EmployeeId)
+                .IsUnique();
+            
             modelBuilder.Entity<Subject>()
                 .HasIndex(s => s.Name)
                 .IsUnique();
             
-            // TeacherSubject composite unique constraint
-            modelBuilder.Entity<TeacherSubject>()
-                .HasIndex(ts => new { ts.TeacherId, ts.SubjectId })
+            modelBuilder.Entity<Class>()
+                .HasIndex(c => new { c.Name, c.Stream })
+                .IsUnique();
+            
+            // ExamResult composite unique constraint
+            modelBuilder.Entity<ExamResult>()
+                .HasIndex(er => new { er.ExamId, er.StudentId, er.SubjectId })
                 .IsUnique();
         }
     }
