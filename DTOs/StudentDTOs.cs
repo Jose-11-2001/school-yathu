@@ -14,18 +14,6 @@ namespace School_Yathu.DTOs
         public string? Stream { get; set; }
     }
     
-    public class StudentResponseDTO
-    {
-        public int Id { get; set; }
-        public string AdmissionNumber { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
-        public string? Class { get; set; }
-        public string? Stream { get; set; }
-        public int? TeacherId { get; set; }
-        public string? TeacherName { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
-    
     public class MarksEntryDTO
     {
         [Required]
@@ -34,14 +22,14 @@ namespace School_Yathu.DTOs
         [Required]
         public int SubjectId { get; set; }
         
-        [Required]
-        [Range(0, 100)]
-        public int Score { get; set; }
+        public int? ContinuousTest1 { get; set; }
+        public int? ContinuousTest2 { get; set; }
+        public int? EndTermExam { get; set; }
         
-        public int? Year { get; set; }
-        public string? Term { get; set; }
-        public string? ExamType { get; set; }
-        public string? Grade { get; set; }
-        public string? Remark { get; set; }
+        [Required]
+        public int Year { get; set; }
+        
+        [Required]
+        public string Term { get; set; } = string.Empty;
     }
 }
