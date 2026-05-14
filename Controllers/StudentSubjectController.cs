@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +18,7 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get available subjects for student (based on their class)
+        // Get available subjects for student
         [HttpGet("available-subjects")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetAvailableSubjects()
@@ -30,7 +29,6 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            // Get subjects offered in student's class
             var availableSubjects = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
                 .Include(cs => cs.Teacher)
@@ -40,11 +38,10 @@ namespace School_Yathu.Controllers
                     cs.SubjectId,
                     SubjectName = cs.Subject != null ? cs.Subject.Name : "",
                     TeacherName = cs.Teacher != null ? cs.Teacher.Name : "",
-                    cs.TeacherId
+                    TeacherId = cs.TeacherId
                 })
                 .ToListAsync();
             
-            // Get already registered subjects
             var registeredSubjectIds = await _context.StudentSubjects
                 .Where(ss => ss.StudentId == studentId && ss.IsActive)
                 .Select(ss => ss.SubjectId)
@@ -64,19 +61,19 @@ namespace School_Yathu.Controllers
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             
-            // Check if already registered
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null)
+                return BadRequest(new { message = "Student not found" });
+            
             var existing = await _context.StudentSubjects
                 .FirstOrDefaultAsync(ss => ss.StudentId == studentId && ss.SubjectId == dto.SubjectId && ss.IsActive);
             
             if (existing != null)
                 return BadRequest(new { message = "You are already registered for this subject" });
             
-            // Get teacher for this subject in student's class
-            var student = await _context.Students.FindAsync(studentId);
-            if (student == null)
-                return BadRequest(new { message = "Student not found" });
-            
             var classSubject = await _context.ClassSubjects
+                .Include(cs => cs.Subject)
+                .Include(cs => cs.Teacher)
                 .FirstOrDefaultAsync(cs => cs.ClassId == student.ClassId && cs.SubjectId == dto.SubjectId);
             
             if (classSubject == null)
@@ -94,22 +91,36 @@ namespace School_Yathu.Controllers
             _context.StudentSubjects.Add(registration);
             await _context.SaveChangesAsync();
             
-            // Notify teacher that a student registered
-            var notification = new Notification
+            // Send notification to teacher
+            var teacherNotification = new Notification
             {
-                Title = "New Student Registration",
-                Message = $"Student {student.FullName} has registered for {await GetSubjectName(dto.SubjectId)}",
-                Type = "Info",
+                Title = "📚 New Student Registration",
+                Message = $"Student {student.FullName} (ID: {student.AdmissionNumber}) has registered for {classSubject.Subject.Name}.",
+                Type = "Success",
                 TeacherId = classSubject.TeacherId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
             };
-            _context.Notifications.Add(notification);
+            _context.Notifications.Add(teacherNotification);
+            
+            // Send confirmation notification to student
+            var studentNotification = new Notification
+            {
+                Title = "✅ Registration Successful",
+                Message = $"You have successfully registered for {classSubject.Subject.Name}. Teacher {classSubject.Teacher.Name} has been notified.",
+                Type = "Success",
+                StudentId = studentId,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(studentNotification);
+            
             await _context.SaveChangesAsync();
             
-            return Ok(new { message = "Successfully registered for subject" });
+            return Ok(new { message = $"Successfully registered for {classSubject.Subject.Name}. Teacher has been notified." });
         }
         
-        // Get my registered subjects with teacher info
+        // Get my registered subjects
         [HttpGet("my-subjects")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetMySubjects()
@@ -133,7 +144,7 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
         
-        // Get students for a teacher (based on registered subjects)
+        // Get students for a teacher
         [HttpGet("teacher-students")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetTeacherStudents()
@@ -155,12 +166,6 @@ namespace School_Yathu.Controllers
                 .ToListAsync();
             
             return Ok(students);
-        }
-        
-        private async Task<string> GetSubjectName(int subjectId)
-        {
-            var subject = await _context.Subjects.FindAsync(subjectId);
-            return subject?.Name ?? "Unknown";
         }
     }
     
