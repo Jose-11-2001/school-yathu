@@ -22,164 +22,82 @@ namespace School_Yathu.Controllers
         [HttpGet]
         public async Task<IActionResult> GetStudents()
         {
-            var students = await _context.Students.ToListAsync();
+            var students = await _context.Students
+                .Select(s => new
+                {
+                    s.Id,
+                    s.AdmissionNumber,
+                    s.FullName,
+                    s.ClassId
+                })
+                .ToListAsync();
             return Ok(students);
-        }
-        
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetStudent(int id)
-        {
-            var student = await _context.Students.FindAsync(id);
-            if (student == null)
-                return NotFound();
-            return Ok(student);
         }
         
         [Authorize(Roles = "Teacher,Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentDTO dto)
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized(new { message = "User not authenticated" });
+            
+            var teacherId = int.Parse(userIdClaim.Value);
+            
+            var existingStudent = await _context.Students
+                .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
+                
+            if (existingStudent != null)
+                return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
+            
+            // Find class by name if provided
+            int? classId = null;
+            if (!string.IsNullOrEmpty(dto.Class))
             {
-                // Get teacher ID from token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null)
-                {
-                    return Unauthorized(new { message = "User not authenticated" });
-                }
+                var classEntity = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
                 
-                var teacherId = int.Parse(userIdClaim.Value);
-                
-                // Check if student with same admission number exists
-                var existingStudent = await _context.Students
-                    .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
-                    
-                if (existingStudent != null)
-                {
-                    return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
-                }
-                
-                var student = new Student
-                {
-                    AdmissionNumber = dto.AdmissionNumber,
-                    FullName = dto.FullName,
-                    Class = dto.Class,
-                    Stream = dto.Stream,
-                    TeacherId = teacherId,
-                    CreatedAt = DateTime.UtcNow
-                };
-                
-                _context.Students.Add(student);
-                await _context.SaveChangesAsync();
-                
-                return Ok(new { 
-                    message = "Student added successfully", 
-                    student = new { student.Id, student.AdmissionNumber, student.FullName, student.Class, student.Stream }
-                });
+                if (classEntity != null)
+                    classId = classEntity.Id;
             }
-            catch (Exception ex)
+            
+            var student = new Student
             {
-                return StatusCode(500, new { message = $"Server error: {ex.Message}" });
-            }
+                AdmissionNumber = dto.AdmissionNumber,
+                FullName = dto.FullName,
+                ClassId = classId,
+                TeacherId = teacherId,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            _context.Students.Add(student);
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Student added successfully", studentId = student.Id });
         }
         
-        // Enter marks (Teacher/Admin only)
-        [Authorize(Roles = "Teacher,Admin")]
-        [HttpPost("marks")]
-        public async Task<IActionResult> EnterMarks([FromBody] MarksEntryDTO dto)
-        {
-            try
-            {
-                var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                
-                var student = await _context.Students.FindAsync(dto.StudentId);
-                if (student == null)
-                    return BadRequest(new { message = "Student not found" });
-                
-                var subject = await _context.Subjects.FindAsync(dto.SubjectId);
-                if (subject == null)
-                    return BadRequest(new { message = "Subject not found" });
-                
-                var year = dto.Year ?? DateTime.UtcNow.Year;
-                var term = dto.Term ?? "Term 1";
-                
-                var existingMarks = await _context.Marks
-                    .FirstOrDefaultAsync(m => m.StudentId == dto.StudentId &&
-                                             m.SubjectId == dto.SubjectId &&
-                                             m.Year == year &&
-                                             m.Term == term);
-                
-                if (existingMarks != null)
-                {
-                    existingMarks.Score = dto.Score;
-                    existingMarks.Grade = dto.Grade;
-                    existingMarks.Remark = dto.Remark;
-                    existingMarks.ExamType = dto.ExamType;
-                    existingMarks.UpdatedAt = DateTime.UtcNow;
-                    await _context.SaveChangesAsync();
-                    return Ok(new { message = "Marks updated successfully" });
-                }
-                
-                var marks = new Marks
-                {
-                    StudentId = dto.StudentId,
-                    SubjectId = dto.SubjectId,
-                    Score = dto.Score,
-                    Grade = dto.Grade,
-                    Remark = dto.Remark,
-                    Year = year,
-                    Term = term,
-                    ExamType = dto.ExamType,
-                    EnteredByTeacherId = teacherId,
-                    CreatedAt = DateTime.UtcNow
-                };
-                
-                _context.Marks.Add(marks);
-                await _context.SaveChangesAsync();
-                
-                return Ok(new { message = "Marks entered successfully" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = $"Error: {ex.Message}" });
-            }
-        }
-        
-        // Get student marks
         [HttpGet("marks/{studentId}")]
-        public async Task<IActionResult> GetStudentMarks(int studentId, [FromQuery] int? year, [FromQuery] string? term)
+        public async Task<IActionResult> GetStudentMarks(int studentId, [FromQuery] int year, [FromQuery] string term)
         {
-            var query = _context.Marks.Where(m => m.StudentId == studentId);
-            
-            if (year.HasValue)
-                query = query.Where(m => m.Year == year.Value);
-            
-            if (!string.IsNullOrEmpty(term))
-                query = query.Where(m => m.Term == term);
-            
-            var marks = await query
-                .Join(_context.Subjects,
-                    m => m.SubjectId,
-                    s => s.Id,
-                    (m, s) => new
-                    {
-                        m.Id,
-                        SubjectName = s.Name,
-                        m.Score,
-                        m.Grade,
-                        m.Remark,
-                        m.Year,
-                        m.Term,
-                        m.ExamType,
-                        m.CreatedAt
-                    })
+            var marks = await _context.Marks
+                .Include(m => m.Subject)
+                .Where(m => m.StudentId == studentId && m.Year == year && m.Term == term)
+                .Select(m => new
+                {
+                    m.Id,
+                    SubjectName = m.Subject != null ? m.Subject.Name : "",
+                    m.ContinuousTest1,
+                    m.ContinuousTest2,
+                    m.EndTermExam,
+                    m.TotalScore,
+                    m.Grade,
+                    m.Remark
+                })
                 .ToListAsync();
             
             return Ok(marks);
         }
         
-        // Get student ranking
         [HttpGet("rank/{studentId}")]
         public async Task<IActionResult> GetStudentRank(int studentId, [FromQuery] int year, [FromQuery] string term)
         {
@@ -192,20 +110,35 @@ namespace School_Yathu.Controllers
                 .ToListAsync();
             
             if (!studentMarks.Any())
-                return NotFound(new { message = "No marks found" });
+                return Ok(new { message = "No marks found" });
             
-            var studentTotal = studentMarks.Sum(m => m.Score);
-            var studentAvg = studentMarks.Average(m => m.Score);
-            var grade = GetGrade(studentAvg);
+            var total = studentMarks.Sum(m => m.TotalScore ?? 0);
+            var average = studentMarks.Average(m => m.TotalScore ?? 0);
+            var grade = GetGrade(average);
+            
+            // Get class students
+            var classStudents = await _context.Students
+                .Where(s => s.ClassId == student.ClassId)
+                .ToListAsync();
+            
+            var totals = new List<int>();
+            foreach (var s in classStudents)
+            {
+                var marks = await _context.Marks
+                    .Where(m => m.StudentId == s.Id && m.Year == year && m.Term == term)
+                    .SumAsync(m => m.TotalScore ?? 0);
+                totals.Add(marks);
+            }
+            
+            var position = totals.OrderByDescending(t => t).ToList().IndexOf(total) + 1;
             
             return Ok(new
             {
                 student.AdmissionNumber,
                 student.FullName,
-                student.Class,
-                student.Stream,
-                TotalMarks = studentTotal,
-                Average = Math.Round(studentAvg, 2),
+                TotalMarks = total,
+                Average = Math.Round(average, 2),
+                Position = position,
                 Grade = grade
             });
         }
