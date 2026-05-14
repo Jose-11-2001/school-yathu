@@ -11,19 +11,33 @@ namespace School_Yathu.Models
         [Required]
         public int StudentId { get; set; }
         
+        [ForeignKey("StudentId")]
+        public Student? Student { get; set; }
+        
         [Required]
         public int SubjectId { get; set; }
         
-        [Required]
-        [Range(0, 100)]
-        public int Score { get; set; }
+        [ForeignKey("SubjectId")]
+        public Subject? Subject { get; set; }
         
+        [Required]
+        public int ClassId { get; set; }
+        
+        [Required]
+        public int Year { get; set; }
+        
+        [Required]
+        public string Term { get; set; } = string.Empty;
+        
+        // Different assessment types
+        public int? ContinuousTest1 { get; set; } // 20%
+        public int? ContinuousTest2 { get; set; } // 20%
+        public int? EndTermExam { get; set; } // 60%
+        
+        // Calculated total (20% + 20% + 60%)
+        public int? TotalScore { get; set; }
         public string? Grade { get; set; }
         public string? Remark { get; set; }
-        
-        public int? Year { get; set; }
-        public string? Term { get; set; }
-        public string? ExamType { get; set; }
         
         public int? EnteredByTeacherId { get; set; }
         
