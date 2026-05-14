@@ -20,5 +20,8 @@ namespace School_Yathu.Models
         public int? TeacherId { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation property
+        public virtual ICollection<Marks>? Marks { get; set; }
     }
 }

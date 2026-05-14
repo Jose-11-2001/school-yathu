@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,35 +20,18 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get students for teacher's subjects
+        // Get all students (simplified - teachers can see all students)
         [HttpGet("my-students")]
         public async Task<IActionResult> GetMyStudents()
         {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            // Get subjects taught by this teacher
-            var teacherSubjects = await _context.TeacherSubjects
-                .Where(ts => ts.TeacherId == teacherId)
-                .Select(ts => ts.SubjectId)
-                .ToListAsync();
-            
-            // Get class IDs where teacher teaches
-            var classIds = await _context.ClassSubjects
-                .Where(cs => teacherSubjects.Contains(cs.SubjectId))
-                .Select(cs => cs.ClassId)
-                .Distinct()
-                .ToListAsync();
-            
-            // Get students in those classes
             var students = await _context.Students
-                .Where(s => classIds.Contains(s.ClassId ?? 0))
                 .Select(s => new
                 {
                     s.Id,
                     s.AdmissionNumber,
                     s.FullName,
-                    ClassName = s.Class != null ? s.Class.Name : null,
-                    s.ClassId
+                    s.Class,
+                    s.Stream
                 })
                 .ToListAsync();
             
@@ -61,13 +43,6 @@ namespace School_Yathu.Controllers
         public async Task<IActionResult> EnterMarks([FromBody] MarksEntryDTO dto)
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            // Verify teacher teaches this subject
-            var isAuthorized = await _context.TeacherSubjects
-                .AnyAsync(ts => ts.TeacherId == teacherId && ts.SubjectId == dto.SubjectId);
-            
-            if (!isAuthorized)
-                return BadRequest(new { message = "You are not authorized to enter marks for this subject" });
             
             var student = await _context.Students.FindAsync(dto.StudentId);
             if (student == null)
@@ -105,7 +80,6 @@ namespace School_Yathu.Controllers
             {
                 StudentId = dto.StudentId,
                 SubjectId = dto.SubjectId,
-                ClassId = student.ClassId ?? 0,
                 Year = dto.Year,
                 Term = dto.Term,
                 ContinuousTest1 = dto.ContinuousTest1,
@@ -124,17 +98,11 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Marks saved successfully", totalScore = totalScore, grade = gradeInfo.Grade });
         }
         
-        // Publish results and notify students
+        // Publish results (simplified)
         [HttpPost("publish-results/{subjectId}/{year}/{term}")]
         public async Task<IActionResult> PublishResults(int subjectId, int year, string term)
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var isAuthorized = await _context.TeacherSubjects
-                .AnyAsync(ts => ts.TeacherId == teacherId && ts.SubjectId == subjectId);
-            
-            if (!isAuthorized)
-                return BadRequest(new { message = "You are not authorized to publish results for this subject" });
             
             var subject = await _context.Subjects.FindAsync(subjectId);
             if (subject == null)
@@ -146,18 +114,7 @@ namespace School_Yathu.Controllers
                 .Distinct()
                 .ToListAsync();
             
-            // Mark as pending approval
-            var marks = await _context.Marks
-                .Where(m => m.SubjectId == subjectId && m.Year == year && m.Term == term)
-                .ToListAsync();
-            
-            foreach (var mark in marks)
-            {
-                mark.IsApproved = false;
-            }
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = $"Results for {subject.Name} are pending Headteacher approval. {studentIds.Count} students will be notified after approval." });
+            return Ok(new { message = $"Results for {subject.Name} recorded. {studentIds.Count} students have marks." });
         }
         
         // Get teacher's notifications
@@ -170,15 +127,6 @@ namespace School_Yathu.Controllers
                 .Where(n => n.TeacherId == teacherId)
                 .OrderByDescending(n => n.CreatedAt)
                 .Take(50)
-                .Select(n => new
-                {
-                    n.Id,
-                    n.Title,
-                    n.Message,
-                    n.Type,
-                    n.IsRead,
-                    n.CreatedAt
-                })
                 .ToListAsync();
             
             return Ok(notifications);

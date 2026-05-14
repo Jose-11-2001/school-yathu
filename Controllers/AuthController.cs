@@ -33,16 +33,25 @@ namespace School_Yathu.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
                 return BadRequest(new { message = "Email already exists" });
             
+            // Validate teacher email
+            if (registerDto.Role == "Teacher" && !registerDto.Email.EndsWith("@gmail.com"))
+            {
+                return BadRequest(new { message = "Teacher must use a valid email address (e.g., name@gmail.com)" });
+            }
+            
             var user = new User
             {
                 Email = registerDto.Email,
                 Name = registerDto.Name,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
                 PhoneNumber = registerDto.PhoneNumber,
+                EmployeeId = registerDto.EmployeeId,
+                Qualification = registerDto.Qualification,
+                HireDate = registerDto.HireDate,
                 Role = registerDto.Role,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,
-                MustChangePassword = true  // Force password change on first login
+                MustChangePassword = true
             };
             
             _context.Users.Add(user);
@@ -82,9 +91,7 @@ namespace School_Yathu.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Invalid credentials" });
             
-            // Check if user needs to change password
             var mustChangePassword = user.MustChangePassword;
-            
             var token = GenerateJwtToken(user);
             
             return Ok(new
@@ -110,11 +117,9 @@ namespace School_Yathu.Controllers
             if (user == null)
                 return NotFound(new { message = "User not found" });
             
-            // Verify current password
             if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
                 return BadRequest(new { message = "Current password is incorrect" });
             
-            // Update password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
             user.MustChangePassword = false;
             await _context.SaveChangesAsync();
@@ -141,13 +146,10 @@ namespace School_Yathu.Controllers
         
         private string GenerateEmailFromName(string name, string role)
         {
-            // Remove spaces and convert to lowercase
             var cleanName = Regex.Replace(name.ToLower(), @"\s+", "");
             
             if (role == "Teacher")
             {
-                // For teacher: first letter of first name + full surname @gmail.com
-                // e.g., John Mbukwa -> jmbukwa@gmail.com
                 var parts = name.Trim().Split(' ');
                 if (parts.Length >= 2)
                 {
@@ -160,17 +162,14 @@ namespace School_Yathu.Controllers
                     return $"{cleanName}@gmail.com".ToLower();
                 }
             }
-            else // Student
+            else
             {
-                // For student: full name without spaces @gmail.com
-                // e.g., Jose Mbukwa -> josembukwa@gmail.com
                 return $"{cleanName}@gmail.com".ToLower();
             }
         }
         
         private string GenerateRandomPassword()
         {
-            // Generate a random 8-character password
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var random = new Random();
             var password = new string(Enumerable.Repeat(chars, 8)
@@ -209,6 +208,9 @@ namespace School_Yathu.Controllers
         public string Name { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
+        public string? EmployeeId { get; set; }
+        public string? Qualification { get; set; }
+        public DateTime? HireDate { get; set; }
         public string Role { get; set; } = "Student";
     }
     

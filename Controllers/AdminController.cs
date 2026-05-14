@@ -42,6 +42,38 @@ namespace School_Yathu.Controllers
             
             return Ok(teachers);
         }
+        [HttpPut("classes/{id}")]
+public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
+{
+    var classEntity = await _context.Classes.FindAsync(id);
+    if (classEntity == null)
+        return NotFound(new { message = "Class not found" });
+    
+    classEntity.Name = dto.Name;
+    classEntity.Stream = dto.Stream;
+    classEntity.TeacherId = dto.TeacherId;
+    classEntity.Capacity = dto.Capacity;
+    
+    await _context.SaveChangesAsync();
+    
+    return Ok(new { message = "Class updated successfully" });
+}
+/*[HttpPut("classes/{id}")]
+        public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
+        {
+            var classEntity = await _context.Classes.FindAsync(id);
+            if (classEntity == null)
+                return NotFound(new { message = "Class not found" });
+            
+            classEntity.Name = dto.Name;
+            classEntity.Stream = dto.Stream;
+            classEntity.TeacherId = dto.TeacherId;
+            classEntity.Capacity = dto.Capacity;
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Class updated successfully" });
+        }*/
         
         [HttpPost("teachers")]
         public async Task<IActionResult> AddTeacher([FromBody] CreateTeacherDTO dto)

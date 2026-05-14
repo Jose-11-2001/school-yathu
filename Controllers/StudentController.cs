@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,7 +67,6 @@ namespace School_Yathu.Controllers
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
                 
-                // Return only the student data without circular references
                 return Ok(new { 
                     message = "Student added successfully", 
                     student = new
@@ -100,7 +100,9 @@ namespace School_Yathu.Controllers
                     m.EndTermExam,
                     m.TotalScore,
                     m.Grade,
-                    m.Remark
+                    m.Remark,
+                    m.Year,
+                    m.Term
                 })
                 .ToListAsync();
             
@@ -125,13 +127,11 @@ namespace School_Yathu.Controllers
             var average = studentMarks.Average(m => m.TotalScore ?? 0);
             var grade = GetGrade(average);
             
-            // Get class students
-            var classStudents = await _context.Students
-                .Where(s => s.Class == student.Class)
-                .ToListAsync();
+            // Get all students
+            var allStudents = await _context.Students.ToListAsync();
             
             var totals = new List<int>();
-            foreach (var s in classStudents)
+            foreach (var s in allStudents)
             {
                 var marks = await _context.Marks
                     .Where(m => m.StudentId == s.Id && m.Year == year && m.Term == term)

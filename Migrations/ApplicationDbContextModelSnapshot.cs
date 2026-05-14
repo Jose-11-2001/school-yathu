@@ -48,8 +48,6 @@ namespace school_yathu.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeacherId");
-
                     b.ToTable("Classes");
                 });
 
@@ -176,7 +174,7 @@ namespace school_yathu.Migrations
                     b.Property<int?>("ApprovedByAdminId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ClassId")
+                    b.Property<int?>("ClassId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ContinuousTest1")
@@ -223,6 +221,8 @@ namespace school_yathu.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
 
                     b.HasIndex("SubjectId");
 
@@ -285,8 +285,8 @@ namespace school_yathu.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("ClassId")
-                        .HasColumnType("int");
+                    b.Property<string>("Class")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -305,8 +305,6 @@ namespace school_yathu.Migrations
 
                     b.HasIndex("AdmissionNumber")
                         .IsUnique();
-
-                    b.HasIndex("ClassId");
 
                     b.ToTable("Students");
                 });
@@ -453,19 +451,10 @@ namespace school_yathu.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("School_Yathu.Models.Class", b =>
-                {
-                    b.HasOne("School_Yathu.Models.User", "Teacher")
-                        .WithMany()
-                        .HasForeignKey("TeacherId");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("School_Yathu.Models.ClassSubject", b =>
                 {
                     b.HasOne("School_Yathu.Models.Class", "Class")
-                        .WithMany("ClassSubjects")
+                        .WithMany()
                         .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -498,7 +487,7 @@ namespace school_yathu.Migrations
                         .IsRequired();
 
                     b.HasOne("School_Yathu.Models.Student", "Student")
-                        .WithMany("ExamResults")
+                        .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -518,6 +507,10 @@ namespace school_yathu.Migrations
 
             modelBuilder.Entity("School_Yathu.Models.Marks", b =>
                 {
+                    b.HasOne("School_Yathu.Models.Class", "Class")
+                        .WithMany("Marks")
+                        .HasForeignKey("ClassId");
+
                     b.HasOne("School_Yathu.Models.Student", "Student")
                         .WithMany("Marks")
                         .HasForeignKey("StudentId")
@@ -529,6 +522,8 @@ namespace school_yathu.Migrations
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Class");
 
                     b.Navigation("Student");
 
@@ -550,19 +545,10 @@ namespace school_yathu.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("School_Yathu.Models.Student", b =>
-                {
-                    b.HasOne("School_Yathu.Models.Class", "Class")
-                        .WithMany("Students")
-                        .HasForeignKey("ClassId");
-
-                    b.Navigation("Class");
-                });
-
             modelBuilder.Entity("School_Yathu.Models.StudentSubject", b =>
                 {
                     b.HasOne("School_Yathu.Models.Student", "Student")
-                        .WithMany("StudentSubjects")
+                        .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -605,9 +591,7 @@ namespace school_yathu.Migrations
 
             modelBuilder.Entity("School_Yathu.Models.Class", b =>
                 {
-                    b.Navigation("ClassSubjects");
-
-                    b.Navigation("Students");
+                    b.Navigation("Marks");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Exam", b =>
@@ -617,11 +601,7 @@ namespace school_yathu.Migrations
 
             modelBuilder.Entity("School_Yathu.Models.Student", b =>
                 {
-                    b.Navigation("ExamResults");
-
                     b.Navigation("Marks");
-
-                    b.Navigation("StudentSubjects");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Subject", b =>
