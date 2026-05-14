@@ -26,5 +26,6 @@ namespace School_Yathu.Models
         // Navigation properties
         public ICollection<Marks>? Marks { get; set; }
         public ICollection<ExamResult>? ExamResults { get; set; }
+        public ICollection<StudentSubject>? StudentSubjects { get; set; }
     }
 }
