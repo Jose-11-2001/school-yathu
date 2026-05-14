@@ -18,11 +18,12 @@ namespace School_Yathu.Models
         public string PasswordHash { get; set; } = string.Empty;
         
         public string? PhoneNumber { get; set; }
-        public string? EmployeeId { get; set; } // For teachers
-        public string? Qualification { get; set; } // For teachers
-        public DateTime? HireDate { get; set; } // For teachers
+        public string? EmployeeId { get; set; }
+        public string? Qualification { get; set; }
+        public DateTime? HireDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
+        public bool MustChangePassword { get; set; } = false;
         public string Role { get; set; } = "Teacher";
     }
 }
