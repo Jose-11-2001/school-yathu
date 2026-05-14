@@ -22,6 +22,7 @@ namespace School_Yathu.Data
         public DbSet<ExamResult> ExamResults { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<StudentSubject> StudentSubjects { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -38,7 +39,6 @@ namespace School_Yathu.Data
                 .HasIndex(s => s.Name)
                 .IsUnique();
             
-            // Unique constraint for Marks per student, subject, year, term
             modelBuilder.Entity<Marks>()
                 .HasIndex(m => new { m.StudentId, m.SubjectId, m.Year, m.Term })
                 .IsUnique();

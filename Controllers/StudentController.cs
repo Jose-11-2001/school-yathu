@@ -66,7 +66,18 @@ namespace School_Yathu.Controllers
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
                 
-                return Ok(new { message = "Student added successfully", student = student });
+                // Return only the student data without circular references
+                return Ok(new { 
+                    message = "Student added successfully", 
+                    student = new
+                    {
+                        student.Id,
+                        student.AdmissionNumber,
+                        student.FullName,
+                        student.Class,
+                        student.Stream
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -114,6 +125,7 @@ namespace School_Yathu.Controllers
             var average = studentMarks.Average(m => m.TotalScore ?? 0);
             var grade = GetGrade(average);
             
+            // Get class students
             var classStudents = await _context.Students
                 .Where(s => s.Class == student.Class)
                 .ToListAsync();
@@ -133,6 +145,8 @@ namespace School_Yathu.Controllers
             {
                 student.AdmissionNumber,
                 student.FullName,
+                student.Class,
+                student.Stream,
                 TotalMarks = total,
                 Average = Math.Round(average, 2),
                 Position = position,

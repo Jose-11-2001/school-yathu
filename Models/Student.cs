@@ -1,5 +1,5 @@
+
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
@@ -14,20 +14,11 @@ namespace School_Yathu.Models
         [Required]
         public string FullName { get; set; } = string.Empty;
         
-        public int? ClassId { get; set; }
-        
+        public string? Class { get; set; }
         public string? Stream { get; set; }
-        
-        [ForeignKey("ClassId")]
-        public Class? Class { get; set; }
         
         public int? TeacherId { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
-        // Navigation properties
-        public ICollection<Marks>? Marks { get; set; }
-        public ICollection<ExamResult>? ExamResults { get; set; }
-        public ICollection<StudentSubject>? StudentSubjects { get; set; }
     }
 }
