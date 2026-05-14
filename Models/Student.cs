@@ -14,11 +14,17 @@ namespace School_Yathu.Models
         [Required]
         public string FullName { get; set; } = string.Empty;
         
-        public string? Class { get; set; }
-        public string? Stream { get; set; }
+        public int? ClassId { get; set; }
+        
+        [ForeignKey("ClassId")]
+        public Class? Class { get; set; }
         
         public int? TeacherId { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public ICollection<Marks>? Marks { get; set; }
+        public ICollection<ExamResult>? ExamResults { get; set; }
     }
 }
