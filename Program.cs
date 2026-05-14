@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using School_Yathu.Data;
-using School_Yathu.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,14 +29,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// CORS
+// CORS - Allow all origins for development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
@@ -59,19 +58,6 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.EnsureCreated();
-    
-    // Seed subjects if none exist
-    if (!dbContext.Subjects.Any())
-    {
-        dbContext.Subjects.AddRange(
-            new Subject { Name = "Mathematics", Code = "MATH101", MaxMarks = 100, CreatedAt = DateTime.UtcNow },
-            new Subject { Name = "English", Code = "ENG101", MaxMarks = 100, CreatedAt = DateTime.UtcNow },
-            new Subject { Name = "Science", Code = "SCI101", MaxMarks = 100, CreatedAt = DateTime.UtcNow },
-            new Subject { Name = "Kiswahili", Code = "KIS101", MaxMarks = 100, CreatedAt = DateTime.UtcNow },
-            new Subject { Name = "Social Studies", Code = "SST101", MaxMarks = 100, CreatedAt = DateTime.UtcNow }
-        );
-        dbContext.SaveChanges();
-    }
 }
 
 app.Run();

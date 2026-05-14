@@ -10,11 +10,11 @@ namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class StudentsController : ControllerBase
+    public class StudentController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         
-        public StudentsController(ApplicationDbContext context)
+        public StudentController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -39,241 +39,190 @@ namespace School_Yathu.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentDTO dto)
         {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var student = new Student
+            try
             {
-                AdmissionNumber = dto.AdmissionNumber,
-                FullName = dto.FullName,
-                Class = dto.Class,
-                Stream = dto.Stream,
-                TeacherId = teacherId,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
-            
-            return Ok(student);
+                // Get teacher ID from token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new { message = "User not authenticated" });
+                }
+                
+                var teacherId = int.Parse(userIdClaim.Value);
+                
+                // Check if student with same admission number exists
+                var existingStudent = await _context.Students
+                    .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
+                    
+                if (existingStudent != null)
+                {
+                    return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
+                }
+                
+                var student = new Student
+                {
+                    AdmissionNumber = dto.AdmissionNumber,
+                    FullName = dto.FullName,
+                    Class = dto.Class,
+                    Stream = dto.Stream,
+                    TeacherId = teacherId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.Students.Add(student);
+                await _context.SaveChangesAsync();
+                
+                return Ok(new { 
+                    message = "Student added successfully", 
+                    student = new { student.Id, student.AdmissionNumber, student.FullName, student.Class, student.Stream }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Server error: {ex.Message}" });
+            }
         }
         
+        // Enter marks (Teacher/Admin only)
+        [Authorize(Roles = "Teacher,Admin")]
+        [HttpPost("marks")]
+        public async Task<IActionResult> EnterMarks([FromBody] MarksEntryDTO dto)
+        {
+            try
+            {
+                var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                
+                var student = await _context.Students.FindAsync(dto.StudentId);
+                if (student == null)
+                    return BadRequest(new { message = "Student not found" });
+                
+                var subject = await _context.Subjects.FindAsync(dto.SubjectId);
+                if (subject == null)
+                    return BadRequest(new { message = "Subject not found" });
+                
+                var year = dto.Year ?? DateTime.UtcNow.Year;
+                var term = dto.Term ?? "Term 1";
+                
+                var existingMarks = await _context.Marks
+                    .FirstOrDefaultAsync(m => m.StudentId == dto.StudentId &&
+                                             m.SubjectId == dto.SubjectId &&
+                                             m.Year == year &&
+                                             m.Term == term);
+                
+                if (existingMarks != null)
+                {
+                    existingMarks.Score = dto.Score;
+                    existingMarks.Grade = dto.Grade;
+                    existingMarks.Remark = dto.Remark;
+                    existingMarks.ExamType = dto.ExamType;
+                    existingMarks.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                    return Ok(new { message = "Marks updated successfully" });
+                }
+                
+                var marks = new Marks
+                {
+                    StudentId = dto.StudentId,
+                    SubjectId = dto.SubjectId,
+                    Score = dto.Score,
+                    Grade = dto.Grade,
+                    Remark = dto.Remark,
+                    Year = year,
+                    Term = term,
+                    ExamType = dto.ExamType,
+                    EnteredByTeacherId = teacherId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.Marks.Add(marks);
+                await _context.SaveChangesAsync();
+                
+                return Ok(new { message = "Marks entered successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error: {ex.Message}" });
+            }
+        }
+        
+        // Get student marks
+        [HttpGet("marks/{studentId}")]
+        public async Task<IActionResult> GetStudentMarks(int studentId, [FromQuery] int? year, [FromQuery] string? term)
+        {
+            var query = _context.Marks.Where(m => m.StudentId == studentId);
+            
+            if (year.HasValue)
+                query = query.Where(m => m.Year == year.Value);
+            
+            if (!string.IsNullOrEmpty(term))
+                query = query.Where(m => m.Term == term);
+            
+            var marks = await query
+                .Join(_context.Subjects,
+                    m => m.SubjectId,
+                    s => s.Id,
+                    (m, s) => new
+                    {
+                        m.Id,
+                        SubjectName = s.Name,
+                        m.Score,
+                        m.Grade,
+                        m.Remark,
+                        m.Year,
+                        m.Term,
+                        m.ExamType,
+                        m.CreatedAt
+                    })
+                .ToListAsync();
+            
+            return Ok(marks);
+        }
+        
+        // Get student ranking
         [HttpGet("rank/{studentId}")]
         public async Task<IActionResult> GetStudentRank(int studentId, [FromQuery] int year, [FromQuery] string term)
         {
-            // Get the student
             var student = await _context.Students.FindAsync(studentId);
             if (student == null)
-                return NotFound("Student not found");
+                return NotFound(new { message = "Student not found" });
             
-            // Get student's marks
             var studentMarks = await _context.Marks
                 .Where(m => m.StudentId == studentId && m.Year == year && m.Term == term)
                 .ToListAsync();
             
             if (!studentMarks.Any())
-                return NotFound("No marks found for this student");
+                return NotFound(new { message = "No marks found" });
             
             var studentTotal = studentMarks.Sum(m => m.Score);
-            var studentAverage = studentMarks.Average(m => m.Score);
-            
-            // Get all students in the same class
-            var allStudents = await _context.Students
-                .Where(s => s.Class == student.Class)
-                .ToListAsync();
-            
-            // Calculate totals for all students
-            var rankings = new List<dynamic>();
-            
-            foreach (var s in allStudents)
-            {
-                var marks = await _context.Marks
-                    .Where(m => m.StudentId == s.Id && m.Year == year && m.Term == term)
-                    .ToListAsync();
-                
-                if (marks.Any())
-                {
-                    var total = marks.Sum(m => m.Score);
-                    var avg = marks.Average(m => m.Score);
-                    rankings.Add(new { StudentId = s.Id, Total = total, Average = avg });
-                }
-            }
-            
-            // Sort by total marks
-            var sortedRankings = rankings.OrderByDescending(r => r.Total).ToList();
-            var position = sortedRankings.FindIndex(r => r.StudentId == studentId) + 1;
-            
-            // Determine grade
-            var grade = GetGrade(studentAverage);
-            var remarks = GetRemarks(grade);
-            
-            // Get subject details with names
-            var subjects = await _context.Subjects.ToListAsync();
-            var subjectScores = studentMarks.Select(m => new
-            {
-                SubjectName = subjects.FirstOrDefault(s => s.Id == m.SubjectId)?.Name ?? "Unknown",
-                m.Score,
-                MaxMarks = 100
-            }).ToList();
+            var studentAvg = studentMarks.Average(m => m.Score);
+            var grade = GetGrade(studentAvg);
             
             return Ok(new
             {
-                StudentId = studentId,
-                StudentName = student.FullName,
-                AdmissionNumber = student.AdmissionNumber,
-                Class = student.Class,
-                Stream = student.Stream,
+                student.AdmissionNumber,
+                student.FullName,
+                student.Class,
+                student.Stream,
                 TotalMarks = studentTotal,
-                AverageScore = Math.Round(studentAverage, 2),
-                Position = position,
-                TotalStudents = rankings.Count,
-                Grade = grade,
-                Remarks = remarks,
-                SubjectScores = subjectScores
+                Average = Math.Round(studentAvg, 2),
+                Grade = grade
             });
         }
         
-        [HttpGet("class-rankings")]
-        public async Task<IActionResult> GetClassRankings(
-            [FromQuery] string className, 
-            [FromQuery] int year, 
-            [FromQuery] string term)
+        private string GetGrade(double score)
         {
-            // Get all students in the class
-            var students = await _context.Students
-                .Where(s => s.Class == className)
-                .ToListAsync();
-            
-            var rankings = new List<dynamic>();
-            
-            foreach (var student in students)
-            {
-                var marks = await _context.Marks
-                    .Where(m => m.StudentId == student.Id && m.Year == year && m.Term == term)
-                    .ToListAsync();
-                
-                if (marks.Any())
-                {
-                    var total = marks.Sum(m => m.Score);
-                    var avg = marks.Average(m => m.Score);
-                    var grade = GetGrade(avg);
-                    
-                    rankings.Add(new
-                    {
-                        student.Id,
-                        student.AdmissionNumber,
-                        student.FullName,
-                        TotalMarks = total,
-                        AverageScore = Math.Round(avg, 2),
-                        Grade = grade
-                    });
-                }
-            }
-            
-            // Sort by total marks descending
-            var sortedRankings = rankings.OrderByDescending(r => r.TotalMarks).ToList();
-            
-            // Add position
-            var result = sortedRankings.Select((r, index) => new
-            {
-                r.Id,
-                r.AdmissionNumber,
-                r.FullName,
-                r.TotalMarks,
-                r.AverageScore,
-                r.Grade,
-                Position = index + 1
-            }).ToList();
-            
-            return Ok(new
-            {
-                Class = className,
-                Year = year,
-                Term = term,
-                TotalStudents = result.Count,
-                Rankings = result
-            });
-        }
-        
-        [HttpGet("top-students")]
-        public async Task<IActionResult> GetTopStudents([FromQuery] int year, [FromQuery] string term, [FromQuery] int top = 10)
-        {
-            // Get all students
-            var students = await _context.Students.ToListAsync();
-            
-            var rankings = new List<dynamic>();
-            
-            foreach (var student in students)
-            {
-                var marks = await _context.Marks
-                    .Where(m => m.StudentId == student.Id && m.Year == year && m.Term == term)
-                    .ToListAsync();
-                
-                if (marks.Any())
-                {
-                    var total = marks.Sum(m => m.Score);
-                    var avg = marks.Average(m => m.Score);
-                    
-                    rankings.Add(new
-                    {
-                        student.Id,
-                        student.AdmissionNumber,
-                        student.FullName,
-                        student.Class,
-                        TotalMarks = total,
-                        AverageScore = Math.Round(avg, 2)
-                    });
-                }
-            }
-            
-            var topStudents = rankings
-                .OrderByDescending(r => r.TotalMarks)
-                .Take(top)
-                .Select((r, index) => new
-                {
-                    r.Id,
-                    r.AdmissionNumber,
-                    r.FullName,
-                    r.Class,
-                    r.TotalMarks,
-                    r.AverageScore,
-                    Position = index + 1
-                })
-                .ToList();
-            
-            return Ok(topStudents);
-        }
-        
-        private string GetGrade(double averageScore)
-        {
-            if (averageScore >= 90) return "A+";
-            if (averageScore >= 80) return "A";
-            if (averageScore >= 75) return "A-";
-            if (averageScore >= 70) return "B+";
-            if (averageScore >= 65) return "B";
-            if (averageScore >= 60) return "B-";
-            if (averageScore >= 55) return "C+";
-            if (averageScore >= 50) return "C";
-            if (averageScore >= 45) return "C-";
-            if (averageScore >= 40) return "D";
+            if (score >= 90) return "A+";
+            if (score >= 80) return "A";
+            if (score >= 75) return "A-";
+            if (score >= 70) return "B+";
+            if (score >= 65) return "B";
+            if (score >= 60) return "B-";
+            if (score >= 55) return "C+";
+            if (score >= 50) return "C";
+            if (score >= 45) return "C-";
+            if (score >= 40) return "D";
             return "E";
-        }
-        
-        private string GetRemarks(string grade)
-        {
-            return grade switch
-            {
-                "A+" => "Excellent performance!",
-                "A" => "Outstanding achievement",
-                "A-" => "Very good performance",
-                "B+" => "Good performance",
-                "B" => "Satisfactory performance",
-                "B-" => "Average performance",
-                "C+" => "Fair performance",
-                "C" => "Passing performance",
-                "C-" => "Barely satisfactory",
-                "D" => "Needs improvement",
-                _ => "Requires significant improvement"
-            };
         }
     }
 }

@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace School_Yathu.Models
@@ -19,12 +18,11 @@ namespace School_Yathu.Models
         public string PasswordHash { get; set; } = string.Empty;
         
         public string? PhoneNumber { get; set; }
+        public string? EmployeeId { get; set; } // For teachers
+        public string? Qualification { get; set; } // For teachers
+        public DateTime? HireDate { get; set; } // For teachers
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
-        public string Role { get; set; } = "Teacher"; // Teacher, Student, Parent, Admin
-        
-        // Navigation properties
-        public ICollection<Student>? Students { get; set; } // Teachers have students
-        public ICollection<Marks>? MarksEntered { get; set; } // Marks entered by teacher
+        public string Role { get; set; } = "Teacher";
     }
 }

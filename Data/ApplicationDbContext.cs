@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Models;
 
@@ -15,6 +14,7 @@ namespace School_Yathu.Data
         public DbSet<Student> Students { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Marks> Marks { get; set; }
+        public DbSet<TeacherSubject> TeacherSubjects { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +30,11 @@ namespace School_Yathu.Data
             
             modelBuilder.Entity<Subject>()
                 .HasIndex(s => s.Name)
+                .IsUnique();
+            
+            // TeacherSubject composite unique constraint
+            modelBuilder.Entity<TeacherSubject>()
+                .HasIndex(ts => new { ts.TeacherId, ts.SubjectId })
                 .IsUnique();
         }
     }

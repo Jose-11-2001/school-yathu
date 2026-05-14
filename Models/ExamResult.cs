@@ -3,27 +3,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    public class Marks
+    public class ExamResult
     {
         [Key]
         public int Id { get; set; }
         
         [Required]
+        public int ExamId { get; set; }
+        
+        [ForeignKey("ExamId")]
+        public Exam? Exam { get; set; }
+        
+        [Required]
         public int StudentId { get; set; }
+        
+        [ForeignKey("StudentId")]
+        public Student? Student { get; set; }
         
         [Required]
         public int SubjectId { get; set; }
         
+        [ForeignKey("SubjectId")]
+        public Subject? Subject { get; set; }
+        
         [Required]
-        [Range(0, 100)]
         public int Score { get; set; }
         
         public string? Grade { get; set; }
         public string? Remark { get; set; }
-        
-        public int? Year { get; set; }
-        public string? Term { get; set; }
-        public string? ExamType { get; set; }
         
         public int? EnteredByTeacherId { get; set; }
         

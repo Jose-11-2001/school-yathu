@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace School_Yathu.DTOs
@@ -42,5 +41,7 @@ namespace School_Yathu.DTOs
         public int? Year { get; set; }
         public string? Term { get; set; }
         public string? ExamType { get; set; }
+        public string? Grade { get; set; }
+        public string? Remark { get; set; }
     }
 }
