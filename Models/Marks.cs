@@ -29,15 +29,20 @@ namespace School_Yathu.Models
         [Required]
         public string Term { get; set; } = string.Empty;
         
-        // Different assessment types
+        // Assessment scores
         public int? ContinuousTest1 { get; set; } // 20%
         public int? ContinuousTest2 { get; set; } // 20%
         public int? EndTermExam { get; set; } // 60%
         
-        // Calculated total (20% + 20% + 60%)
+        // Calculated values
         public int? TotalScore { get; set; }
         public string? Grade { get; set; }
         public string? Remark { get; set; }
+        
+        // Approval fields
+        public bool IsApproved { get; set; } = false;
+        public DateTime? ApprovedAt { get; set; }
+        public int? ApprovedByAdminId { get; set; }
         
         public int? EnteredByTeacherId { get; set; }
         
