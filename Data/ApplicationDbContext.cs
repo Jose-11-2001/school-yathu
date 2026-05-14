@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Models;
 
@@ -19,6 +20,7 @@ namespace School_Yathu.Data
         public DbSet<ClassSubject> ClassSubjects { get; set; }
         public DbSet<Exam> Exams { get; set; }
         public DbSet<ExamResult> ExamResults { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,21 +34,13 @@ namespace School_Yathu.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
             
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.EmployeeId)
-                .IsUnique();
-            
             modelBuilder.Entity<Subject>()
                 .HasIndex(s => s.Name)
                 .IsUnique();
             
-            modelBuilder.Entity<Class>()
-                .HasIndex(c => new { c.Name, c.Stream })
-                .IsUnique();
-            
-            // ExamResult composite unique constraint
-            modelBuilder.Entity<ExamResult>()
-                .HasIndex(er => new { er.ExamId, er.StudentId, er.SubjectId })
+            // Unique constraint for Marks per student, subject, year, term
+            modelBuilder.Entity<Marks>()
+                .HasIndex(m => new { m.StudentId, m.SubjectId, m.Year, m.Term })
                 .IsUnique();
         }
     }
