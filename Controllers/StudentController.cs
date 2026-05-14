@@ -28,52 +28,50 @@ namespace School_Yathu.Controllers
                     s.Id,
                     s.AdmissionNumber,
                     s.FullName,
-                    s.ClassId
+                    s.Class,
+                    s.Stream
                 })
                 .ToListAsync();
             return Ok(students);
         }
         
-        [Authorize(Roles = "Teacher,Admin")]
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentDTO dto)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized(new { message = "User not authenticated" });
-            
-            var teacherId = int.Parse(userIdClaim.Value);
-            
-            var existingStudent = await _context.Students
-                .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
-                
-            if (existingStudent != null)
-                return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
-            
-            // Find class by name if provided
-            int? classId = null;
-            if (!string.IsNullOrEmpty(dto.Class))
+            try
             {
-                var classEntity = await _context.Classes
-                    .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                    return Unauthorized(new { message = "User not authenticated" });
                 
-                if (classEntity != null)
-                    classId = classEntity.Id;
+                var teacherId = int.Parse(userIdClaim.Value);
+                
+                var existingStudent = await _context.Students
+                    .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
+                    
+                if (existingStudent != null)
+                    return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
+                
+                var student = new Student
+                {
+                    AdmissionNumber = dto.AdmissionNumber,
+                    FullName = dto.FullName,
+                    Class = dto.Class,
+                    Stream = dto.Stream,
+                    TeacherId = teacherId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.Students.Add(student);
+                await _context.SaveChangesAsync();
+                
+                return Ok(new { message = "Student added successfully", student = student });
             }
-            
-            var student = new Student
+            catch (Exception ex)
             {
-                AdmissionNumber = dto.AdmissionNumber,
-                FullName = dto.FullName,
-                ClassId = classId,
-                TeacherId = teacherId,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = "Student added successfully", studentId = student.Id });
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
         
         [HttpGet("marks/{studentId}")]
@@ -116,9 +114,8 @@ namespace School_Yathu.Controllers
             var average = studentMarks.Average(m => m.TotalScore ?? 0);
             var grade = GetGrade(average);
             
-            // Get class students
             var classStudents = await _context.Students
-                .Where(s => s.ClassId == student.ClassId)
+                .Where(s => s.Class == student.Class)
                 .ToListAsync();
             
             var totals = new List<int>();

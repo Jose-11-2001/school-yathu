@@ -16,6 +16,8 @@ namespace School_Yathu.Models
         
         public int? ClassId { get; set; }
         
+        public string? Stream { get; set; }
+        
         [ForeignKey("ClassId")]
         public Class? Class { get; set; }
         

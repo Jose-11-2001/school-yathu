@@ -70,21 +70,22 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher added successfully", teacherId = teacher.Id });
         }
         
-        [HttpDelete("teachers/{id}")]
-        public async Task<IActionResult> DeleteTeacher(int id)
-        {
-            var teacher = await _context.Users.FindAsync(id);
-            if (teacher == null)
-                return NotFound(new { message = "Teacher not found" });
-            
-            if (teacher.Role != "Teacher")
-                return BadRequest(new { message = "User is not a teacher" });
-            
-            _context.Users.Remove(teacher);
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = "Teacher deleted successfully" });
-        }
+       [HttpDelete("teachers/{id}")]
+public async Task<IActionResult> DeleteTeacher(int id)
+{
+    var teacher = await _context.Users.FindAsync(id);
+    if (teacher == null)
+        return NotFound(new { message = "Teacher not found" });
+    
+    if (teacher.Role != "Teacher")
+        return BadRequest(new { message = "User is not a teacher" });
+    
+    // Instead of deleting, just deactivate
+    teacher.IsActive = false;
+    await _context.SaveChangesAsync();
+    
+    return Ok(new { message = "Teacher deactivated successfully" });
+}
         
         // ==================== CLASS MANAGEMENT ====================
         
@@ -226,6 +227,7 @@ namespace School_Yathu.Controllers
             
             return Ok(students);
         }
+        
         
         [HttpDelete("students/{id}")]
         public async Task<IActionResult> DeleteStudent(int id)
