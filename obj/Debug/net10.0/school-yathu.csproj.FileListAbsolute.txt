@@ -18,7 +18,6 @@ C:\Projects\school-yathu\bin\Debug\net10.0\school-yathu.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\school-yathu.pdb
 C:\Projects\school-yathu\bin\Debug\net10.0\Azure.Core.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Azure.Identity.dll
-C:\Projects\school-yathu\bin\Debug\net10.0\BCrypt.Net-Next.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Humanizer.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
@@ -145,3 +144,4 @@ C:\Projects\school-yathu\obj\Debug\net10.0\refint\school-yathu.dll
 C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.pdb
 C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.genruntimeconfig.cache
 C:\Projects\school-yathu\obj\Debug\net10.0\ref\school-yathu.dll
+C:\Projects\school-yathu\bin\Debug\net10.0\BCrypt-Net-Next.dll
