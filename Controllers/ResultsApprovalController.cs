@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.Models;
+using System.Security.Claims;
 
 namespace School_Yathu.Controllers
 {
@@ -24,7 +25,6 @@ namespace School_Yathu.Controllers
         {
             var pendingResults = await _context.Marks
                 .Include(m => m.Subject)
-                .Include(m => m.Student)
                 .Where(m => m.IsApproved == false && m.TotalScore.HasValue)
                 .GroupBy(m => new { m.SubjectId, m.Year, m.Term })
                 .Select(g => new
@@ -33,8 +33,7 @@ namespace School_Yathu.Controllers
                     SubjectName = g.First().Subject != null ? g.First().Subject.Name : "",
                     Year = g.Key.Year,
                     Term = g.Key.Term,
-                    StudentCount = g.Count(),
-                    HasMarks = true
+                    StudentCount = g.Count()
                 })
                 .ToListAsync();
             
@@ -47,7 +46,6 @@ namespace School_Yathu.Controllers
         {
             var results = await _context.Marks
                 .Include(m => m.Student)
-                .Include(m => m.Subject)
                 .Where(m => m.SubjectId == subjectId && m.Year == year && m.Term == term && m.TotalScore.HasValue)
                 .Select(m => new
                 {
@@ -70,6 +68,8 @@ namespace School_Yathu.Controllers
         [HttpPost("approve-results")]
         public async Task<IActionResult> ApproveResults([FromBody] ApproveResultsDTO dto)
         {
+            var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            
             var marks = await _context.Marks
                 .Where(m => m.SubjectId == dto.SubjectId && m.Year == dto.Year && m.Term == dto.Term)
                 .ToListAsync();
@@ -82,28 +82,27 @@ namespace School_Yathu.Controllers
             {
                 mark.IsApproved = true;
                 mark.ApprovedAt = DateTime.UtcNow;
-                mark.ApprovedByAdminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                mark.ApprovedByAdminId = adminId;
             }
             
             await _context.SaveChangesAsync();
-            
-            // Get all students who have these marks
-            var studentIds = marks.Select(m => m.StudentId).Distinct().ToList();
-            var students = await _context.Students.Where(s => studentIds.Contains(s.Id)).ToListAsync();
             
             // Get subject name
             var subject = await _context.Subjects.FindAsync(dto.SubjectId);
             var subjectName = subject?.Name ?? "Unknown Subject";
             
+            // Get all students who have these marks
+            var studentIds = marks.Select(m => m.StudentId).Distinct().ToList();
+            
             // Send notifications to students
-            foreach (var student in students)
+            foreach (var studentId in studentIds)
             {
                 var studentNotification = new Notification
                 {
                     Title = "📢 Exam Results Published",
-                    Message = $"The results for {subjectName} ({dto.Term} {dto.Year}) have been approved and published by the Headteacher. You can now view your results.",
+                    Message = $"The results for {subjectName} ({dto.Term} {dto.Year}) have been approved and published. You can now view your results.",
                     Type = "ExamResults",
-                    StudentId = student.Id,
+                    StudentId = studentId,
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false
                 };
@@ -111,22 +110,19 @@ namespace School_Yathu.Controllers
             }
             
             // Send notification to teachers
-            var teacherIds = marks.Select(m => m.EnteredByTeacherId).Distinct().ToList();
+            var teacherIds = marks.Select(m => m.EnteredByTeacherId).Where(t => t.HasValue).Select(t => t.Value).Distinct().ToList();
             foreach (var teacherId in teacherIds)
             {
-                if (teacherId.HasValue)
+                var teacherNotification = new Notification
                 {
-                    var teacherNotification = new Notification
-                    {
-                        Title = "✅ Results Approved",
-                        Message = $"The results for {subjectName} ({dto.Term} {dto.Year}) have been approved by the Headteacher and published to students.",
-                        Type = "Success",
-                        TeacherId = teacherId.Value,
-                        CreatedAt = DateTime.UtcNow,
-                        IsRead = false
-                    };
-                    _context.Notifications.Add(teacherNotification);
-                }
+                    Title = "✅ Results Approved",
+                    Message = $"The results for {subjectName} ({dto.Term} {dto.Year}) have been approved by the Headteacher and published to students.",
+                    Type = "Success",
+                    TeacherId = teacherId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.Notifications.Add(teacherNotification);
             }
             
             await _context.SaveChangesAsync();
@@ -135,7 +131,7 @@ namespace School_Yathu.Controllers
             { 
                 message = $"Results for {subjectName} ({dto.Term} {dto.Year}) have been approved and published.",
                 studentCount = studentIds.Count,
-                teacherCount = teacherIds.Count(n => n.HasValue)
+                teacherCount = teacherIds.Count
             });
         }
         
