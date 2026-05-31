@@ -8,20 +8,21 @@ using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure port FIRST
+// 1. Configure the port FIRST – Render requires this
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 Console.WriteLine($"Configuring web host to listen on port: {port}");
 
+// 2. Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
+// 3. Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// JWT
+// 4. JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -36,7 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// CORS - Simplified for Render
+// 5. CORS – Allow all for initial deployment
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -60,19 +61,21 @@ app.MapGet("/health", () => Results.Ok(new {
     timestamp = DateTime.UtcNow 
 }));
 
-// Configure pipeline (NO UseHttpsRedirection)
+// 7. Configure pipeline – NO UseHttpsRedirection()
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// app.UseHttpsRedirection(); // ❌ IMPORTANT: Comment this out for Render!
+
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Database seeding
+// 8. Database seeding (this runs successfully, as seen in logs)
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -83,7 +86,7 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.EnsureCreated();
         Console.WriteLine("Database connection successful");
         
-        // Check if admin exists
+        // Check admin
         var adminExists = dbContext.Users.Any(u => u.Email == "ntcheu@gmail.com");
         Console.WriteLine($"Admin exists: {adminExists}");
         
@@ -105,7 +108,7 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("Default Admin created!");
         }
         
-        // Seed subjects if none exist
+        // Seed subjects
         if (!dbContext.Subjects.Any())
         {
             Console.WriteLine("Seeding subjects...");
@@ -125,5 +128,5 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-Console.WriteLine($"Application starting on port: {port}");
+Console.WriteLine($"Application starting successfully on port: {port}");
 app.Run();
