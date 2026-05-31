@@ -42,38 +42,6 @@ namespace School_Yathu.Controllers
             
             return Ok(teachers);
         }
-        [HttpPut("classes/{id}")]
-public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
-{
-    var classEntity = await _context.Classes.FindAsync(id);
-    if (classEntity == null)
-        return NotFound(new { message = "Class not found" });
-    
-    classEntity.Name = dto.Name;
-    classEntity.Stream = dto.Stream;
-    classEntity.TeacherId = dto.TeacherId;
-    classEntity.Capacity = dto.Capacity;
-    
-    await _context.SaveChangesAsync();
-    
-    return Ok(new { message = "Class updated successfully" });
-}
-/*[HttpPut("classes/{id}")]
-        public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
-        {
-            var classEntity = await _context.Classes.FindAsync(id);
-            if (classEntity == null)
-                return NotFound(new { message = "Class not found" });
-            
-            classEntity.Name = dto.Name;
-            classEntity.Stream = dto.Stream;
-            classEntity.TeacherId = dto.TeacherId;
-            classEntity.Capacity = dto.Capacity;
-            
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = "Class updated successfully" });
-        }*/
         
         [HttpPost("teachers")]
         public async Task<IActionResult> AddTeacher([FromBody] CreateTeacherDTO dto)
@@ -89,7 +57,7 @@ public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO d
                 PhoneNumber = dto.PhoneNumber,
                 EmployeeId = dto.EmployeeId,
                 Qualification = dto.Qualification,
-                HireDate = dto.HireDate ?? DateTime.UtcNow,
+                HireDate = dto.HireDate.HasValue ? DateTime.SpecifyKind(dto.HireDate.Value, DateTimeKind.Utc) : DateTime.UtcNow,
                 Role = "Teacher",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,
@@ -127,6 +95,7 @@ public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO d
                     c.Id,
                     c.Name,
                     c.Stream,
+                    c.TeacherId,
                     c.Capacity,
                     c.CreatedAt
                 })
@@ -142,6 +111,7 @@ public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO d
             {
                 Name = dto.Name,
                 Stream = dto.Stream,
+                TeacherId = dto.TeacherId,
                 Capacity = dto.Capacity,
                 CreatedAt = DateTime.UtcNow
             };
@@ -150,6 +120,23 @@ public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO d
             await _context.SaveChangesAsync();
             
             return Ok(new { message = "Class added successfully", classId = newClass.Id });
+        }
+        
+        [HttpPut("classes/{id}")]
+        public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
+        {
+            var classEntity = await _context.Classes.FindAsync(id);
+            if (classEntity == null)
+                return NotFound(new { message = "Class not found" });
+            
+            classEntity.Name = dto.Name;
+            classEntity.Stream = dto.Stream;
+            classEntity.TeacherId = dto.TeacherId;
+            classEntity.Capacity = dto.Capacity;
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Class updated successfully" });
         }
         
         [HttpDelete("classes/{id}")]
@@ -223,13 +210,17 @@ public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO d
         public async Task<IActionResult> GetClassAllocations(int classId)
         {
             var allocations = await _context.ClassSubjects
+                .Include(cs => cs.Subject)
+                .Include(cs => cs.Teacher)
                 .Where(cs => cs.ClassId == classId)
                 .Select(cs => new
                 {
                     cs.Id,
                     cs.ClassId,
                     cs.SubjectId,
+                    SubjectName = cs.Subject != null ? cs.Subject.Name : "Unknown",
                     cs.TeacherId,
+                    TeacherName = cs.Teacher != null ? cs.Teacher.Name : "Unknown",
                     cs.AssignedAt
                 })
                 .ToListAsync();

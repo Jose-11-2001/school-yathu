@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -32,11 +31,25 @@ namespace School_Yathu.Models
         public string? Remark { get; set; }
         public int Year { get; set; }
         public string Term { get; set; } = string.Empty;
+        
+        // Publication properties
+        public bool IsPublished { get; set; } = false;
+        public DateTime? PublishedAt { get; set; }
+        
+        // Approval properties - defined only ONCE
         public bool IsApproved { get; set; } = false;
         public DateTime? ApprovedAt { get; set; }
         public int? ApprovedByAdminId { get; set; }
+        
         public int? EnteredByTeacherId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        
+        // Navigation property for admin who approved
+        [ForeignKey("ApprovedByAdminId")]
+        public virtual User? ApprovedByAdmin { get; set; }
+        
+        [ForeignKey("EnteredByTeacherId")]
+        public virtual User? EnteredByTeacher { get; set; }
     }
 }

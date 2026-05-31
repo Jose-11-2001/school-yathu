@@ -57,9 +57,11 @@ namespace School_Yathu.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             
+            // Return the password so Admin can give it to the teacher
             return Ok(new { 
-                message = $"User registered successfully. Default password: {registerDto.Password}", 
+                message = "User registered successfully", 
                 email = user.Email,
+                password = registerDto.Password,
                 role = user.Role,
                 mustChangePassword = true
             });

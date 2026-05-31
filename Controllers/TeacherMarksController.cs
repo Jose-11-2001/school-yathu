@@ -20,25 +20,90 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get all students (simplified - teachers can see all students)
+        // Get students assigned to this teacher (based on subject allocations)
         [HttpGet("my-students")]
         public async Task<IActionResult> GetMyStudents()
         {
-            var students = await _context.Students
-                .Select(s => new
+            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var currentYear = DateTime.Now.Year;
+            
+            // Get students from StudentSubjects (subject allocations)
+            var students = await _context.StudentSubjects
+                .Include(ss => ss.Student)
+                .Include(ss => ss.Subject)
+                .Where(ss => ss.TeacherId == teacherId && 
+                             ss.IsActive && 
+                             ss.AcademicYear == currentYear)
+                .Select(ss => new
                 {
-                    s.Id,
-                    s.AdmissionNumber,
-                    s.FullName,
-                    s.Class,
-                    s.Stream
+                    Id = ss.Student != null ? ss.Student.Id : 0,
+                    StudentId = ss.Student != null ? ss.Student.Id : 0,
+                    AdmissionNumber = ss.Student != null ? ss.Student.AdmissionNumber : "",
+                    StudentName = ss.Student != null ? ss.Student.FullName : "",
+                    FullName = ss.Student != null ? ss.Student.FullName : "",
+                    Class = ss.Student != null ? ss.Student.Class : "",
+                    Stream = ss.Student != null ? ss.Student.Stream : "",
+                    className = ss.Student != null ? $"{ss.Student.Class} {ss.Student.Stream}" : "",
+                    SubjectId = ss.SubjectId,
+                    SubjectName = ss.Subject != null ? ss.Subject.Name : ""
                 })
+                .Distinct()
                 .ToListAsync();
+            
+            if (!students.Any())
+            {
+                // Fallback: Get students where teacher is class teacher
+                var classTeacherStudents = await _context.Students
+                    .Where(s => s.TeacherId == teacherId)
+                    .Select(s => new
+                    {
+                        Id = s.Id,
+                        StudentId = s.Id,
+                        AdmissionNumber = s.AdmissionNumber,
+                        StudentName = s.FullName,
+                        FullName = s.FullName,
+                        Class = s.Class,
+                        Stream = s.Stream,
+                        className = $"{s.Class} {s.Stream}",
+                        SubjectId = (int?)null,
+                        SubjectName = ""
+                    })
+                    .ToListAsync();
+                
+                return Ok(classTeacherStudents);
+            }
             
             return Ok(students);
         }
         
-        // Enter marks for a student
+        // Get marks for a specific student and subject
+        [HttpGet("student-marks/{studentId}/{subjectId}/{year}/{term}")]
+        public async Task<IActionResult> GetStudentMarks(int studentId, int subjectId, int year, string term)
+        {
+            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            
+            var marks = await _context.Marks
+                .FirstOrDefaultAsync(m => m.StudentId == studentId &&
+                                         m.SubjectId == subjectId &&
+                                         m.Year == year &&
+                                         m.Term == term &&
+                                         m.EnteredByTeacherId == teacherId);
+            
+            if (marks == null)
+                return NotFound(new { message = "No marks found for this student" });
+            
+            return Ok(new
+            {
+                marks.ContinuousTest1,
+                marks.ContinuousTest2,
+                marks.EndTermExam,
+                marks.TotalScore,
+                marks.Grade,
+                marks.Remark
+            });
+        }
+        
+        // Enter marks for a student with proper grade calculation based on class level
         [HttpPost("enter-marks")]
         public async Task<IActionResult> EnterMarks([FromBody] MarksEntryDTO dto)
         {
@@ -48,12 +113,15 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            // Calculate total (20% + 20% + 60%)
+            // Calculate overall percentage (20% + 20% + 60%)
             int ct1 = dto.ContinuousTest1 ?? 0;
             int ct2 = dto.ContinuousTest2 ?? 0;
             int endTerm = dto.EndTermExam ?? 0;
-            int totalScore = (int)((ct1 * 0.20) + (ct2 * 0.20) + (endTerm * 0.60));
-            var gradeInfo = CalculateGrade(totalScore);
+            double overallPercentage = (ct1 * 0.20) + (ct2 * 0.20) + (endTerm * 0.60);
+            int totalScoreInt = (int)Math.Round(overallPercentage);
+            
+            // Calculate grade based on class level
+            var gradeInfo = CalculateGradeBasedOnClass(overallPercentage, student.Class);
             
             // Check if marks already exist
             var existingMarks = await _context.Marks
@@ -67,13 +135,18 @@ namespace School_Yathu.Controllers
                 existingMarks.ContinuousTest1 = dto.ContinuousTest1;
                 existingMarks.ContinuousTest2 = dto.ContinuousTest2;
                 existingMarks.EndTermExam = dto.EndTermExam;
-                existingMarks.TotalScore = totalScore;
+                existingMarks.TotalScore = totalScoreInt;
                 existingMarks.Grade = gradeInfo.Grade;
                 existingMarks.Remark = gradeInfo.Remark;
                 existingMarks.UpdatedAt = DateTime.UtcNow;
                 
                 await _context.SaveChangesAsync();
-                return Ok(new { message = "Marks updated successfully", totalScore = totalScore, grade = gradeInfo.Grade });
+                return Ok(new { 
+                    message = "Marks updated successfully", 
+                    totalScore = overallPercentage.ToString("F2"), 
+                    grade = gradeInfo.Grade,
+                    displayScore = $"{overallPercentage:F2}%"
+                });
             }
             
             var marks = new Marks
@@ -85,7 +158,7 @@ namespace School_Yathu.Controllers
                 ContinuousTest1 = dto.ContinuousTest1,
                 ContinuousTest2 = dto.ContinuousTest2,
                 EndTermExam = dto.EndTermExam,
-                TotalScore = totalScore,
+                TotalScore = totalScoreInt,
                 Grade = gradeInfo.Grade,
                 Remark = gradeInfo.Remark,
                 EnteredByTeacherId = teacherId,
@@ -95,10 +168,15 @@ namespace School_Yathu.Controllers
             _context.Marks.Add(marks);
             await _context.SaveChangesAsync();
             
-            return Ok(new { message = "Marks saved successfully", totalScore = totalScore, grade = gradeInfo.Grade });
+            return Ok(new { 
+                message = "Marks saved successfully", 
+                totalScore = overallPercentage.ToString("F2"), 
+                grade = gradeInfo.Grade,
+                displayScore = $"{overallPercentage:F2}%"
+            });
         }
         
-        // Publish results (simplified)
+        // Publish results and notify students (without IsPublished field)
         [HttpPost("publish-results/{subjectId}/{year}/{term}")]
         public async Task<IActionResult> PublishResults(int subjectId, int year, string term)
         {
@@ -108,13 +186,34 @@ namespace School_Yathu.Controllers
             if (subject == null)
                 return BadRequest(new { message = "Subject not found" });
             
-            var studentIds = await _context.Marks
+            var marks = await _context.Marks
                 .Where(m => m.SubjectId == subjectId && m.Year == year && m.Term == term && m.TotalScore.HasValue)
-                .Select(m => m.StudentId)
-                .Distinct()
                 .ToListAsync();
             
-            return Ok(new { message = $"Results for {subject.Name} recorded. {studentIds.Count} students have marks." });
+            if (!marks.Any())
+                return BadRequest(new { message = "No marks found to publish" });
+            
+            // Send notifications to students
+            foreach (var mark in marks)
+            {
+                var studentNotification = new Notification
+                {
+                    Title = "📢 Results Published",
+                    Message = $"Your results for {subject.Name} ({term} {year}) have been published. Score: {mark.TotalScore}% - Grade: {mark.Grade}",
+                    Type = "ExamResults",
+                    StudentId = mark.StudentId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.Notifications.Add(studentNotification);
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { 
+                message = $"Results for {subject.Name} published successfully. {marks.Count} students have been notified.",
+                studentCount = marks.Count
+            });
         }
         
         // Get teacher's notifications
@@ -149,6 +248,25 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Notification marked as read" });
         }
         
+        [HttpPut("notifications/mark-all-read")]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            
+            var notifications = await _context.Notifications
+                .Where(n => n.TeacherId == teacherId && !n.IsRead)
+                .ToListAsync();
+            
+            foreach (var notification in notifications)
+            {
+                notification.IsRead = true;
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "All notifications marked as read" });
+        }
+        
         [HttpGet("notifications/unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
@@ -160,19 +278,31 @@ namespace School_Yathu.Controllers
             return Ok(new { unreadCount = count });
         }
         
-        private (string Grade, string Remark) CalculateGrade(int totalScore)
+        // Calculate grade based on class level (Form 1-2 vs Form 3-4)
+        private (string Grade, string Remark) CalculateGradeBasedOnClass(double percentage, string? className)
         {
-            if (totalScore >= 90) return ("A+", "Excellent!");
-            if (totalScore >= 80) return ("A", "Very Good!");
-            if (totalScore >= 75) return ("A-", "Good!");
-            if (totalScore >= 70) return ("B+", "Above Average");
-            if (totalScore >= 65) return ("B", "Satisfactory");
-            if (totalScore >= 60) return ("B-", "Average");
-            if (totalScore >= 55) return ("C+", "Fair");
-            if (totalScore >= 50) return ("C", "Pass");
-            if (totalScore >= 45) return ("C-", "Below Average");
-            if (totalScore >= 40) return ("D", "Needs Improvement");
-            return ("E", "Poor");
+            // For Form 1 & Form 2 - Letter Grades
+            if (className != null && (className.Contains("Form 1") || className.Contains("Form 2") || 
+                                       className.Contains("Form1") || className.Contains("Form2")))
+            {
+                if (percentage >= 80) return ("A", "Excellent");
+                if (percentage >= 65) return ("B", "Good");
+                if (percentage >= 50) return ("C", "Average");
+                if (percentage >= 45) return ("D", "Below Average");
+                if (percentage >= 40) return ("E", "Poor");
+                return ("F", "Fail");
+            }
+            
+            // For Form 3 & Form 4 - Points System
+            if (percentage >= 85) return ("1 point", "Excellent (85-100%)");
+            if (percentage >= 80) return ("2 points", "Very Good (80-84%)");
+            if (percentage >= 65) return ("3 points", "Good (65-79%)");
+            if (percentage >= 60) return ("4 points", "Above Average (60-64%)");
+            if (percentage >= 55) return ("5 points", "Average (55-59%)");
+            if (percentage >= 50) return ("6 points", "Satisfactory (50-54%)");
+            if (percentage >= 45) return ("7 points", "Below Average (45-49%)");
+            if (percentage >= 40) return ("8 points", "Poor (40-44%)");
+            return ("9 points", "Fail (0-39%)");
         }
     }
 }

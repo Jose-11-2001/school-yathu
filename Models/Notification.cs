@@ -14,7 +14,7 @@ namespace School_Yathu.Models
         [Required]
         public string Message { get; set; } = string.Empty;
         
-        public string Type { get; set; } = "Info"; // Info, Warning, Success, ExamResults
+        public string Type { get; set; } = "Info";
         
         public int? TeacherId { get; set; }
         

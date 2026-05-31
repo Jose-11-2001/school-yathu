@@ -12,9 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
+// Database - PostgreSQL (change to UseSqlServer if using SQL Server)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -62,14 +62,14 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.EnsureCreated();
     
-    // Check if admin exists
-    var adminExists = await dbContext.Users.AnyAsync(u => u.Email == "loyola@gmail.com");
+    // Check if admin exists (using async pattern with .GetAwaiter().GetResult() for sync context)
+    var adminExists = dbContext.Users.Any(u => u.Email == "ntcheu@gmail.com");
     
     if (!adminExists)
     {
         var admin = new User
         {
-            Email = "loyola@gmail.com",
+            Email = "ntcheu@gmail.com",
             Name = "Headteacher",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
             Role = "Admin",
@@ -79,10 +79,10 @@ using (var scope = app.Services.CreateScope())
         };
         
         dbContext.Users.Add(admin);
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         
         Console.WriteLine("✅ Default Admin created:");
-        Console.WriteLine("   Email: loyola@gmail.com");
+        Console.WriteLine("   Email: ntcheu@gmail.com");
         Console.WriteLine("   Password: admin123");
     }
     
@@ -105,7 +105,7 @@ using (var scope = app.Services.CreateScope())
             new Subject { Name = "Computer Studies", Code = "CSE101", MaxMarks = 100, CreatedAt = DateTime.UtcNow },
             new Subject { Name = "Religious Education", Code = "RE101", MaxMarks = 100, CreatedAt = DateTime.UtcNow }
         );
-        await dbContext.SaveChangesAsync();
+        dbContext.SaveChanges();
         Console.WriteLine("✅ Default subjects created.");
     }
 }

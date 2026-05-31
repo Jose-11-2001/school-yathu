@@ -1,32 +1,21 @@
-
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System;
 
 namespace School_Yathu.Models
 {
     public class StudentSubject
     {
-        [Key]
         public int Id { get; set; }
-        
-        [Required]
         public int StudentId { get; set; }
-        
-        [ForeignKey("StudentId")]
-        public Student? Student { get; set; }
-        
-        [Required]
         public int SubjectId { get; set; }
-        
-        [ForeignKey("SubjectId")]
-        public Subject? Subject { get; set; }
-        
-        public int? TeacherId { get; set; }
-        
-        [ForeignKey("TeacherId")]
-        public User? Teacher { get; set; }
-        
-        public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+        public int TeacherId { get; set; }
+        public int AcademicYear { get; set; }
+        public string Term { get; set; } = string.Empty;
+        public DateTime RegisteredAt { get; set; }
         public bool IsActive { get; set; } = true;
+
+        // Navigation properties
+        public virtual Student? Student { get; set; }
+        public virtual Subject? Subject { get; set; }
+        public virtual User? Teacher { get; set; }
     }
 }

@@ -1,3 +1,12 @@
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.csproj.AssemblyReference.cache
+C:\Projects\school-yathu\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.AssemblyInfoInputs.cache
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.AssemblyInfo.cs
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.csproj.CoreCompileInputs.cache
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.MvcApplicationPartsAssemblyInfo.cs
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.MvcApplicationPartsAssemblyInfo.cache
+C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.sourcelink.json
 C:\Projects\school-yathu\bin\Debug\net10.0\appsettings.Development.json
 C:\Projects\school-yathu\bin\Debug\net10.0\appsettings.json
 C:\Projects\school-yathu\bin\Debug\net10.0\package-lock.json
@@ -37,6 +46,8 @@ C:\Projects\school-yathu\bin\Debug\net10.0\Microsoft.OpenApi.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Microsoft.SqlServer.Server.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Microsoft.Win32.SystemEvents.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Mono.TextTemplating.dll
+C:\Projects\school-yathu\bin\Debug\net10.0\Npgsql.dll
+C:\Projects\school-yathu\bin\Debug\net10.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -118,15 +129,6 @@ C:\Projects\school-yathu\bin\Debug\net10.0\runtimes\win\lib\net6.0\System.Drawin
 C:\Projects\school-yathu\bin\Debug\net10.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Projects\school-yathu\bin\Debug\net10.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.csproj.AssemblyReference.cache
-C:\Projects\school-yathu\obj\Debug\net10.0\rpswa.dswa.cache.json
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.GeneratedMSBuildEditorConfig.editorconfig
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.AssemblyInfoInputs.cache
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.AssemblyInfo.cs
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.csproj.CoreCompileInputs.cache
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.MvcApplicationPartsAssemblyInfo.cs
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.MvcApplicationPartsAssemblyInfo.cache
-C:\Projects\school-yathu\obj\Debug\net10.0\school-yathu.sourcelink.json
 C:\Projects\school-yathu\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Projects\school-yathu\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Projects\school-yathu\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json

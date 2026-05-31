@@ -29,14 +29,16 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            // Get subjects from class subjects based on student's class name
+            // Get subjects allocated to student's class
             var availableSubjects = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
+                .Include(cs => cs.Teacher)
                 .Where(cs => cs.Class != null && cs.Class.Name == student.Class)
                 .Select(cs => new
                 {
                     cs.SubjectId,
                     SubjectName = cs.Subject != null ? cs.Subject.Name : "",
+                    TeacherName = cs.Teacher != null ? cs.Teacher.Name : "",
                     TeacherId = cs.TeacherId
                 })
                 .ToListAsync();
@@ -71,6 +73,7 @@ namespace School_Yathu.Controllers
             
             var classSubject = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
+                .Include(cs => cs.Teacher)
                 .FirstOrDefaultAsync(cs => cs.Class != null && cs.Class.Name == student.Class && cs.SubjectId == dto.SubjectId);
             
             if (classSubject == null)
@@ -88,7 +91,52 @@ namespace School_Yathu.Controllers
             _context.StudentSubjects.Add(registration);
             await _context.SaveChangesAsync();
             
-            return Ok(new { message = $"Successfully registered for the subject." });
+            // Send notification to teacher
+            var teacherNotification = new Notification
+            {
+                Title = "📚 New Student Registration",
+                Message = $"Student {student.FullName} (ID: {student.AdmissionNumber}) has registered for {classSubject.Subject.Name}.",
+                Type = "Success",
+                TeacherId = classSubject.TeacherId,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(teacherNotification);
+            
+            // Send notification to Admin
+            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
+            if (adminUser != null)
+            {
+                var adminNotification = new Notification
+                {
+                    Title = "📢 Student Subject Registration",
+                    Message = $"Student {student.FullName} has registered for {classSubject.Subject.Name} under teacher {classSubject.Teacher?.Name}.",
+                    Type = "Info",
+                    TeacherId = adminUser.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _context.Notifications.Add(adminNotification);
+            }
+            
+            // Send confirmation notification to student
+            var studentNotification = new Notification
+            {
+                Title = "✅ Registration Successful",
+                Message = $"You have successfully registered for {classSubject.Subject.Name}. Teacher {classSubject.Teacher?.Name} has been notified.",
+                Type = "Success",
+                StudentId = studentId,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(studentNotification);
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { 
+                message = $"Successfully registered for {classSubject.Subject.Name}. Teacher has been notified.",
+                teacherName = classSubject.Teacher?.Name
+            });
         }
         
         [HttpGet("my-subjects")]
@@ -99,11 +147,14 @@ namespace School_Yathu.Controllers
             
             var subjects = await _context.StudentSubjects
                 .Include(ss => ss.Subject)
+                .Include(ss => ss.Teacher)
                 .Where(ss => ss.StudentId == studentId && ss.IsActive)
                 .Select(ss => new
                 {
                     ss.SubjectId,
                     SubjectName = ss.Subject != null ? ss.Subject.Name : "",
+                    TeacherName = ss.Teacher != null ? ss.Teacher.Name : "",
+                    TeacherEmail = ss.Teacher != null ? ss.Teacher.Email : "",
                     ss.RegisteredAt
                 })
                 .ToListAsync();
@@ -125,6 +176,7 @@ namespace School_Yathu.Controllers
                     ss.StudentId,
                     StudentName = ss.Student != null ? ss.Student.FullName : "",
                     AdmissionNumber = ss.Student != null ? ss.Student.AdmissionNumber : "",
+                    ss.SubjectId,
                     ss.RegisteredAt
                 })
                 .Distinct()

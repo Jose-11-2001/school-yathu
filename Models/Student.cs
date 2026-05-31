@@ -23,5 +23,7 @@ namespace School_Yathu.Models
         
         // Navigation property
         public virtual ICollection<Marks>? Marks { get; set; }
+        // In Models/Student.cs - Add this property
+        public int? ClassId { get; set; }
     }
 }
