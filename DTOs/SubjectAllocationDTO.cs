@@ -24,7 +24,6 @@ namespace School_Yathu.DTOs
         public int TeacherId { get; set; }
     }
 
-    // Additional DTOs that might be needed for the allocation system
     public class StudentAllocationDTO
     {
         public int Id { get; set; }
@@ -51,13 +50,7 @@ namespace School_Yathu.DTOs
         public string Stream { get; set; } = string.Empty;
     }
 
-    public class AvailableSubjectDTO
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-        public bool IsAllocated { get; set; }
-    }
+    // REMOVED duplicate AvailableSubjectDTO - it's now in StudentRegistrationDTO.cs
 
     public class AllocationSummaryDTO
     {

@@ -123,13 +123,17 @@ namespace School_Yathu.Data
                       .OnDelete(DeleteBehavior.SetNull);
             });
             
-            // ClassSubject configuration
+            // ClassSubject configuration - FIXED (no duplicates)
             modelBuilder.Entity<ClassSubject>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 
+                entity.Property(e => e.AssignedAt)
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                
+                // Each relationship configured only ONCE
                 entity.HasOne(e => e.Class)
-                      .WithMany()
+                      .WithMany(c => c.ClassSubjects)
                       .HasForeignKey(e => e.ClassId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
@@ -143,6 +147,7 @@ namespace School_Yathu.Data
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
+                // Unique constraint: one subject per class
                 entity.HasIndex(e => new { e.ClassId, e.SubjectId })
                       .IsUnique();
             });
