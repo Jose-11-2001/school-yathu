@@ -21,7 +21,25 @@ namespace School_Yathu.Controllers
             _context = context;
         }
 
-        // Get available subjects by class and root
+        // GET: api/StudentRegistration/classes
+        [HttpGet("classes")]
+        public async Task<IActionResult> GetClasses()
+        {
+            var classes = await _context.Classes
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Stream
+                })
+                .OrderBy(c => c.Name)
+                .ThenBy(c => c.Stream)
+                .ToListAsync();
+
+            return Ok(classes);
+        }
+
+        // Get available subjects by class and stream
         [HttpGet("available-subjects/{className}/{stream}")]
         public async Task<IActionResult> GetAvailableSubjects(string className, string stream, [FromQuery] string? root)
         {
@@ -34,7 +52,7 @@ namespace School_Yathu.Controllers
             // Get subjects allocated to this class
             var classSubjects = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
-                .Where(cs => cs.ClassId == classEntity.Id)
+                .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                 .Select(cs => cs.Subject)
                 .ToListAsync();
 
@@ -43,37 +61,43 @@ namespace School_Yathu.Controllers
             
             // Define subject categories
             var humanitiesSubjects = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
-            var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science" };
+            var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
 
-            var availableSubjects = new ClassSubjectsDTO
+            // Get subject names from the database
+            var coreSubjects = classSubjects
+                .Where(s => coreSubjectNames.Contains(s.Name))
+                .Select(s => s.Name)
+                .ToList();
+
+            var humanities = classSubjects
+                .Where(s => humanitiesSubjects.Contains(s.Name))
+                .Select(s => s.Name)
+                .ToList();
+
+            var sciences = classSubjects
+                .Where(s => scienceSubjects.Contains(s.Name))
+                .Select(s => s.Name)
+                .ToList();
+
+            return Ok(new
             {
-                ClassName = className,
-                Stream = stream,
-                CoreSubjects = coreSubjectNames,
-                HumanitiesSubjects = humanitiesSubjects,
-                ScienceSubjects = scienceSubjects,
-                AvailableSubjects = classSubjects.Select(s => new AvailableSubjectDTO
+                coreSubjects = coreSubjects,
+                humanitiesSubjects = humanities,
+                scienceSubjects = sciences,
+                availableSubjects = classSubjects.Select(s => new
                 {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Code = s.Code ?? "",
-                    Category = GetSubjectCategory(s.Name, coreSubjectNames, humanitiesSubjects, scienceSubjects),
-                    IsRequired = coreSubjectNames.Contains(s.Name)
+                    s.Id,
+                    s.Name,
+                    s.Code
                 }).ToList()
-            };
-
-            return Ok(availableSubjects);
+            });
         }
 
         // Get all registered students
         [HttpGet("registered-students")]
-        public async Task<IActionResult> GetRegisteredStudents([FromQuery] string? className, [FromQuery] string? stream, [FromQuery] int? year)
+        public async Task<IActionResult> GetRegisteredStudents([FromQuery] string? className, [FromQuery] string? stream)
         {
-            var currentYear = year ?? DateTime.Now.Year;
-            
-            var query = _context.Students
-                .Include(s => s.Teacher)
-                .Where(s => s.CreatedAt.Year == currentYear);
+            var query = _context.Students.AsQueryable();
 
             if (!string.IsNullOrEmpty(className))
                 query = query.Where(s => s.Class == className);
@@ -89,7 +113,6 @@ namespace School_Yathu.Controllers
                     s.FullName,
                     s.Class,
                     s.Stream,
-                    TeacherName = s.Teacher != null ? s.Teacher.Name : "",
                     s.CreatedAt,
                     SubjectsCount = _context.StudentSubjects.Count(ss => ss.StudentId == s.Id && ss.IsActive)
                 })
@@ -153,7 +176,7 @@ namespace School_Yathu.Controllers
                     // For Form 3 & 4, get subjects based on root
                     var classSubjects = await _context.ClassSubjects
                         .Include(cs => cs.Subject)
-                        .Where(cs => cs.ClassId == classEntity.Id)
+                        .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                         .ToListAsync();
 
                     foreach (var classSubject in classSubjects)
@@ -180,7 +203,7 @@ namespace School_Yathu.Controllers
                 {
                     // For Form 1 & 2, allocate all subjects available for the class
                     var classSubjects = await _context.ClassSubjects
-                        .Where(cs => cs.ClassId == classEntity.Id)
+                        .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                         .Select(cs => cs.SubjectId)
                         .ToListAsync();
                     
@@ -202,7 +225,7 @@ namespace School_Yathu.Controllers
                 foreach (var subjectId in subjectIdsToAllocate.Distinct())
                 {
                     var classSubject = await _context.ClassSubjects
-                        .FirstOrDefaultAsync(cs => cs.ClassId == classEntity.Id && cs.SubjectId == subjectId);
+                        .FirstOrDefaultAsync(cs => cs.ClassId == classEntity.Id && cs.SubjectId == subjectId && cs.IsActive);
 
                     if (classSubject != null)
                     {
@@ -352,6 +375,20 @@ namespace School_Yathu.Controllers
             // Generate a random password
             var password = GenerateRandomPassword();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            // Check if user already exists
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == $"{student.AdmissionNumber.ToLower()}@student.school.com");
+
+            if (existingUser != null)
+            {
+                return new
+                {
+                    Email = existingUser.Email,
+                    Password = password,
+                    Message = "User account already exists. Password reset sent."
+                };
+            }
 
             // Create user account
             var user = new User

@@ -94,7 +94,7 @@ namespace School_Yathu.Controllers
             // Send notification to teacher
             var teacherNotification = new Notification
             {
-                Title = "📚 New Student Registration",
+                Title = "New Student Registration",
                 Message = $"Student {student.FullName} (ID: {student.AdmissionNumber}) has registered for {classSubject.Subject.Name}.",
                 Type = "Success",
                 TeacherId = classSubject.TeacherId,
@@ -109,7 +109,7 @@ namespace School_Yathu.Controllers
             {
                 var adminNotification = new Notification
                 {
-                    Title = "📢 Student Subject Registration",
+                    Title = "Student Subject Registration",
                     Message = $"Student {student.FullName} has registered for {classSubject.Subject.Name} under teacher {classSubject.Teacher?.Name}.",
                     Type = "Info",
                     TeacherId = adminUser.Id,
@@ -122,7 +122,7 @@ namespace School_Yathu.Controllers
             // Send confirmation notification to student
             var studentNotification = new Notification
             {
-                Title = "✅ Registration Successful",
+                Title = "Registration Successful",
                 Message = $"You have successfully registered for {classSubject.Subject.Name}. Teacher {classSubject.Teacher?.Name} has been notified.",
                 Type = "Success",
                 StudentId = studentId,
