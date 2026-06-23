@@ -127,6 +127,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"❌ Database error: {ex.Message}");
     }
 }
-
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 Console.WriteLine($"Application starting successfully on port: {port}");
 app.Run();

@@ -1,39 +1,35 @@
-using System;
+
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    public class Student
+    public class Notification
     {
         [Key]
         public int Id { get; set; }
         
         [Required]
-        [MaxLength(50)]
-        public string AdmissionNumber { get; set; } = string.Empty;
+        public string Message { get; set; }
         
-        [Required]
-        [MaxLength(200)]
-        public string FullName { get; set; } = string.Empty;
+        public string Type { get; set; } // result, deadline, enrollment, general
         
-        [MaxLength(20)]
-        public string Class { get; set; } = string.Empty;
+        public string Role { get; set; } // Student, Teacher, Admin, All
         
-        [MaxLength(20)]
-        public string Stream { get; set; } = string.Empty;
+        public int? UserId { get; set; } // Specific user
         
-        public int? TeacherId { get; set; }
-        public int? ClassId { get; set; }
+        public int? SpecificStudentId { get; set; }
         
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
+        public int? SpecificTeacherId { get; set; }
+        
+        public string Link { get; set; }
+        
+        public bool IsRead { get; set; }
+        
+        public DateTime CreatedAt { get; set; }
         
         // Navigation properties
-        [ForeignKey("TeacherId")]
-        public virtual User? Teacher { get; set; }
-        
-        [ForeignKey("ClassId")]
-        public virtual Class? ClassNavigation { get; set; }
+        public User User { get; set; }
+        public Student SpecificStudent { get; set; }
+        public Teacher SpecificTeacher { get; set; }
     }
 }
