@@ -1,17 +1,17 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.DTOs;
 using School_Yathu.Models;
-using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [SwaggerTag("Admin Management - Teachers, Classes, Students")]
     public class AdminController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -21,7 +21,13 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
+        /// <summary>
+        /// Get all teachers
+        /// </summary>
         [HttpGet("teachers")]
+        [SwaggerOperation(Summary = "Get all teachers", Description = "Retrieves a list of all teachers in the system")]
+        [SwaggerResponse(200, "List of teachers", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetTeachers()
         {
             var teachers = await _context.Users
@@ -43,7 +49,14 @@ namespace School_Yathu.Controllers
             return Ok(teachers);
         }
         
+        /// <summary>
+        /// Add a new teacher
+        /// </summary>
         [HttpPost("teachers")]
+        [SwaggerOperation(Summary = "Add a new teacher", Description = "Creates a new teacher account")]
+        [SwaggerResponse(200, "Teacher added successfully")]
+        [SwaggerResponse(400, "Invalid request or email already exists")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> AddTeacher([FromBody] CreateTeacherDTO dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
@@ -70,7 +83,14 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher added successfully", teacherId = teacher.Id });
         }
         
+        /// <summary>
+        /// Delete/Deactivate a teacher
+        /// </summary>
         [HttpDelete("teachers/{id}")]
+        [SwaggerOperation(Summary = "Delete a teacher", Description = "Deactivates a teacher account")]
+        [SwaggerResponse(200, "Teacher deactivated successfully")]
+        [SwaggerResponse(404, "Teacher not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> DeleteTeacher(int id)
         {
             var teacher = await _context.Users.FindAsync(id);
@@ -86,7 +106,13 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher deactivated successfully" });
         }
         
+        /// <summary>
+        /// Get all classes
+        /// </summary>
         [HttpGet("classes")]
+        [SwaggerOperation(Summary = "Get all classes", Description = "Retrieves a list of all classes with their streams")]
+        [SwaggerResponse(200, "List of classes", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetClasses()
         {
             var classes = await _context.Classes
@@ -104,7 +130,14 @@ namespace School_Yathu.Controllers
             return Ok(classes);
         }
         
+        /// <summary>
+        /// Add a new class
+        /// </summary>
         [HttpPost("classes")]
+        [SwaggerOperation(Summary = "Add a new class", Description = "Creates a new class with optional stream")]
+        [SwaggerResponse(200, "Class added successfully")]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> AddClass([FromBody] CreateClassDTO dto)
         {
             var newClass = new Class
@@ -122,7 +155,14 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class added successfully", classId = newClass.Id });
         }
         
+        /// <summary>
+        /// Update an existing class
+        /// </summary>
         [HttpPut("classes/{id}")]
+        [SwaggerOperation(Summary = "Update a class", Description = "Updates an existing class information")]
+        [SwaggerResponse(200, "Class updated successfully")]
+        [SwaggerResponse(404, "Class not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
         {
             var classEntity = await _context.Classes.FindAsync(id);
@@ -139,7 +179,14 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class updated successfully" });
         }
         
+        /// <summary>
+        /// Delete a class
+        /// </summary>
         [HttpDelete("classes/{id}")]
+        [SwaggerOperation(Summary = "Delete a class", Description = "Permanently deletes a class")]
+        [SwaggerResponse(200, "Class deleted successfully")]
+        [SwaggerResponse(404, "Class not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> DeleteClass(int id)
         {
             var classEntity = await _context.Classes.FindAsync(id);
@@ -152,7 +199,13 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class deleted successfully" });
         }
         
+        /// <summary>
+        /// Get all students
+        /// </summary>
         [HttpGet("all-students")]
+        [SwaggerOperation(Summary = "Get all students", Description = "Retrieves a list of all students")]
+        [SwaggerResponse(200, "List of students", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetAllStudents()
         {
             var students = await _context.Students
@@ -170,7 +223,14 @@ namespace School_Yathu.Controllers
             return Ok(students);
         }
         
+        /// <summary>
+        /// Delete a student
+        /// </summary>
         [HttpDelete("students/{id}")]
+        [SwaggerOperation(Summary = "Delete a student", Description = "Permanently deletes a student")]
+        [SwaggerResponse(200, "Student deleted successfully")]
+        [SwaggerResponse(404, "Student not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> DeleteStudent(int id)
         {
             var student = await _context.Students.FindAsync(id);
@@ -183,7 +243,14 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Student deleted successfully" });
         }
         
+        /// <summary>
+        /// Allocate a teacher to a subject
+        /// </summary>
         [HttpPost("allocate-teacher")]
+        [SwaggerOperation(Summary = "Allocate teacher to subject", Description = "Assigns a teacher to teach a subject in a class")]
+        [SwaggerResponse(200, "Teacher allocated successfully")]
+        [SwaggerResponse(400, "Invalid request or teacher already allocated")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> AllocateTeacher([FromBody] AllocateTeacherDTO dto)
         {
             var exists = await _context.ClassSubjects
@@ -206,7 +273,13 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher allocated successfully" });
         }
         
+        /// <summary>
+        /// Get class allocations
+        /// </summary>
         [HttpGet("class-allocations/{classId}")]
+        [SwaggerOperation(Summary = "Get class allocations", Description = "Retrieves all subject allocations for a specific class")]
+        [SwaggerResponse(200, "List of allocations", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetClassAllocations(int classId)
         {
             var allocations = await _context.ClassSubjects
@@ -228,7 +301,14 @@ namespace School_Yathu.Controllers
             return Ok(allocations);
         }
         
+        /// <summary>
+        /// Remove an allocation
+        /// </summary>
         [HttpDelete("allocations/{id}")]
+        [SwaggerOperation(Summary = "Remove an allocation", Description = "Removes a teacher allocation from a subject")]
+        [SwaggerResponse(200, "Allocation removed successfully")]
+        [SwaggerResponse(404, "Allocation not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> RemoveAllocation(int id)
         {
             var allocation = await _context.ClassSubjects.FindAsync(id);

@@ -1,35 +1,41 @@
-
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    public class Notification
+    public class Student
     {
         [Key]
         public int Id { get; set; }
         
         [Required]
-        public string Message { get; set; }
+        public string AdmissionNumber { get; set; } = string.Empty;
         
-        public string Type { get; set; } // result, deadline, enrollment, general
+        [Required]
+        public string FullName { get; set; } = string.Empty;
         
-        public string Role { get; set; } // Student, Teacher, Admin, All
+        public string? Class { get; set; }
         
-        public int? UserId { get; set; } // Specific user
+        public string? Stream { get; set; }
         
-        public int? SpecificStudentId { get; set; }
+        public int? TeacherId { get; set; }
         
-        public int? SpecificTeacherId { get; set; }
-        
-        public string Link { get; set; }
-        
-        public bool IsRead { get; set; }
+        public int? ClassId { get; set; }
         
         public DateTime CreatedAt { get; set; }
         
-        // Navigation properties
-        public User User { get; set; }
-        public Student SpecificStudent { get; set; }
-        public Teacher SpecificTeacher { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        
+        [ForeignKey("TeacherId")]
+        public User? Teacher { get; set; }
+        
+        [ForeignKey("ClassId")]
+        public Class? ClassEntity { get; set; }
+        
+        public ICollection<StudentSubject> StudentSubjects { get; set; } = new List<StudentSubject>();
+        
+        public ICollection<Marks> Marks { get; set; } = new List<Marks>();
+        
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

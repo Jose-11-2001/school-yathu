@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.OpenApi.Models;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using School_Yathu.Services;
 using BCrypt.Net;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,14 +18,69 @@ Console.WriteLine($"Configuring web host to listen on port: {port}");
 
 // 2. Add services
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// 3. Database
+// 3. Configure Swagger with XML documentation
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "School Yathu API",
+        Version = "v1",
+        Description = "API for School Yathu - Student Management System",
+        Contact = new OpenApiContact
+        {
+            Name = "School Yathu",
+            Email = "support@school-yathu.com",
+            Url = new Uri("https://school-yathu.onrender.com")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        },
+        TermsOfService = new Uri("https://school-yathu.onrender.com/terms")
+    });
+
+    // Enable XML comments for Swagger
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+
+    // Add JWT Authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// 4. Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 4. JWT Authentication
+// 5. JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -38,7 +95,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// 5. CORS – Allow all for initial deployment
+// 6. CORS – Allow all for initial deployment
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -49,8 +106,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+// 7. Email services
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 var app = builder.Build();
 
+// 8. Root endpoints
 app.MapGet("/", () => Results.Ok(new { 
     message = "School Yathu API is running!", 
     status = "healthy",
@@ -62,11 +124,17 @@ app.MapGet("/health", () => Results.Ok(new {
     timestamp = DateTime.UtcNow 
 }));
 
-// 7. Configure pipeline – NO UseHttpsRedirection()
-if (app.Environment.IsDevelopment())
+// 9. Configure pipeline
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "School Yathu API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "School Yathu API Documentation";
+        c.EnableTryItOutByDefault();
+    });
 }
 
 // app.UseHttpsRedirection(); // ❌ IMPORTANT: Comment this out for Render!
@@ -76,7 +144,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// 8. Database seeding (this runs successfully, as seen in logs)
+// 10. Database seeding
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -128,18 +196,6 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"❌ Database error: {ex.Message}");
     }
 }
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 Console.WriteLine($"Application starting successfully on port: {port}");
 app.Run();
-
-internal class EmailSettings
-{
-    public string? SmtpServer { get; set; }
-    public int Port { get; set; }
-    public string? Username { get; set; }
-    public string? Password { get; set; }
-    public bool UseSsl { get; set; }
-    public string? FromEmail { get; set; }
-}

@@ -21,6 +21,8 @@ namespace School_Yathu.Data
         public DbSet<ExamResult> ExamResults { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<StudentSubject> StudentSubjects { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<TeacherSubjectAllocation> TeacherSubjectAllocations { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

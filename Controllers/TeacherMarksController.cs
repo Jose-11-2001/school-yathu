@@ -5,12 +5,14 @@ using School_Yathu.Data;
 using School_Yathu.DTOs;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Teacher")]
+    [SwaggerTag("Teacher Marks - Manage student marks")]
     public class TeacherMarksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -20,14 +22,18 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get students assigned to this teacher (based on subject allocations)
+        /// <summary>
+        /// Get students assigned to the teacher
+        /// </summary>
         [HttpGet("my-students")]
+        [SwaggerOperation(Summary = "Get my students", Description = "Retrieves all students assigned to the logged-in teacher")]
+        [SwaggerResponse(200, "List of students", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Teacher role required")]
         public async Task<IActionResult> GetMyStudents()
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var currentYear = DateTime.Now.Year;
             
-            // Get students from StudentSubjects (subject allocations)
             var students = await _context.StudentSubjects
                 .Include(ss => ss.Student)
                 .Include(ss => ss.Subject)
@@ -52,7 +58,6 @@ namespace School_Yathu.Controllers
             
             if (!students.Any())
             {
-                // Fallback: Get students where teacher is class teacher
                 var classTeacherStudents = await _context.Students
                     .Where(s => s.TeacherId == teacherId)
                     .Select(s => new
@@ -76,8 +81,14 @@ namespace School_Yathu.Controllers
             return Ok(students);
         }
         
-        // Get marks for a specific student and subject
+        /// <summary>
+        /// Get student marks for a specific subject
+        /// </summary>
         [HttpGet("student-marks/{studentId}/{subjectId}/{year}/{term}")]
+        [SwaggerOperation(Summary = "Get student marks", Description = "Retrieves marks for a specific student and subject")]
+        [SwaggerResponse(200, "Student marks", typeof(object))]
+        [SwaggerResponse(404, "No marks found")]
+        [SwaggerResponse(401, "Unauthorized - Teacher role required")]
         public async Task<IActionResult> GetStudentMarks(int studentId, int subjectId, int year, string term)
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -103,8 +114,14 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Enter marks for a student with proper grade calculation based on class level
+        /// <summary>
+        /// Enter marks for a student
+        /// </summary>
         [HttpPost("enter-marks")]
+        [SwaggerOperation(Summary = "Enter marks", Description = "Enters marks for a student with grade calculation")]
+        [SwaggerResponse(200, "Marks saved successfully", typeof(object))]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(401, "Unauthorized - Teacher role required")]
         public async Task<IActionResult> EnterMarks([FromBody] MarksEntryDTO dto)
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -113,17 +130,14 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            // Calculate overall percentage (20% + 20% + 60%)
             int ct1 = dto.ContinuousTest1 ?? 0;
             int ct2 = dto.ContinuousTest2 ?? 0;
             int endTerm = dto.EndTermExam ?? 0;
             double overallPercentage = (ct1 * 0.20) + (ct2 * 0.20) + (endTerm * 0.60);
             int totalScoreInt = (int)Math.Round(overallPercentage);
             
-            // Calculate grade based on class level
             var gradeInfo = CalculateGradeBasedOnClass(overallPercentage, student.Class);
             
-            // Check if marks already exist
             var existingMarks = await _context.Marks
                 .FirstOrDefaultAsync(m => m.StudentId == dto.StudentId &&
                                          m.SubjectId == dto.SubjectId &&
@@ -176,8 +190,14 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Publish results and notify students (without IsPublished field)
+        /// <summary>
+        /// Publish results and notify students
+        /// </summary>
         [HttpPost("publish-results/{subjectId}/{year}/{term}")]
+        [SwaggerOperation(Summary = "Publish results", Description = "Publishes results and notifies students")]
+        [SwaggerResponse(200, "Results published successfully", typeof(object))]
+        [SwaggerResponse(400, "No marks found to publish")]
+        [SwaggerResponse(401, "Unauthorized - Teacher role required")]
         public async Task<IActionResult> PublishResults(int subjectId, int year, string term)
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -193,7 +213,6 @@ namespace School_Yathu.Controllers
             if (!marks.Any())
                 return BadRequest(new { message = "No marks found to publish" });
             
-            // Send notifications to students
             foreach (var mark in marks)
             {
                 var studentNotification = new Notification
@@ -216,72 +235,8 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Get teacher's notifications
-        [HttpGet("notifications")]
-        public async Task<IActionResult> GetNotifications()
-        {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var notifications = await _context.Notifications
-                .Where(n => n.TeacherId == teacherId)
-                .OrderByDescending(n => n.CreatedAt)
-                .Take(50)
-                .ToListAsync();
-            
-            return Ok(notifications);
-        }
-        
-        [HttpPut("notifications/{id}/read")]
-        public async Task<IActionResult> MarkAsRead(int id)
-        {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var notification = await _context.Notifications
-                .FirstOrDefaultAsync(n => n.Id == id && n.TeacherId == teacherId);
-            
-            if (notification == null)
-                return NotFound();
-            
-            notification.IsRead = true;
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = "Notification marked as read" });
-        }
-        
-        [HttpPut("notifications/mark-all-read")]
-        public async Task<IActionResult> MarkAllAsRead()
-        {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var notifications = await _context.Notifications
-                .Where(n => n.TeacherId == teacherId && !n.IsRead)
-                .ToListAsync();
-            
-            foreach (var notification in notifications)
-            {
-                notification.IsRead = true;
-            }
-            
-            await _context.SaveChangesAsync();
-            
-            return Ok(new { message = "All notifications marked as read" });
-        }
-        
-        [HttpGet("notifications/unread-count")]
-        public async Task<IActionResult> GetUnreadCount()
-        {
-            var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            
-            var count = await _context.Notifications
-                .CountAsync(n => n.TeacherId == teacherId && !n.IsRead);
-            
-            return Ok(new { unreadCount = count });
-        }
-        
-        // Calculate grade based on class level (Form 1-2 vs Form 3-4)
         private (string Grade, string Remark) CalculateGradeBasedOnClass(double percentage, string? className)
         {
-            // For Form 1 & Form 2 - Letter Grades
             if (className != null && (className.Contains("Form 1") || className.Contains("Form 2") || 
                                        className.Contains("Form1") || className.Contains("Form2")))
             {
@@ -293,7 +248,6 @@ namespace School_Yathu.Controllers
                 return ("F", "Fail");
             }
             
-            // For Form 3 & Form 4 - Points System
             if (percentage >= 85) return ("1 point", "Excellent (85-100%)");
             if (percentage >= 80) return ("2 points", "Very Good (80-84%)");
             if (percentage >= 65) return ("3 points", "Good (65-79%)");

@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.DTOs;
 using School_Yathu.Models;
-using System.Security.Cryptography;
-using System.Text;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [SwaggerTag("Student Registration - Register new students with subject allocations")]
     public class StudentRegistrationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -21,8 +21,13 @@ namespace School_Yathu.Controllers
             _context = context;
         }
 
-        // GET: api/StudentRegistration/classes
+        /// <summary>
+        /// Get all classes for registration
+        /// </summary>
         [HttpGet("classes")]
+        [SwaggerOperation(Summary = "Get all classes", Description = "Retrieves a list of all classes for student registration")]
+        [SwaggerResponse(200, "List of classes", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetClasses()
         {
             var classes = await _context.Classes
@@ -39,8 +44,14 @@ namespace School_Yathu.Controllers
             return Ok(classes);
         }
 
-        // Get available subjects by class and stream
+        /// <summary>
+        /// Get available subjects by class and stream
+        /// </summary>
         [HttpGet("available-subjects/{className}/{stream}")]
+        [SwaggerOperation(Summary = "Get available subjects", Description = "Retrieves subjects available for a specific class and stream")]
+        [SwaggerResponse(200, "Available subjects", typeof(object))]
+        [SwaggerResponse(404, "Class not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetAvailableSubjects(string className, string stream, [FromQuery] string? root)
         {
             var classEntity = await _context.Classes
@@ -49,21 +60,16 @@ namespace School_Yathu.Controllers
             if (classEntity == null)
                 return NotFound(new { message = "Class not found" });
 
-            // Get subjects allocated to this class
             var classSubjects = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
                 .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                 .Select(cs => cs.Subject)
                 .ToListAsync();
 
-            // Define core subjects (everyone takes these)
             var coreSubjectNames = new List<string> { "Mathematics", "English", "Chichewa" };
-            
-            // Define subject categories
             var humanitiesSubjects = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
             var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
 
-            // Get subject names from the database
             var coreSubjects = classSubjects
                 .Where(s => coreSubjectNames.Contains(s.Name))
                 .Select(s => s.Name)
@@ -93,8 +99,13 @@ namespace School_Yathu.Controllers
             });
         }
 
-        // Get all registered students
+        /// <summary>
+        /// Get all registered students
+        /// </summary>
         [HttpGet("registered-students")]
+        [SwaggerOperation(Summary = "Get registered students", Description = "Retrieves a list of all registered students")]
+        [SwaggerResponse(200, "List of students", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetRegisteredStudents([FromQuery] string? className, [FromQuery] string? stream)
         {
             var query = _context.Students.AsQueryable();
@@ -124,22 +135,26 @@ namespace School_Yathu.Controllers
             return Ok(students);
         }
 
-        // Register a new student with subjects
+        /// <summary>
+        /// Register a new student with subjects
+        /// </summary>
         [HttpPost("register")]
+        [SwaggerOperation(Summary = "Register a new student", Description = "Registers a new student with subject allocations")]
+        [SwaggerResponse(200, "Student registered successfully", typeof(object))]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> RegisterStudent([FromBody] StudentRegistrationDTO dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             
             try
             {
-                // Check if student already exists
                 var existingStudent = await _context.Students
                     .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
                 
                 if (existingStudent != null)
                     return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
 
-                // Validate root for Form 3 & 4
                 bool isUpperForm = dto.Class.Contains("Form 3") || dto.Class.Contains("Form 4") ||
                                    dto.Class.Contains("Form3") || dto.Class.Contains("Form4");
                 
@@ -149,11 +164,9 @@ namespace School_Yathu.Controllers
                 if (!isUpperForm && !string.IsNullOrEmpty(dto.Root))
                     return BadRequest(new { message = "Root selection is only for Form 3 and Form 4 students" });
 
-                // Find the class
                 var classEntity = await _context.Classes
                     .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
 
-                // Create the student
                 var student = new Student
                 {
                     AdmissionNumber = dto.AdmissionNumber,
@@ -168,12 +181,10 @@ namespace School_Yathu.Controllers
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
 
-                // Determine which subjects to allocate
                 var subjectIdsToAllocate = new List<int>();
 
                 if (isUpperForm)
                 {
-                    // For Form 3 & 4, get subjects based on root
                     var classSubjects = await _context.ClassSubjects
                         .Include(cs => cs.Subject)
                         .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
@@ -183,12 +194,10 @@ namespace School_Yathu.Controllers
                     {
                         var subjectName = classSubject.Subject?.Name ?? "";
                         
-                        // Core subjects - always include
                         if (IsCoreSubject(subjectName))
                         {
                             subjectIdsToAllocate.Add(classSubject.SubjectId);
                         }
-                        // Root-specific subjects
                         else if (dto.Root == "Humanities" && IsHumanitiesSubject(subjectName))
                         {
                             subjectIdsToAllocate.Add(classSubject.SubjectId);
@@ -201,7 +210,6 @@ namespace School_Yathu.Controllers
                 }
                 else
                 {
-                    // For Form 1 & 2, allocate all subjects available for the class
                     var classSubjects = await _context.ClassSubjects
                         .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                         .Select(cs => cs.SubjectId)
@@ -210,7 +218,6 @@ namespace School_Yathu.Controllers
                     subjectIdsToAllocate.AddRange(classSubjects);
                 }
 
-                // Also add any manually selected subjects
                 if (dto.SelectedSubjectIds != null && dto.SelectedSubjectIds.Any())
                 {
                     foreach (var subjectId in dto.SelectedSubjectIds)
@@ -220,7 +227,6 @@ namespace School_Yathu.Controllers
                     }
                 }
 
-                // Create subject allocations
                 var currentYear = DateTime.Now.Year;
                 foreach (var subjectId in subjectIdsToAllocate.Distinct())
                 {
@@ -246,7 +252,6 @@ namespace School_Yathu.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Create user account for student
                 var userAccount = await CreateStudentUserAccount(student);
                 
                 return Ok(new
@@ -272,8 +277,14 @@ namespace School_Yathu.Controllers
             }
         }
 
-        // Get student details for editing
+        /// <summary>
+        /// Get student details for editing
+        /// </summary>
         [HttpGet("student-details/{studentId}")]
+        [SwaggerOperation(Summary = "Get student details", Description = "Retrieves student details for editing")]
+        [SwaggerResponse(200, "Student details", typeof(object))]
+        [SwaggerResponse(404, "Student not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetStudentDetails(int studentId)
         {
             var student = await _context.Students.FindAsync(studentId);
@@ -302,22 +313,26 @@ namespace School_Yathu.Controllers
             });
         }
 
-        // Update student information
+        /// <summary>
+        /// Update student information
+        /// </summary>
         [HttpPut("update/{studentId}")]
+        [SwaggerOperation(Summary = "Update student", Description = "Updates student information")]
+        [SwaggerResponse(200, "Student updated successfully")]
+        [SwaggerResponse(404, "Student not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> UpdateStudent(int studentId, [FromBody] StudentRegistrationDTO dto)
         {
             var student = await _context.Students.FindAsync(studentId);
             if (student == null)
                 return NotFound(new { message = "Student not found" });
 
-            // Update basic info
             student.FullName = dto.FullName;
             student.Class = dto.Class;
             student.Stream = dto.Stream;
             student.TeacherId = dto.TeacherId;
             student.UpdatedAt = DateTime.Now;
 
-            // Update class reference
             var classEntity = await _context.Classes
                 .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
             student.ClassId = classEntity?.Id;
@@ -325,15 +340,6 @@ namespace School_Yathu.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Student updated successfully" });
-        }
-
-        // Helper methods
-        private string GetSubjectCategory(string subjectName, List<string> core, List<string> humanities, List<string> sciences)
-        {
-            if (core.Contains(subjectName)) return "Core";
-            if (humanities.Contains(subjectName)) return "Humanities";
-            if (sciences.Contains(subjectName)) return "Sciences";
-            return "Elective";
         }
 
         private bool IsCoreSubject(string subjectName)
@@ -372,11 +378,9 @@ namespace School_Yathu.Controllers
 
         private async Task<object> CreateStudentUserAccount(Student student)
         {
-            // Generate a random password
             var password = GenerateRandomPassword();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            // Check if user already exists
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == $"{student.AdmissionNumber.ToLower()}@student.school.com");
 
@@ -390,7 +394,6 @@ namespace School_Yathu.Controllers
                 };
             }
 
-            // Create user account
             var user = new User
             {
                 Email = $"{student.AdmissionNumber.ToLower()}@student.school.com",

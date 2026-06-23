@@ -1,15 +1,16 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [SwaggerTag("Student Subjects - Manage student subject registrations")]
     public class StudentSubjectController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,8 +20,14 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
+        /// <summary>
+        /// Get available subjects for the logged-in student
+        /// </summary>
         [HttpGet("available-subjects")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Get available subjects", Description = "Retrieves subjects available for the logged-in student to register")]
+        [SwaggerResponse(200, "Available and registered subjects", typeof(object))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetAvailableSubjects()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -29,7 +36,6 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            // Get subjects allocated to student's class
             var availableSubjects = await _context.ClassSubjects
                 .Include(cs => cs.Subject)
                 .Include(cs => cs.Teacher)
@@ -55,8 +61,15 @@ namespace School_Yathu.Controllers
             });
         }
         
+        /// <summary>
+        /// Register for a subject
+        /// </summary>
         [HttpPost("register")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Register for a subject", Description = "Registers the logged-in student for a specific subject")]
+        [SwaggerResponse(200, "Registration successful", typeof(object))]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> RegisterSubject([FromBody] RegisterSubjectDTO dto)
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -139,8 +152,14 @@ namespace School_Yathu.Controllers
             });
         }
         
+        /// <summary>
+        /// Get subjects registered by the logged-in student
+        /// </summary>
         [HttpGet("my-subjects")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Get my registered subjects", Description = "Retrieves subjects registered by the logged-in student")]
+        [SwaggerResponse(200, "List of registered subjects", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetMySubjects()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -162,8 +181,14 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
         
+        /// <summary>
+        /// Get students assigned to the logged-in teacher
+        /// </summary>
         [HttpGet("teacher-students")]
         [Authorize(Roles = "Teacher")]
+        [SwaggerOperation(Summary = "Get teacher's students", Description = "Retrieves students assigned to the logged-in teacher")]
+        [SwaggerResponse(200, "List of students", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetTeacherStudents()
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

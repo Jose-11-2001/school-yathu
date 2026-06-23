@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Teacher,Admin")]
+    [SwaggerTag("Teacher Subjects - Manage teacher subject assignments")]
     public class TeacherSubjectsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,8 +21,13 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get subjects assigned to current teacher with class information
+        /// <summary>
+        /// Get subjects assigned to the current teacher
+        /// </summary>
         [HttpGet("my-subjects")]
+        [SwaggerOperation(Summary = "Get my subjects", Description = "Retrieves all subjects assigned to the logged-in teacher")]
+        [SwaggerResponse(200, "List of subjects", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetMySubjects()
         {
             var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -44,7 +51,6 @@ namespace School_Yathu.Controllers
             
             if (!subjects.Any())
             {
-                // Fallback to TeacherSubjects table
                 var fallbackSubjects = await _context.TeacherSubjects
                     .Include(ts => ts.Subject)
                     .Where(ts => ts.TeacherId == teacherId)
@@ -66,9 +72,15 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
         
-        // Assign subject to teacher (Admin only)
+        /// <summary>
+        /// Assign subject to teacher (Admin only)
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPost("assign")]
+        [SwaggerOperation(Summary = "Assign subject to teacher", Description = "Assigns a subject to a teacher (Admin only)")]
+        [SwaggerResponse(200, "Subject assigned successfully")]
+        [SwaggerResponse(400, "Subject already assigned to this teacher")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> AssignSubjectToTeacher([FromBody] AssignSubjectDTO dto)
         {
             var exists = await _context.TeacherSubjects
@@ -90,9 +102,14 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Subject assigned successfully" });
         }
         
-        // Get all teacher-subject assignments (Admin only)
+        /// <summary>
+        /// Get all teacher-subject assignments (Admin only)
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpGet("all-assignments")]
+        [SwaggerOperation(Summary = "Get all assignments", Description = "Retrieves all teacher-subject assignments (Admin only)")]
+        [SwaggerResponse(200, "List of assignments", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetAllAssignments()
         {
             var assignments = await _context.TeacherSubjects
@@ -111,9 +128,15 @@ namespace School_Yathu.Controllers
             return Ok(assignments);
         }
         
-        // Remove subject from teacher (Admin only)
+        /// <summary>
+        /// Remove subject from teacher (Admin only)
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpDelete("remove/{id}")]
+        [SwaggerOperation(Summary = "Remove assignment", Description = "Removes a subject assignment from a teacher (Admin only)")]
+        [SwaggerResponse(200, "Assignment removed successfully")]
+        [SwaggerResponse(404, "Assignment not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> RemoveAssignment(int id)
         {
             var assignment = await _context.TeacherSubjects.FindAsync(id);

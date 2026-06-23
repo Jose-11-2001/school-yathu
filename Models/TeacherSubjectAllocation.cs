@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    public class ClassSubject
+    public class TeacherSubjectAllocation
     {
         [Key]
         public int Id { get; set; }
@@ -17,18 +17,17 @@ namespace School_Yathu.Models
         [Required]
         public int TeacherId { get; set; }
         
-        public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
         
-        public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
         
-        // Navigation properties
         [ForeignKey("ClassId")]
-        public virtual Class? Class { get; set; }
+        public Class? Class { get; set; }
         
         [ForeignKey("SubjectId")]
-        public virtual Subject? Subject { get; set; }
+        public Subject? Subject { get; set; }
         
         [ForeignKey("TeacherId")]
-        public virtual User? Teacher { get; set; }
+        public User? Teacher { get; set; }
     }
 }

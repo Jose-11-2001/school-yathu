@@ -1,10 +1,8 @@
-// Services/EmailService.cs
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using Microsoft.Extensions.Options;
 using School_Yathu.DTOs;
-using School_Yathu.Settings;
 
 namespace School_Yathu.Services
 {
@@ -24,7 +22,9 @@ namespace School_Yathu.Services
             try
             {
                 var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(_emailSettings.FromName, _emailSettings.FromEmail));
+                message.From.Add(new MailboxAddress(
+                    _emailSettings.FromName ?? "Maranatha Secondary School", 
+                    _emailSettings.FromEmail ?? "noreply@maranatha.ac.mw"));
                 message.To.Add(new MailboxAddress("", to));
                 message.Subject = subject;
 
@@ -37,9 +37,13 @@ namespace School_Yathu.Services
                 message.Body = bodyBuilder.ToMessageBody();
 
                 using var client = new SmtpClient();
-                await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, 
+                await client.ConnectAsync(
+                    _emailSettings.SmtpServer ?? "smtp.gmail.com", 
+                    _emailSettings.SmtpPort > 0 ? _emailSettings.SmtpPort : 587, 
                     _emailSettings.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
-                await client.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+                await client.AuthenticateAsync(
+                    _emailSettings.SmtpUsername ?? "", 
+                    _emailSettings.SmtpPassword ?? "");
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
@@ -172,9 +176,13 @@ namespace School_Yathu.Services
             return await SendEmailAsync(to, subject, body, true);
         }
 
-        public async Task<bool> SendWelcomeEmailAsync(string to, string name, string role, string admissionNumber = null)
+        public async Task<bool> SendWelcomeEmailAsync(string to, string name, string role, string? admissionNumber = null)
         {
             var subject = $"Welcome to Maranatha Secondary School - {role} Account Created";
+            
+            var admissionHtml = string.IsNullOrEmpty(admissionNumber) 
+                ? "" 
+                : $"<p><strong>Admission Number:</strong> {admissionNumber}</p>";
             
             var body = $@"
                 <html>
@@ -201,7 +209,7 @@ namespace School_Yathu.Services
                             <div class='info-box'>
                                 <h3 style='margin-top: 0;'>Account Details:</h3>
                                 <p><strong>Role:</strong> {role}</p>
-                                {(admissionNumber != null ? $"<p><strong>Admission Number:</strong> {admissionNumber}</p>" : "")}
+                                {admissionHtml}
                                 <p><strong>Email:</strong> {to}</p>
                             </div>
                             

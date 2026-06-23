@@ -5,11 +5,13 @@ using School_Yathu.Data;
 using School_Yathu.DTOs;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [SwaggerTag("Student - Manage students, subjects, marks and dashboard")]
     public class StudentController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,7 +21,12 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
+        /// <summary>
+        /// Get all students
+        /// </summary>
         [HttpGet]
+        [SwaggerOperation(Summary = "Get all students", Description = "Retrieves a list of all students")]
+        [SwaggerResponse(200, "List of students", typeof(List<object>))]
         public async Task<IActionResult> GetStudents()
         {
             var students = await _context.Students
@@ -35,8 +42,16 @@ namespace School_Yathu.Controllers
             return Ok(students);
         }
         
+        /// <summary>
+        /// Create a new student
+        /// </summary>
         [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
+        [SwaggerOperation(Summary = "Create a new student", Description = "Creates a new student record")]
+        [SwaggerResponse(200, "Student added successfully", typeof(object))]
+        [SwaggerResponse(400, "Invalid request or duplicate admission number")]
+        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerResponse(500, "Server error")]
         public async Task<IActionResult> CreateStudent([FromBody] CreateStudentDTO dto)
         {
             try
@@ -84,9 +99,14 @@ namespace School_Yathu.Controllers
             }
         }
         
-        // Get subjects allocated to this student by admin
+        /// <summary>
+        /// Get subjects allocated to the logged-in student
+        /// </summary>
         [HttpGet("my-subjects")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Get my subjects", Description = "Retrieves subjects allocated to the logged-in student")]
+        [SwaggerResponse(200, "List of subjects", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetMySubjects()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -117,7 +137,6 @@ namespace School_Yathu.Controllers
             
             if (!subjects.Any())
             {
-                // Fallback: Get subjects from class subjects if no direct allocations
                 var student = await _context.Students.FindAsync(studentId);
                 if (student != null)
                 {
@@ -147,9 +166,15 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
         
-        // Get marks for a specific subject
+        /// <summary>
+        /// Get marks for a specific subject
+        /// </summary>
         [HttpGet("my-marks/{subjectId}")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Get my marks", Description = "Retrieves marks for a specific subject for the logged-in student")]
+        [SwaggerResponse(200, "Student marks", typeof(object))]
+        [SwaggerResponse(404, "No marks found")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetMyMarks(int subjectId, [FromQuery] int year, [FromQuery] string term)
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -177,8 +202,13 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Get all marks for a student (by year and term)
+        /// <summary>
+        /// Get all marks for a student by year and term
+        /// </summary>
         [HttpGet("marks/{studentId}")]
+        [SwaggerOperation(Summary = "Get student marks", Description = "Retrieves all marks for a student by year and term")]
+        [SwaggerResponse(200, "Student marks with summary", typeof(object))]
+        [SwaggerResponse(404, "No marks found")]
         public async Task<IActionResult> GetStudentMarks(int studentId, [FromQuery] int year, [FromQuery] string term)
         {
             var marks = await _context.Marks
@@ -203,7 +233,6 @@ namespace School_Yathu.Controllers
             if (!marks.Any())
                 return NotFound(new { message = "No marks found for this student" });
             
-            // Calculate overall performance
             var totalScore = marks.Sum(m => m.TotalScore ?? 0);
             var averageScore = marks.Average(m => m.TotalScore ?? 0);
             var overallGrade = GetGrade(averageScore);
@@ -221,8 +250,13 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Get student rank in class
+        /// <summary>
+        /// Get student rank in class
+        /// </summary>
         [HttpGet("rank/{studentId}")]
+        [SwaggerOperation(Summary = "Get student rank", Description = "Retrieves the rank of a student in their class")]
+        [SwaggerResponse(200, "Student rank and class rankings", typeof(object))]
+        [SwaggerResponse(404, "Student not found or no marks")]
         public async Task<IActionResult> GetStudentRank(int studentId, [FromQuery] int year, [FromQuery] string term)
         {
             var student = await _context.Students.FindAsync(studentId);
@@ -240,7 +274,6 @@ namespace School_Yathu.Controllers
             var average = studentMarks.Average(m => m.TotalScore ?? 0);
             var grade = GetGrade(average);
             
-            // Get all students in the same class
             var classStudents = await _context.Students
                 .Where(s => s.Class == student.Class && s.Stream == student.Stream)
                 .ToListAsync();
@@ -273,13 +306,19 @@ namespace School_Yathu.Controllers
                 Position = position,
                 TotalStudents = classStudents.Count,
                 Grade = grade,
-                ClassRankings = rankedStudents.Take(10) // Top 10 students
+                ClassRankings = rankedStudents.Take(10)
             });
         }
         
-        // Get student dashboard summary
+        /// <summary>
+        /// Get student dashboard summary
+        /// </summary>
         [HttpGet("dashboard")]
         [Authorize(Roles = "Student")]
+        [SwaggerOperation(Summary = "Get student dashboard", Description = "Retrieves a summary of the student dashboard")]
+        [SwaggerResponse(200, "Student dashboard data", typeof(object))]
+        [SwaggerResponse(404, "Student not found")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetStudentDashboard()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -289,24 +328,20 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return NotFound(new { message = "Student not found" });
             
-            // Get allocated subjects
             var subjects = await _context.StudentSubjects
                 .Include(ss => ss.Subject)
                 .Include(ss => ss.Teacher)
                 .Where(ss => ss.StudentId == studentId && ss.IsActive && ss.AcademicYear == currentYear)
                 .ToListAsync();
             
-            // Get marks for current year
             var marks = await _context.Marks
                 .Include(m => m.Subject)
                 .Where(m => m.StudentId == studentId && m.Year == currentYear)
                 .ToListAsync();
             
-            // Calculate performance metrics
             var totalScore = marks.Sum(m => m.TotalScore ?? 0);
             var averageScore = marks.Any() ? marks.Average(m => m.TotalScore ?? 0) : 0;
             
-            // Get notifications
             var notifications = await _context.Notifications
                 .Where(n => n.StudentId == studentId && !n.IsRead)
                 .OrderByDescending(n => n.CreatedAt)

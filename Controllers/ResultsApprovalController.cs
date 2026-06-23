@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]
+    [SwaggerTag("Results Approval - Approve and manage exam results")]
     public class ResultsApprovalController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,8 +21,13 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get pending results for approval
+        /// <summary>
+        /// Get pending results for approval
+        /// </summary>
         [HttpGet("pending-results")]
+        [SwaggerOperation(Summary = "Get pending results", Description = "Retrieves all results waiting for headteacher approval")]
+        [SwaggerResponse(200, "List of pending results", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetPendingResults()
         {
             var pendingResults = await _context.Marks
@@ -40,8 +47,13 @@ namespace School_Yathu.Controllers
             return Ok(pendingResults);
         }
         
-        // Get results details for a specific subject/term/year
+        /// <summary>
+        /// Get results details for a specific subject/term/year
+        /// </summary>
         [HttpGet("results-details/{subjectId}/{year}/{term}")]
+        [SwaggerOperation(Summary = "Get results details", Description = "Retrieves detailed results for a specific subject, term and year")]
+        [SwaggerResponse(200, "Results details", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetResultsDetails(int subjectId, int year, string term)
         {
             var results = await _context.Marks
@@ -64,8 +76,14 @@ namespace School_Yathu.Controllers
             return Ok(results);
         }
         
-        // Approve results for a subject/term/year
+        /// <summary>
+        /// Approve results for a subject/term/year
+        /// </summary>
         [HttpPost("approve-results")]
+        [SwaggerOperation(Summary = "Approve results", Description = "Approves results for a specific subject, term and year")]
+        [SwaggerResponse(200, "Results approved successfully", typeof(object))]
+        [SwaggerResponse(400, "No results found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> ApproveResults([FromBody] ApproveResultsDTO dto)
         {
             var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -77,7 +95,6 @@ namespace School_Yathu.Controllers
             if (!marks.Any())
                 return BadRequest(new { message = "No results found for this subject/term/year" });
             
-            // Mark results as approved
             foreach (var mark in marks)
             {
                 mark.IsApproved = true;
@@ -87,11 +104,9 @@ namespace School_Yathu.Controllers
             
             await _context.SaveChangesAsync();
             
-            // Get subject name
             var subject = await _context.Subjects.FindAsync(dto.SubjectId);
             var subjectName = subject?.Name ?? "Unknown Subject";
             
-            // Get all students who have these marks
             var studentIds = marks.Select(m => m.StudentId).Distinct().ToList();
             
             // Send notifications to students
@@ -135,8 +150,13 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Get all approved results summary
+        /// <summary>
+        /// Get all approved results summary
+        /// </summary>
         [HttpGet("approved-results")]
+        [SwaggerOperation(Summary = "Get approved results", Description = "Retrieves a summary of all approved results")]
+        [SwaggerResponse(200, "List of approved results", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetApprovedResults()
         {
             var approvedResults = await _context.Marks

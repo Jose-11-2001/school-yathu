@@ -9,24 +9,44 @@ namespace School_Yathu.Models
         public int Id { get; set; }
         
         [Required]
-        public string Title { get; set; } = string.Empty;
-        
-        [Required]
         public string Message { get; set; } = string.Empty;
         
-        public string Type { get; set; } = "Info";
+        public string? Title { get; set; }
+        
+        public string? Type { get; set; } // result, deadline, enrollment, general
+        
+        public string? Role { get; set; } // Student, Teacher, Admin, All
+        
+        public int? UserId { get; set; } // Specific user
+        
+        public int? StudentId { get; set; }
         
         public int? TeacherId { get; set; }
         
-        [ForeignKey("TeacherId")]
-        public User? Teacher { get; set; }
+        public int? SpecificStudentId { get; set; }
         
-        public int? StudentId { get; set; }
+        public int? SpecificTeacherId { get; set; }
+        
+        public string? Link { get; set; }
+        
+        public bool IsRead { get; set; }
+        
+        public DateTime CreatedAt { get; set; }
+        
+        // Navigation properties
+        [ForeignKey("UserId")]
+        public User? User { get; set; }
         
         [ForeignKey("StudentId")]
         public Student? Student { get; set; }
         
-        public bool IsRead { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [ForeignKey("TeacherId")]
+        public User? Teacher { get; set; }
+        
+        [ForeignKey("SpecificStudentId")]
+        public Student? SpecificStudent { get; set; }
+        
+        [ForeignKey("SpecificTeacherId")]
+        public Teacher? SpecificTeacher { get; set; }
     }
 }

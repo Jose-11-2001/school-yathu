@@ -8,11 +8,13 @@ using System.Text;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using System.Text.RegularExpressions;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [SwaggerTag("Authentication - Login, Register, Password Management")]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -24,16 +26,20 @@ namespace School_Yathu.Controllers
             _configuration = configuration;
         }
         
-        // ONLY ADMIN can register new users (Teachers and Students)
+        /// <summary>
+        /// Register a new user (Admin only)
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPost("register")]
+        [SwaggerOperation(Summary = "Register new user", Description = "Creates a new teacher or student account (Admin only)")]
+        [SwaggerResponse(200, "User registered successfully", typeof(object))]
+        [SwaggerResponse(400, "Invalid request or email already exists")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDto)
         {
-            // Check if email already exists
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
                 return BadRequest(new { message = "Email already exists" });
             
-            // Validate teacher email
             if (registerDto.Role == "Teacher" && !registerDto.Email.EndsWith("@gmail.com"))
             {
                 return BadRequest(new { message = "Teacher must use a valid email address (e.g., name@gmail.com)" });
@@ -57,7 +63,6 @@ namespace School_Yathu.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             
-            // Return the password so Admin can give it to the teacher
             return Ok(new { 
                 message = "User registered successfully", 
                 email = user.Email,
@@ -67,25 +72,41 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Generate email from name
+        /// <summary>
+        /// Generate email from name
+        /// </summary>
         [HttpPost("generate-email")]
         [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Generate email from name", Description = "Auto-generates an email based on user name and role")]
+        [SwaggerResponse(200, "Generated email", typeof(object))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public IActionResult GenerateEmail([FromBody] GenerateEmailDTO dto)
         {
             var email = GenerateEmailFromName(dto.Name, dto.Role);
             return Ok(new { email = email });
         }
         
-        // Generate default password
+        /// <summary>
+        /// Generate random password
+        /// </summary>
         [HttpPost("generate-password")]
         [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Generate random password", Description = "Generates a secure random password")]
+        [SwaggerResponse(200, "Generated password", typeof(object))]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public IActionResult GeneratePassword()
         {
             var password = GenerateRandomPassword();
             return Ok(new { password = password });
         }
         
+        /// <summary>
+        /// Login user
+        /// </summary>
         [HttpPost("login")]
+        [SwaggerOperation(Summary = "Login", Description = "Authenticates a user and returns a JWT token")]
+        [SwaggerResponse(200, "Login successful", typeof(object))]
+        [SwaggerResponse(401, "Invalid credentials")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
@@ -108,9 +129,16 @@ namespace School_Yathu.Controllers
             });
         }
         
-        // Change password
+        /// <summary>
+        /// Change password
+        /// </summary>
         [HttpPost("change-password")]
         [Authorize]
+        [SwaggerOperation(Summary = "Change password", Description = "Changes the current user's password")]
+        [SwaggerResponse(200, "Password changed successfully")]
+        [SwaggerResponse(400, "Current password is incorrect")]
+        [SwaggerResponse(404, "User not found")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -129,9 +157,15 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Password changed successfully" });
         }
         
-        // Reset password (Admin only)
+        /// <summary>
+        /// Reset password (Admin only)
+        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPost("reset-password/{userId}")]
+        [SwaggerOperation(Summary = "Reset password", Description = "Resets a user's password (Admin only)")]
+        [SwaggerResponse(200, "Password reset successfully", typeof(object))]
+        [SwaggerResponse(404, "User not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> ResetPassword(int userId)
         {
             var user = await _context.Users.FindAsync(userId);

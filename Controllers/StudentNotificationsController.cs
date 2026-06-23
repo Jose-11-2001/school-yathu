@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using School_Yathu.Models;
 using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Student")]
+    [SwaggerTag("Student Notifications - Manage student notifications")]
     public class StudentNotificationsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -19,8 +21,13 @@ namespace School_Yathu.Controllers
             _context = context;
         }
         
-        // Get all notifications for the logged-in student
+        /// <summary>
+        /// Get all notifications for the logged-in student
+        /// </summary>
         [HttpGet("my-notifications")]
+        [SwaggerOperation(Summary = "Get my notifications", Description = "Retrieves all notifications for the logged-in student")]
+        [SwaggerResponse(200, "List of notifications", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetMyNotifications()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -42,8 +49,13 @@ namespace School_Yathu.Controllers
             return Ok(notifications);
         }
         
-        // Get unread notification count
+        /// <summary>
+        /// Get unread notification count
+        /// </summary>
         [HttpGet("unread-count")]
+        [SwaggerOperation(Summary = "Get unread count", Description = "Retrieves the number of unread notifications for the logged-in student")]
+        [SwaggerResponse(200, "Unread count", typeof(object))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetUnreadCount()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -54,8 +66,14 @@ namespace School_Yathu.Controllers
             return Ok(new { unreadCount = count });
         }
         
-        // Mark a notification as read
+        /// <summary>
+        /// Mark a notification as read
+        /// </summary>
         [HttpPut("{id}/read")]
+        [SwaggerOperation(Summary = "Mark notification as read", Description = "Marks a specific notification as read")]
+        [SwaggerResponse(200, "Notification marked as read")]
+        [SwaggerResponse(404, "Notification not found")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -72,8 +90,13 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Notification marked as read" });
         }
         
-        // Mark all notifications as read
+        /// <summary>
+        /// Mark all notifications as read
+        /// </summary>
         [HttpPut("mark-all-read")]
+        [SwaggerOperation(Summary = "Mark all as read", Description = "Marks all notifications as read for the logged-in student")]
+        [SwaggerResponse(200, "All notifications marked as read")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> MarkAllAsRead()
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
