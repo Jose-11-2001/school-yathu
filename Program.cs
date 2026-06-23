@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using School_Yathu.Data;
 using School_Yathu.Models;
+using School_Yathu.Services;
 using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -129,5 +130,16 @@ using (var scope = app.Services.CreateScope())
 }
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+
 Console.WriteLine($"Application starting successfully on port: {port}");
 app.Run();
+
+internal class EmailSettings
+{
+    public string? SmtpServer { get; set; }
+    public int Port { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+    public bool UseSsl { get; set; }
+    public string? FromEmail { get; set; }
+}
