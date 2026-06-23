@@ -377,6 +377,53 @@ namespace School_Yathu.Controllers
 
             return Ok(availableSubjects);
         }
+        [HttpPost("allocate-teacher-to-subject")]
+public async Task<IActionResult> AllocateTeacherToSubject([FromBody] TeacherSubjectAllocationDTO dto)
+{
+    try
+    {
+        // Check if allocation already exists
+        var existing = await _context.TeacherSubjectAllocations
+            .FirstOrDefaultAsync(a => a.ClassId == dto.ClassId && a.SubjectId == dto.SubjectId);
+
+        if (existing != null)
+        {
+            // Update existing
+            existing.TeacherId = dto.TeacherId;
+            existing.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Teacher updated successfully for this subject" });
+        }
+
+        // Create new allocation
+        var allocation = new TeacherSubjectAllocation
+        {
+            ClassId = dto.ClassId,
+            SubjectId = dto.SubjectId,
+            TeacherId = dto.TeacherId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.TeacherSubjectAllocations.Add(allocation);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Teacher allocated successfully!" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error allocating teacher: {ex.Message}" });
+        }
+        }
+
+        // DTO
+        public class TeacherSubjectAllocationDTO
+        {
+        public int ClassId { get; set; }
+        public int SubjectId { get; set; }
+        public int TeacherId { get; set; }
+        }
 
         // Get summary statistics
         [HttpGet("summary")]
