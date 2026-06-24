@@ -18,11 +18,11 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Set environment variables for Render
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:10000
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Expose port 8080
-EXPOSE 8080
+# Expose port 10000
+EXPOSE 10000
 
 # Start the application
 ENTRYPOINT ["dotnet", "school-yathu.dll"]
