@@ -91,7 +91,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "school-yathu-secret-key-32-chars-long!"))
+                Encoding.UTF8.GetBytes(builder.Configuration["jwt_Key"] ?? "school-yathu-secret-key-32-chars-long!"))
         };
     });
 
