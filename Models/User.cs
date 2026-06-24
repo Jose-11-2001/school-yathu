@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
@@ -25,5 +26,10 @@ namespace School_Yathu.Models
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = false;
         public string Role { get; set; } = "Teacher";
+        
+        // Navigation properties - ADD THESE
+        public ICollection<Class>? Classes { get; set; }
+        public ICollection<TeacherSubject>? TeacherSubjects { get; set; }
+        public ICollection<Notification>? Notifications { get; set; }
     }
 }

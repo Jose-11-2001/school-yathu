@@ -48,6 +48,22 @@ namespace School_Yathu.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(u => u.Email).IsUnique();
+                
+                // Add relationships for User
+                entity.HasMany(u => u.Classes)
+                      .WithOne(c => c.Teacher)
+                      .HasForeignKey(c => c.TeacherId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                
+                entity.HasMany(u => u.TeacherSubjects)
+                      .WithOne(ts => ts.Teacher)
+                      .HasForeignKey(ts => ts.TeacherId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasMany(u => u.Notifications)
+                      .WithOne(n => n.User)
+                      .HasForeignKey(n => n.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
             
             // Subject configuration
@@ -247,7 +263,7 @@ namespace School_Yathu.Data
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(n => n.User)
-                      .WithMany()
+                      .WithMany(u => u.Notifications)
                       .HasForeignKey(n => n.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
