@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
@@ -11,13 +12,21 @@ namespace School_Yathu.Models
         public string Name { get; set; } = string.Empty;
         
         public string? Code { get; set; }
-        public int? MaxMarks { get; set; } = 100;
+        
+        public int? MaxMarks { get; set; }
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         // Navigation properties
-        public virtual ICollection<Marks>? Marks { get; set; }
-        public virtual ICollection<ClassSubject>? ClassSubjects { get; set; }
-        public virtual ICollection<TeacherSubject>? TeacherSubjects { get; set; }
-        public virtual ICollection<StudentSubject>? StudentSubjects { get; set; }
+        public ICollection<ClassSubject> ClassSubjects { get; set; } = new List<ClassSubject>();
+        
+        public ICollection<TeacherSubject> TeacherSubjects { get; set; } = new List<TeacherSubject>();
+        
+        public ICollection<StudentSubject> StudentSubjects { get; set; } = new List<StudentSubject>();
+        
+        public ICollection<Marks> Marks { get; set; } = new List<Marks>();
+        
+        // Add this - Links to ExamResults
+        public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
     }
 }

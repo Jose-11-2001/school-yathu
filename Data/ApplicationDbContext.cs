@@ -32,6 +32,16 @@ namespace School_Yathu.Data
             modelBuilder.Entity<Student>(entity =>
             {
                 entity.HasIndex(s => s.AdmissionNumber).IsUnique();
+                
+                entity.HasMany(s => s.Notifications)
+                      .WithOne(n => n.SpecificStudent)
+                      .HasForeignKey(n => n.SpecificStudentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                
+                entity.HasMany(s => s.ExamResults)
+                      .WithOne(er => er.Student)
+                      .HasForeignKey(er => er.StudentId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
             
             // User configuration
@@ -44,6 +54,11 @@ namespace School_Yathu.Data
             modelBuilder.Entity<Subject>(entity =>
             {
                 entity.HasIndex(s => s.Name).IsUnique();
+                
+                entity.HasMany(s => s.ExamResults)
+                      .WithOne(er => er.Subject)
+                      .HasForeignKey(er => er.SubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
             
             // Marks configuration
@@ -69,12 +84,12 @@ namespace School_Yathu.Data
                       .HasDefaultValue(true);
                 
                 entity.HasOne(e => e.Student)
-                      .WithMany()
+                      .WithMany(s => s.StudentSubjects)
                       .HasForeignKey(e => e.StudentId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
                 entity.HasOne(e => e.Subject)
-                      .WithMany()
+                      .WithMany(s => s.StudentSubjects)
                       .HasForeignKey(e => e.SubjectId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
@@ -94,12 +109,12 @@ namespace School_Yathu.Data
                 entity.HasKey(e => e.Id);
                 
                 entity.HasOne(e => e.Teacher)
-                      .WithMany()
+                      .WithMany(t => t.TeacherSubjects)
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
                 entity.HasOne(e => e.Subject)
-                      .WithMany()
+                      .WithMany(s => s.TeacherSubjects)
                       .HasForeignKey(e => e.SubjectId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
@@ -120,12 +135,12 @@ namespace School_Yathu.Data
                       .HasMaxLength(20);
                 
                 entity.HasOne(e => e.Teacher)
-                      .WithMany()
+                      .WithMany(t => t.Classes)
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
             
-            // ClassSubject configuration - FIXED (no duplicates)
+            // ClassSubject configuration
             modelBuilder.Entity<ClassSubject>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -133,9 +148,117 @@ namespace School_Yathu.Data
                 entity.Property(e => e.AssignedAt)
                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
-                // Each relationship configured only ONCE
                 entity.HasOne(e => e.Class)
                       .WithMany(c => c.ClassSubjects)
+                      .HasForeignKey(e => e.ClassId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.Subject)
+                      .WithMany(s => s.ClassSubjects)
+                      .HasForeignKey(e => e.SubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.Teacher)
+                      .WithMany()
+                      .HasForeignKey(e => e.TeacherId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasIndex(e => new { e.ClassId, e.SubjectId })
+                      .IsUnique();
+            });
+            
+            // Exam configuration
+            modelBuilder.Entity<Exam>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Name)
+                      .HasMaxLength(200)
+                      .IsRequired();
+                
+                entity.Property(e => e.Type)
+                      .HasMaxLength(50);
+                
+                entity.Property(e => e.Term)
+                      .HasMaxLength(20);
+                
+                entity.HasMany(e => e.ExamResults)
+                      .WithOne(er => er.Exam)
+                      .HasForeignKey(er => er.ExamId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // ExamResult configuration
+            modelBuilder.Entity<ExamResult>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.HasOne(e => e.Exam)
+                      .WithMany(e => e.ExamResults)
+                      .HasForeignKey(e => e.ExamId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.Student)
+                      .WithMany(s => s.ExamResults)
+                      .HasForeignKey(e => e.StudentId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.Subject)
+                      .WithMany(s => s.ExamResults)
+                      .HasForeignKey(e => e.SubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.EnteredByTeacher)
+                      .WithMany()
+                      .HasForeignKey(e => e.EnteredByTeacherId)
+                      .OnDelete(DeleteBehavior.SetNull);
+                
+                entity.HasIndex(e => new { e.ExamId, e.StudentId })
+                      .IsUnique();
+            });
+            
+            // Notification configuration
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.Property(e => e.Title)
+                      .HasMaxLength(200);
+                
+                entity.Property(e => e.Message)
+                      .HasMaxLength(1000);
+                
+                entity.Property(e => e.Type)
+                      .HasMaxLength(50);
+                
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.IsRead);
+                entity.HasIndex(e => e.StudentId);
+                entity.HasIndex(e => e.TeacherId);
+                
+                entity.HasOne(n => n.SpecificStudent)
+                      .WithMany(s => s.Notifications)
+                      .HasForeignKey(n => n.SpecificStudentId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.SpecificTeacher)
+                      .WithMany()
+                      .HasForeignKey(n => n.SpecificTeacherId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.User)
+                      .WithMany()
+                      .HasForeignKey(n => n.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // TeacherSubjectAllocation configuration
+            modelBuilder.Entity<TeacherSubjectAllocation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.HasOne(e => e.Class)
+                      .WithMany()
                       .HasForeignKey(e => e.ClassId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
@@ -149,67 +272,8 @@ namespace School_Yathu.Data
                       .HasForeignKey(e => e.TeacherId)
                       .OnDelete(DeleteBehavior.Cascade);
                 
-                // Unique constraint: one subject per class
                 entity.HasIndex(e => new { e.ClassId, e.SubjectId })
                       .IsUnique();
-            });
-            
-            // Exam configuration - Commented out (uncomment when Exam model has navigation properties)
-            /*
-            modelBuilder.Entity<Exam>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                
-                entity.HasOne(e => e.Class)
-                      .WithMany()
-                      .HasForeignKey(e => e.ClassId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasOne(e => e.Subject)
-                      .WithMany()
-                      .HasForeignKey(e => e.SubjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-            */
-            
-            // ExamResult configuration
-            modelBuilder.Entity<ExamResult>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                
-                entity.HasOne(e => e.Exam)
-                      .WithMany()
-                      .HasForeignKey(e => e.ExamId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasOne(e => e.Student)
-                      .WithMany()
-                      .HasForeignKey(e => e.StudentId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                
-                entity.HasIndex(e => new { e.ExamId, e.StudentId })
-                      .IsUnique();
-            });
-            
-            // Notification configuration
-            modelBuilder.Entity<Notification>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                
-                entity.Property(e => e.Title)
-                      .HasMaxLength(200)
-                      .IsRequired();
-                
-                entity.Property(e => e.Message)
-                      .HasMaxLength(1000);
-                
-                entity.Property(e => e.Type)
-                      .HasMaxLength(50);
-                
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.IsRead);
-                entity.HasIndex(e => e.StudentId);
-                entity.HasIndex(e => e.TeacherId);
             });
         }
     }

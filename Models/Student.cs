@@ -32,10 +32,14 @@ namespace School_Yathu.Models
         [ForeignKey("ClassId")]
         public Class? ClassEntity { get; set; }
         
+        // Navigation properties
         public ICollection<StudentSubject> StudentSubjects { get; set; } = new List<StudentSubject>();
         
         public ICollection<Marks> Marks { get; set; } = new List<Marks>();
         
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        
+        // Add this - Links to ExamResults
+        public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
     }
 }

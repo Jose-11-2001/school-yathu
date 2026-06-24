@@ -11,20 +11,11 @@ namespace School_Yathu.Models
         [Required]
         public int ExamId { get; set; }
         
-        [ForeignKey("ExamId")]
-        public Exam? Exam { get; set; }
-        
         [Required]
         public int StudentId { get; set; }
         
-        [ForeignKey("StudentId")]
-        public Student? Student { get; set; }
-        
         [Required]
         public int SubjectId { get; set; }
-        
-        [ForeignKey("SubjectId")]
-        public Subject? Subject { get; set; }
         
         [Required]
         public int Score { get; set; }
@@ -36,5 +27,18 @@ namespace School_Yathu.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        
+        // Navigation properties
+        [ForeignKey("ExamId")]
+        public Exam? Exam { get; set; }
+        
+        [ForeignKey("StudentId")]
+        public Student? Student { get; set; }
+        
+        [ForeignKey("SubjectId")]
+        public Subject? Subject { get; set; }
+        
+        [ForeignKey("EnteredByTeacherId")]
+        public User? EnteredByTeacher { get; set; }
     }
 }
