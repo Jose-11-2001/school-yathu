@@ -84,6 +84,68 @@ namespace School_Yathu.Controllers
         }
         
         /// <summary>
+        /// Update an existing teacher
+        /// </summary>
+        [HttpPut("teachers/{id}")]
+        [SwaggerOperation(Summary = "Update a teacher", Description = "Updates an existing teacher's information")]
+        [SwaggerResponse(200, "Teacher updated successfully")]
+        [SwaggerResponse(400, "Invalid request or user is not a teacher")]
+        [SwaggerResponse(404, "Teacher not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
+        public async Task<IActionResult> UpdateTeacher(int id, [FromBody] UpdateTeacherDTO dto)
+        {
+            var teacher = await _context.Users.FindAsync(id);
+            if (teacher == null)
+                return NotFound(new { message = "Teacher not found" });
+            
+            if (teacher.Role != "Teacher")
+                return BadRequest(new { message = "User is not a teacher" });
+            
+            // Update fields if provided
+            if (!string.IsNullOrEmpty(dto.Name))
+                teacher.Name = dto.Name;
+            
+            if (!string.IsNullOrEmpty(dto.Email))
+            {
+                // Check if email is already taken by another user
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Id != id);
+                if (existingUser != null)
+                    return BadRequest(new { message = "Email already exists" });
+                
+                teacher.Email = dto.Email;
+            }
+            
+            if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                teacher.PhoneNumber = dto.PhoneNumber;
+            
+            if (!string.IsNullOrEmpty(dto.EmployeeId))
+                teacher.EmployeeId = dto.EmployeeId;
+            
+            if (!string.IsNullOrEmpty(dto.Qualification))
+                teacher.Qualification = dto.Qualification;
+            
+            teacher.UpdatedAt = DateTime.UtcNow;
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { 
+                message = "Teacher updated successfully", 
+                teacher = new
+                {
+                    teacher.Id,
+                    teacher.Email,
+                    teacher.Name,
+                    teacher.PhoneNumber,
+                    teacher.EmployeeId,
+                    teacher.Qualification,
+                    teacher.HireDate,
+                    teacher.UpdatedAt
+                }
+            });
+        }
+        
+        /// <summary>
         /// Delete/Deactivate a teacher
         /// </summary>
         [HttpDelete("teachers/{id}")]
@@ -216,11 +278,67 @@ namespace School_Yathu.Controllers
                     s.FullName,
                     s.Class,
                     s.Stream,
-                    s.CreatedAt
+                    s.CreatedAt,
+                    s.UpdatedAt
                 })
                 .ToListAsync();
             
             return Ok(students);
+        }
+        
+        /// <summary>
+        /// Update an existing student
+        /// </summary>
+        [HttpPut("students/{id}")]
+        [SwaggerOperation(Summary = "Update a student", Description = "Updates an existing student's information")]
+        [SwaggerResponse(200, "Student updated successfully")]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(404, "Student not found")]
+        [SwaggerResponse(401, "Unauthorized - Admin role required")]
+        public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentDTO dto)
+        {
+            var student = await _context.Students.FindAsync(id);
+            if (student == null)
+                return NotFound(new { message = "Student not found" });
+            
+            // Update fields if provided
+            if (!string.IsNullOrEmpty(dto.FullName))
+                student.FullName = dto.FullName;
+            
+            if (!string.IsNullOrEmpty(dto.Class))
+                student.Class = dto.Class;
+            
+            if (!string.IsNullOrEmpty(dto.Stream))
+                student.Stream = dto.Stream;
+            
+            student.UpdatedAt = DateTime.UtcNow;
+            
+            // Also update the associated user account name if changed
+            if (!string.IsNullOrEmpty(dto.FullName))
+            {
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == student.AdmissionNumber.ToLower() + "@student.school.com");
+                if (user != null)
+                {
+                    user.Name = dto.FullName;
+                    user.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { 
+                message = "Student updated successfully", 
+                student = new
+                {
+                    student.Id,
+                    student.AdmissionNumber,
+                    student.FullName,
+                    student.Class,
+                    student.Stream,
+                    student.UpdatedAt
+                }
+            });
         }
         
         /// <summary>
