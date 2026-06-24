@@ -98,7 +98,72 @@ namespace School_Yathu.Controllers
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+        /// <summary>
+/// Get class rankings for a specific class
+/// </summary>
+[HttpGet("class-ranking")]
+[Authorize]
+[SwaggerOperation(Summary = "Get class rankings", Description = "Retrieves rankings for all students in a class")]
+[SwaggerResponse(200, "Class rankings", typeof(object))]
+public async Task<IActionResult> GetClassRankings([FromQuery] string className, [FromQuery] int year, [FromQuery] string term)
+{
+    // Get all students in the class
+    var students = await _context.Students
+        .Where(s => s.Class == className)
+        .ToListAsync();
+    
+    if (!students.Any())
+        return Ok(new { message = "No students found in this class", rankings = new List<object>() });
+
+    var classRankings = new List<object>();
+    
+    foreach (var student in students)
+    {
+        var marks = await _context.Marks
+            .Where(m => m.StudentId == student.Id && m.Year == year && m.Term == term)
+            .ToListAsync();
         
+        if (marks.Any())
+        {
+            var totalScore = marks.Sum(m => m.TotalScore ?? 0);
+            var average = marks.Average(m => m.TotalScore ?? 0);
+            var grade = GetGrade(average);
+            
+            classRankings.Add(new
+            {
+                student.Id,
+                student.AdmissionNumber,
+                student.FullName,
+                TotalMarks = totalScore,
+                Average = Math.Round(average, 2),
+                Grade = grade
+            });
+        }
+    }
+    
+    // Sort by total marks descending and assign positions
+    var rankedStudents = classRankings
+        .OrderByDescending(s => ((dynamic)s).TotalMarks)
+        .Select((s, index) => new
+        {
+            Position = index + 1,
+            AdmissionNumber = ((dynamic)s).AdmissionNumber,
+            FullName = ((dynamic)s).FullName,
+            TotalMarks = ((dynamic)s).TotalMarks,
+            Average = ((dynamic)s).Average,
+            Grade = ((dynamic)s).Grade
+        })
+        .ToList();
+    
+    return Ok(new
+    {
+        Class = className,
+        Year = year,
+        Term = term,
+        TotalStudents = students.Count,
+        Rankings = rankedStudents
+    });
+}
         /// <summary>
         /// Get subjects allocated to the logged-in student
         /// </summary>
