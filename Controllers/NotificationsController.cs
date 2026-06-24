@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -29,13 +30,8 @@ namespace School_Yathu.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Get student notifications
-        /// </summary>
         [HttpGet("student")]
-        [SwaggerOperation(Summary = "Get student notifications", Description = "Retrieves notifications for the logged-in student")]
-        [SwaggerResponse(200, "List of notifications", typeof(NotificationListResponseDTO))]
-        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerOperation(Summary = "Get student notifications")]
         public async Task<IActionResult> GetStudentNotifications()
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
@@ -46,60 +42,58 @@ namespace School_Yathu.Controllers
                 return Unauthorized();
             }
 
+            var email = user.Email ?? string.Empty;
+            var admissionNumber = email.Split('@')[0];
             var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.AdmissionNumber == user.Email?.Split('@')[0]);
+                .FirstOrDefaultAsync(s => s.AdmissionNumber == admissionNumber);
 
             if (student == null)
             {
                 return Ok(new NotificationListResponseDTO());
             }
 
-            // Build query without using null propagating operator in expression tree
-            var query = _context.Notifications
+            var notificationsList = await _context.Notifications
                 .Where(n => n.UserId == userId || n.Role == "Student" || n.SpecificStudentId == student.Id)
-                .OrderByDescending(n => n.CreatedAt);
-
-            var notificationsList = await query.ToListAsync();
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
 
             var notifications = new List<NotificationResponseDTO>();
             foreach (var n in notificationsList)
             {
-                notifications.Add(new NotificationResponseDTO
-                {
-                    Id = n.Id,
-                    Message = n.Message,
-                    Title = n.Title,
-                    IsRead = n.IsRead,
-                    CreatedAt = n.CreatedAt,
-                    Type = n.Type,
-                    Link = n.Link,
-                    Role = n.Role,
-                    StudentId = n.StudentId,
-                    TeacherId = n.TeacherId,
-                    TimeAgo = this.GetTimeAgo(n.CreatedAt)
-                });
+                var response = new NotificationResponseDTO();
+                response.Id = n.Id;
+                response.Message = n.Message;
+                response.Title = n.Title;
+                response.IsRead = n.IsRead;
+                response.CreatedAt = n.CreatedAt;
+                response.Type = n.Type;
+                response.Link = n.Link;
+                response.Role = n.Role;
+                response.StudentId = n.StudentId;
+                response.TeacherId = n.TeacherId;
+                response.TimeAgo = GetTimeAgo(n.CreatedAt);
+                notifications.Add(response);
             }
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
-
-            return Ok(new NotificationListResponseDTO
+            var unreadCount = 0;
+            foreach (var n in notifications)
             {
-                Notifications = notifications,
-                TotalCount = notifications.Count,
-                UnreadCount = unreadCount,
-                Page = 1,
-                PageSize = 50,
-                TotalPages = 1
-            });
+                if (!n.IsRead) unreadCount++;
+            }
+
+            var result = new NotificationListResponseDTO();
+            result.Notifications = notifications;
+            result.TotalCount = notifications.Count;
+            result.UnreadCount = unreadCount;
+            result.Page = 1;
+            result.PageSize = 50;
+            result.TotalPages = 1;
+
+            return Ok(result);
         }
 
-        /// <summary>
-        /// Get teacher notifications
-        /// </summary>
         [HttpGet("teacher")]
-        [SwaggerOperation(Summary = "Get teacher notifications", Description = "Retrieves notifications for the logged-in teacher")]
-        [SwaggerResponse(200, "List of notifications", typeof(NotificationListResponseDTO))]
-        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerOperation(Summary = "Get teacher notifications")]
         public async Task<IActionResult> GetTeacherNotifications()
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
@@ -113,101 +107,95 @@ namespace School_Yathu.Controllers
             var teacher = await _context.Teachers
                 .FirstOrDefaultAsync(t => t.Email == user.Email);
 
-            // Build query without using null propagating operator
-            var query = _context.Notifications
+            var notificationsList = await _context.Notifications
                 .Where(n => n.UserId == userId || n.Role == "Teacher" || n.SpecificTeacherId == teacher.Id)
-                .OrderByDescending(n => n.CreatedAt);
-
-            var notificationsList = await query.ToListAsync();
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
 
             var notifications = new List<NotificationResponseDTO>();
             foreach (var n in notificationsList)
             {
-                notifications.Add(new NotificationResponseDTO
-                {
-                    Id = n.Id,
-                    Message = n.Message,
-                    Title = n.Title,
-                    IsRead = n.IsRead,
-                    CreatedAt = n.CreatedAt,
-                    Type = n.Type,
-                    Link = n.Link,
-                    Role = n.Role,
-                    StudentId = n.StudentId,
-                    TeacherId = n.TeacherId,
-                    TimeAgo = this.GetTimeAgo(n.CreatedAt)
-                });
+                var response = new NotificationResponseDTO();
+                response.Id = n.Id;
+                response.Message = n.Message;
+                response.Title = n.Title;
+                response.IsRead = n.IsRead;
+                response.CreatedAt = n.CreatedAt;
+                response.Type = n.Type;
+                response.Link = n.Link;
+                response.Role = n.Role;
+                response.StudentId = n.StudentId;
+                response.TeacherId = n.TeacherId;
+                response.TimeAgo = GetTimeAgo(n.CreatedAt);
+                notifications.Add(response);
             }
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
-
-            return Ok(new NotificationListResponseDTO
+            var unreadCount = 0;
+            foreach (var n in notifications)
             {
-                Notifications = notifications,
-                TotalCount = notifications.Count,
-                UnreadCount = unreadCount,
-                Page = 1,
-                PageSize = 50,
-                TotalPages = 1
-            });
+                if (!n.IsRead) unreadCount++;
+            }
+
+            var result = new NotificationListResponseDTO();
+            result.Notifications = notifications;
+            result.TotalCount = notifications.Count;
+            result.UnreadCount = unreadCount;
+            result.Page = 1;
+            result.PageSize = 50;
+            result.TotalPages = 1;
+
+            return Ok(result);
         }
 
-        /// <summary>
-        /// Get admin notifications
-        /// </summary>
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
-        [SwaggerOperation(Summary = "Get admin notifications", Description = "Retrieves notifications for the logged-in admin")]
-        [SwaggerResponse(200, "List of notifications", typeof(NotificationListResponseDTO))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
+        [SwaggerOperation(Summary = "Get admin notifications")]
         public async Task<IActionResult> GetAdminNotifications()
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
 
-            var query = _context.Notifications
+            var notificationsList = await _context.Notifications
                 .Where(n => n.UserId == userId || n.Role == "Admin")
-                .OrderByDescending(n => n.CreatedAt);
-
-            var notificationsList = await query.ToListAsync();
+                .OrderByDescending(n => n.CreatedAt)
+                .ToListAsync();
 
             var notifications = new List<NotificationResponseDTO>();
             foreach (var n in notificationsList)
             {
-                notifications.Add(new NotificationResponseDTO
-                {
-                    Id = n.Id,
-                    Message = n.Message,
-                    Title = n.Title,
-                    IsRead = n.IsRead,
-                    CreatedAt = n.CreatedAt,
-                    Type = n.Type,
-                    Link = n.Link,
-                    Role = n.Role,
-                    StudentId = n.StudentId,
-                    TeacherId = n.TeacherId,
-                    TimeAgo = this.GetTimeAgo(n.CreatedAt)
-                });
+                var response = new NotificationResponseDTO();
+                response.Id = n.Id;
+                response.Message = n.Message;
+                response.Title = n.Title;
+                response.IsRead = n.IsRead;
+                response.CreatedAt = n.CreatedAt;
+                response.Type = n.Type;
+                response.Link = n.Link;
+                response.Role = n.Role;
+                response.StudentId = n.StudentId;
+                response.TeacherId = n.TeacherId;
+                response.TimeAgo = GetTimeAgo(n.CreatedAt);
+                notifications.Add(response);
             }
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
-
-            return Ok(new NotificationListResponseDTO
+            var unreadCount = 0;
+            foreach (var n in notifications)
             {
-                Notifications = notifications,
-                TotalCount = notifications.Count,
-                UnreadCount = unreadCount,
-                Page = 1,
-                PageSize = 50,
-                TotalPages = 1
-            });
+                if (!n.IsRead) unreadCount++;
+            }
+
+            var result = new NotificationListResponseDTO();
+            result.Notifications = notifications;
+            result.TotalCount = notifications.Count;
+            result.UnreadCount = unreadCount;
+            result.Page = 1;
+            result.PageSize = 50;
+            result.TotalPages = 1;
+
+            return Ok(result);
         }
 
-        /// <summary>
-        /// Get unread notification count
-        /// </summary>
         [HttpGet("unread-count")]
-        [SwaggerOperation(Summary = "Get unread count", Description = "Retrieves the number of unread notifications")]
-        [SwaggerResponse(200, "Unread count", typeof(object))]
+        [SwaggerOperation(Summary = "Get unread count")]
         public async Task<IActionResult> GetUnreadCount()
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
@@ -218,13 +206,8 @@ namespace School_Yathu.Controllers
             return Ok(new { unreadCount = count });
         }
 
-        /// <summary>
-        /// Mark notification as read
-        /// </summary>
         [HttpPut("{id}/read")]
-        [SwaggerOperation(Summary = "Mark notification as read", Description = "Marks a specific notification as read")]
-        [SwaggerResponse(200, "Notification marked as read", typeof(NotificationResponseDTO))]
-        [SwaggerResponse(404, "Notification not found")]
+        [SwaggerOperation(Summary = "Mark notification as read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
@@ -240,26 +223,22 @@ namespace School_Yathu.Controllers
             notification.IsRead = true;
             await _context.SaveChangesAsync();
 
-            return Ok(new NotificationResponseDTO
-            {
-                Id = notification.Id,
-                Message = notification.Message,
-                Title = notification.Title,
-                IsRead = notification.IsRead,
-                CreatedAt = notification.CreatedAt,
-                Type = notification.Type,
-                Link = notification.Link,
-                Role = notification.Role,
-                TimeAgo = this.GetTimeAgo(notification.CreatedAt)
-            });
+            var response = new NotificationResponseDTO();
+            response.Id = notification.Id;
+            response.Message = notification.Message;
+            response.Title = notification.Title;
+            response.IsRead = notification.IsRead;
+            response.CreatedAt = notification.CreatedAt;
+            response.Type = notification.Type;
+            response.Link = notification.Link;
+            response.Role = notification.Role;
+            response.TimeAgo = GetTimeAgo(notification.CreatedAt);
+
+            return Ok(response);
         }
 
-        /// <summary>
-        /// Mark all notifications as read
-        /// </summary>
         [HttpPut("read-all")]
-        [SwaggerOperation(Summary = "Mark all as read", Description = "Marks all notifications as read for the current user")]
-        [SwaggerResponse(200, "All notifications marked as read")]
+        [SwaggerOperation(Summary = "Mark all as read")]
         public async Task<IActionResult> MarkAllAsRead()
         {
             var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
@@ -278,15 +257,9 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "All notifications marked as read", count = notifications.Count });
         }
 
-        /// <summary>
-        /// Send notification (Admin only)
-        /// </summary>
         [HttpPost("send")]
         [Authorize(Roles = "Admin")]
-        [SwaggerOperation(Summary = "Send notification", Description = "Sends a notification to users (Admin only)")]
-        [SwaggerResponse(200, "Notification sent successfully", typeof(object))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
-        [SwaggerResponse(500, "Server error")]
+        [SwaggerOperation(Summary = "Send notification")]
         public async Task<IActionResult> SendNotification([FromBody] SendNotificationDTO dto)
         {
             try
@@ -307,7 +280,7 @@ namespace School_Yathu.Controllers
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
 
-                var emailSent = await this.SendEmailNotifications(dto);
+                var emailSent = await SendEmailNotifications(dto);
 
                 return Ok(new
                 {

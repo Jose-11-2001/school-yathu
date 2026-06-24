@@ -1,0 +1,338 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>school-yathu</name>
+    </assembly>
+    <members>
+        <member name="M:School_Yathu.Controllers.AdminController.GetTeachers">
+            <summary>
+            Get all teachers
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AddTeacher(School_Yathu.DTOs.CreateTeacherDTO)">
+            <summary>
+            Add a new teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.DeleteTeacher(System.Int32)">
+            <summary>
+            Delete/Deactivate a teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.GetClasses">
+            <summary>
+            Get all classes
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AddClass(School_Yathu.DTOs.CreateClassDTO)">
+            <summary>
+            Add a new class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.UpdateClass(System.Int32,School_Yathu.DTOs.CreateClassDTO)">
+            <summary>
+            Update an existing class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.DeleteClass(System.Int32)">
+            <summary>
+            Delete a class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.GetAllStudents">
+            <summary>
+            Get all students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.DeleteStudent(System.Int32)">
+            <summary>
+            Delete a student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AllocateTeacher(School_Yathu.DTOs.AllocateTeacherDTO)">
+            <summary>
+            Allocate a teacher to a subject
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.GetClassAllocations(System.Int32)">
+            <summary>
+            Get class allocations
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.RemoveAllocation(System.Int32)">
+            <summary>
+            Remove an allocation
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAvailableSubjects">
+            <summary>
+            Get all available subjects
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetTeachers">
+            <summary>
+            Get all teachers
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetClasses">
+            <summary>
+            Get all classes
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetStudentsByClass(System.String,System.String)">
+            <summary>
+            Get students by class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetStudentAllocations(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Get student allocations
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetStudentSubjects(System.Int32,System.Int32)">
+            <summary>
+            Get subjects allocated to a specific student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.AllocateSubjectsToStudent(School_Yathu.DTOs.SubjectAllocationDTO)">
+            <summary>
+            Allocate subjects to a student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.BulkAllocateToClass(School_Yathu.DTOs.BulkSubjectAllocationDTO)">
+            <summary>
+            Bulk allocate subjects to a class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.RemoveAllocation(System.Int32)">
+            <summary>
+            Remove subject allocation
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAvailableSubjectsForStudent(System.Int32,System.Int32)">
+            <summary>
+            Get available subjects for a student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.AllocateTeacherToSubject(School_Yathu.Controllers.AdminSubjectAllocationController.TeacherSubjectAllocationDTO)">
+            <summary>
+            Allocate teacher to subject
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAllocationSummary">
+            <summary>
+            Get allocation summary statistics
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.Register(School_Yathu.Controllers.RegisterDTO)">
+            <summary>
+            Register a new user (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GenerateEmail(School_Yathu.Controllers.GenerateEmailDTO)">
+            <summary>
+            Generate email from name
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GeneratePassword">
+            <summary>
+            Generate random password
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.Login(School_Yathu.Controllers.LoginDTO)">
+            <summary>
+            Login user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.ChangePassword(School_Yathu.Controllers.ChangePasswordDTO)">
+            <summary>
+            Change password
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.ResetPassword(System.Int32)">
+            <summary>
+            Reset password (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetPendingResults">
+            <summary>
+            Get pending results for approval
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetResultsDetails(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get results details for a specific subject/term/year
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.ResultsApprovalController.ApproveResults(School_Yathu.Controllers.ApproveResultsDTO)">
+            <summary>
+            Approve results for a subject/term/year
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetApprovedResults">
+            <summary>
+            Get all approved results summary
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudents">
+            <summary>
+            Get all students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.CreateStudent(School_Yathu.DTOs.CreateStudentDTO)">
+            <summary>
+            Create a new student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetMySubjects">
+            <summary>
+            Get subjects allocated to the logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetMyMarks(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get marks for a specific subject
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentMarks(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get all marks for a student by year and term
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentRank(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get student rank in class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentDashboard">
+            <summary>
+            Get student dashboard summary
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentNotificationsController.GetMyNotifications">
+            <summary>
+            Get all notifications for the logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentNotificationsController.GetUnreadCount">
+            <summary>
+            Get unread notification count
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentNotificationsController.MarkAsRead(System.Int32)">
+            <summary>
+            Mark a notification as read
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentNotificationsController.MarkAllAsRead">
+            <summary>
+            Mark all notifications as read
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetClasses">
+            <summary>
+            Get all classes for registration
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetAvailableSubjects(System.String,System.String,System.String)">
+            <summary>
+            Get available subjects by class and stream
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetRegisteredStudents(System.String,System.String)">
+            <summary>
+            Get all registered students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.RegisterStudent(School_Yathu.DTOs.StudentRegistrationDTO)">
+            <summary>
+            Register a new student with subjects
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetStudentDetails(System.Int32)">
+            <summary>
+            Get student details for editing
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.UpdateStudent(System.Int32,School_Yathu.DTOs.StudentRegistrationDTO)">
+            <summary>
+            Update student information
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetAvailableSubjects">
+            <summary>
+            Get available subjects for the logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.RegisterSubject(School_Yathu.Controllers.RegisterSubjectDTO)">
+            <summary>
+            Register for a subject
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetMySubjects">
+            <summary>
+            Get subjects registered by the logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetTeacherStudents">
+            <summary>
+            Get students assigned to the logged-in teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.SubjectsController.GetSubjects">
+            <summary>
+            Get all subjects
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.SubjectsController.CreateSubject(School_Yathu.Models.Subject)">
+            <summary>
+            Create a new subject (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherMarksController.GetMyStudents">
+            <summary>
+            Get students assigned to the teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherMarksController.GetStudentMarks(System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            Get student marks for a specific subject
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherMarksController.EnterMarks(School_Yathu.DTOs.MarksEntryDTO)">
+            <summary>
+            Enter marks for a student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherMarksController.PublishResults(System.Int32,System.Int32,System.String)">
+            <summary>
+            Publish results and notify students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherSubjectsController.GetMySubjects">
+            <summary>
+            Get subjects assigned to the current teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherSubjectsController.AssignSubjectToTeacher(School_Yathu.Controllers.AssignSubjectDTO)">
+            <summary>
+            Assign subject to teacher (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherSubjectsController.GetAllAssignments">
+            <summary>
+            Get all teacher-subject assignments (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.TeacherSubjectsController.RemoveAssignment(System.Int32)">
+            <summary>
+            Remove subject from teacher (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.UsersController.GetTeachers">
+            <summary>
+            Get all teachers
+            </summary>
+        </member>
+    </members>
+</doc>
