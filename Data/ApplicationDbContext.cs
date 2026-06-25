@@ -48,70 +48,77 @@ namespace School_Yathu.Data
 
         #region Entity Configurations
 
-        private void ConfigureUser(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<User>(entity =>
-            {
-                // Primary Key
-                entity.HasKey(u => u.Id);
+       private void ConfigureUser(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<User>(entity =>
+    {
+        // Primary Key
+        entity.HasKey(u => u.Id);
 
-                // Properties
-                entity.Property(u => u.Email)
-                    .IsRequired()
-                    .HasMaxLength(100);
+        // Properties
+        entity.Property(u => u.Email)
+            .IsRequired()
+            .HasMaxLength(100);
 
-                entity.Property(u => u.Name)
-                    .IsRequired()
-                    .HasMaxLength(100);
+        entity.Property(u => u.Name)
+            .IsRequired()
+            .HasMaxLength(100);
 
-                entity.Property(u => u.PasswordHash)
-                    .IsRequired();
+        entity.Property(u => u.PasswordHash)
+            .IsRequired();
 
-                entity.Property(u => u.PhoneNumber)
-                    .HasMaxLength(20);
+        entity.Property(u => u.PhoneNumber)
+            .HasMaxLength(20);
 
-                entity.Property(u => u.EmployeeId)
-                    .HasMaxLength(50);
+        entity.Property(u => u.EmployeeId)
+            .HasMaxLength(50);
 
-                entity.Property(u => u.Qualification)
-                    .HasMaxLength(100);
+        entity.Property(u => u.Qualification)
+            .HasMaxLength(100);
 
-                entity.Property(u => u.Role)
-                    .IsRequired()
-                    .HasMaxLength(20);
+        entity.Property(u => u.Role)
+            .IsRequired()
+            .HasMaxLength(20);
 
-                // Indexes
-                entity.HasIndex(u => u.Email)
-                    .IsUnique()
-                    .HasDatabaseName("IX_Users_Email");
+        // ADD THIS LINE
+        entity.Property(u => u.UpdatedAt)
+            .IsRequired(false);
 
-                entity.HasIndex(u => u.EmployeeId)
-                    .IsUnique(false)
-                    .HasDatabaseName("IX_Users_EmployeeId");
+        // Indexes
+        entity.HasIndex(u => u.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email");
 
-                // Relationships
-                entity.HasMany(u => u.ClassesAsTeacher)
-                    .WithOne(c => c.Teacher)
-                    .HasForeignKey(c => c.TeacherId)
-                    .OnDelete(DeleteBehavior.SetNull);
+        entity.HasIndex(u => u.EmployeeId)
+            .IsUnique(false)
+            .HasDatabaseName("IX_Users_EmployeeId");
 
-                entity.HasMany(u => u.TeacherSubjects)
-                    .WithOne(ts => ts.Teacher)
-                    .HasForeignKey(ts => ts.TeacherId)
-                    .OnDelete(DeleteBehavior.Cascade);
+        // Relationships
+        entity.HasMany(u => u.ClassesAsTeacher)
+            .WithOne(c => c.Teacher)
+            .HasForeignKey(c => c.TeacherId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("FK_Classes_TeacherId");
 
-                entity.HasMany(u => u.Notifications)
-                    .WithOne(n => n.User)
-                    .HasForeignKey(n => n.UserId)
-                    .OnDelete(DeleteBehavior.Restrict);
+        entity.HasMany(u => u.TeacherSubjects)
+            .WithOne(ts => ts.Teacher)
+            .HasForeignKey(ts => ts.TeacherId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("FK_TeacherSubjects_TeacherId");
 
-                entity.HasMany(u => u.StudentSubjects)
-                    .WithOne(ss => ss.Teacher)
-                    .HasForeignKey(ss => ss.TeacherId)
-                    .OnDelete(DeleteBehavior.SetNull);
-            });
-        }
+        entity.HasMany(u => u.Notifications)
+            .WithOne(n => n.User)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("FK_Notifications_UserId");
 
+        entity.HasMany(u => u.StudentSubjects)
+            .WithOne(ss => ss.Teacher)
+            .HasForeignKey(ss => ss.TeacherId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("FK_StudentSubjects_TeacherId");
+    });
+}
         private void ConfigureStudent(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Student>(entity =>
