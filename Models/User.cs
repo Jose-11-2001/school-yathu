@@ -39,7 +39,7 @@ namespace School_Yathu.Models
         public string Role { get; set; } = "Student";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        //public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = false;
