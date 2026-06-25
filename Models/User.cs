@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using School_Yathu.Models.Enums;
 
 namespace School_Yathu.Models
 {

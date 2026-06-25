@@ -669,5 +669,17 @@
             User model for authentication and authorization
             </summary>
         </member>
+        <member name="T:school_yathu.Migrations.AddUpdatedAtToUser">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>
