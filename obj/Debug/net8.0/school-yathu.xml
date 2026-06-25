@@ -14,6 +14,11 @@
             Add a new teacher
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AdminController.UpdateTeacher(System.Int32,School_Yathu.DTOs.UpdateTeacherDTO)">
+            <summary>
+            Update an existing teacher
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.AdminController.DeleteTeacher(System.Int32)">
             <summary>
             Delete/Deactivate a teacher
@@ -42,6 +47,11 @@
         <member name="M:School_Yathu.Controllers.AdminController.GetAllStudents">
             <summary>
             Get all students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.UpdateStudent(System.Int32,School_Yathu.DTOs.UpdateStudentDTO)">
+            <summary>
+            Update an existing student
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.AdminController.DeleteStudent(System.Int32)">
@@ -174,9 +184,29 @@
             Get all approved results summary
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.StudentController.GetStudents">
+        <member name="M:School_Yathu.Controllers.ResultsController.GetStudentResults(System.String,System.Int32,System.String)">
             <summary>
-            Get all students
+            Get student results
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetAllStudents">
+            <summary>
+            Get all students (Admin/Teacher only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentByEmail(System.String)">
+            <summary>
+            Get student by email
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentByName(System.String)">
+            <summary>
+            Get student by name
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentByAdmission(System.String)">
+            <summary>
+            Get student by admission number
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.CreateStudent(School_Yathu.DTOs.CreateStudentDTO)">
@@ -184,14 +214,34 @@
             Create a new student
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.StudentController.UpdateStudent(System.Int32,School_Yathu.DTOs.UpdateStudentDTO)">
+            <summary>
+            Update an existing student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.DeleteStudent(System.Int32)">
+            <summary>
+            Delete a student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentSubjects(System.String,System.String)">
+            <summary>
+            Get student subjects with teacher information
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetMySubjects">
             <summary>
-            Get subjects allocated to the logged-in student
+            Get subjects for the currently logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentResults(System.String,System.Int32,System.String)">
+            <summary>
+            Get student results/marks
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetMyMarks(System.Int32,System.Int32,System.String)">
             <summary>
-            Get marks for a specific subject
+            Get marks for a specific subject for the logged-in student
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetStudentMarks(System.Int32,System.Int32,System.String)">
@@ -204,9 +254,29 @@
             Get student rank in class
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetClassRankings(System.String,System.Int32,System.String)">
+            <summary>
+            Get class rankings for a specific class
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetStudentDashboard">
             <summary>
             Get student dashboard summary
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentMarksData(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get student marks data for a specific term and year
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.CalculateStudentRanking(System.Int32,System.String,System.String,System.Int32,System.String)">
+            <summary>
+            Calculate student ranking within their class
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.CalculateGradeAndRemarks(System.Double)">
+            <summary>
+            Calculate grade and remarks based on score
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentNotificationsController.GetMyNotifications">
@@ -242,6 +312,11 @@
         <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetRegisteredStudents(System.String,System.String)">
             <summary>
             Get all registered students
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentRegistrationController.GetStudentSubjects(System.String,System.String)">
+            <summary>
+            Get student subjects with teachers
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentRegistrationController.RegisterStudent(School_Yathu.DTOs.StudentRegistrationDTO)">
@@ -332,6 +407,226 @@
         <member name="M:School_Yathu.Controllers.UsersController.GetTeachers">
             <summary>
             Get all teachers
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.CreateNotificationDTO">
+            <summary>
+            DTO for creating a new notification
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.SendNotificationDTO">
+            <summary>
+            DTO for sending a notification (simplified)
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.UpdateNotificationStatusDTO">
+            <summary>
+            DTO for updating notification status
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.MarkNotificationsReadDTO">
+            <summary>
+            DTO for marking multiple notifications as read
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationFilterDTO">
+            <summary>
+            DTO for filtering notifications
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationResponseDTO">
+            <summary>
+            DTO for notification response
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationListResponseDTO">
+            <summary>
+            DTO for notification list response with pagination
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationSummaryDTO">
+            <summary>
+            DTO for notification summary
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationEmailDTO">
+            <summary>
+            DTO for notification email
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationStatsDTO">
+            <summary>
+            DTO for notification statistics
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.DailyNotificationCount">
+            <summary>
+            DTO for daily notification count
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.NotificationGetDTO">
+            <summary>
+            DTO for receiving notifications from API (GET)
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentRegistrationDTO">
+            <summary>
+            DTO for student registration with subject allocations
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.CreateStudentDTO">
+            <summary>
+            DTO for creating a new student
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.UpdateStudentDTO">
+            <summary>
+            DTO for updating an existing student
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentDTO">
+            <summary>
+            DTO for student information response
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentListDTO">
+            <summary>
+            DTO for student list response with additional info
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentSubjectDTO">
+            <summary>
+            DTO for student subjects with teacher information
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.AllocateSubjectDTO">
+            <summary>
+            DTO for subject allocation to student
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.MarksEntryDTO">
+            <summary>
+            DTO for entering student marks
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentMarkDTO">
+            <summary>
+            DTO for student marks response - UPDATED with Test1, Test2, EndTerm
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.AddMarksDTO">
+            <summary>
+            DTO for adding/updating marks via admission number
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.UpdateMarksDTO">
+            <summary>
+            DTO for updating existing marks
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentResultDTO">
+            <summary>
+            DTO for student results with ranking
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.PerformanceSummaryDTO">
+            <summary>
+            DTO for performance summary
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.RankingDTO">
+            <summary>
+            DTO for student ranking
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.RankingItemDTO">
+            <summary>
+            DTO for ranking item
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.ClassRankingsDTO">
+            <summary>
+            DTO for class rankings response
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentDashboardDTO">
+            <summary>
+            DTO for student dashboard response
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.UpcomingExamDTO">
+            <summary>
+            DTO for upcoming exams
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.StudentFilterDTO">
+            <summary>
+            DTO for filtering students
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.PaginatedStudentResponseDTO">
+            <summary>
+            DTO for paginated student response
+            </summary>
+        </member>
+        <member name="T:School_Yathu.DTOs.GradeResultDTO">
+            <summary>
+            DTO for grade calculation result
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.Class">
+            <summary>
+            Class model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.ClassSubject">
+            <summary>
+            Class-Subject relationship model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.Exam">
+            <summary>
+            Exam model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.ExamResult">
+            <summary>
+            Exam Result model - Stores exam results for students
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.Marks">
+            <summary>
+            Marks model - Stores student marks for subjects
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.Notification">
+            <summary>
+            Notification model for system notifications
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.Student">
+            <summary>
+            Student model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.StudentMark">
+            <summary>
+            Student Marks model (New - preferred)
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.StudentSubject">
+            <summary>
+            Student-Subject relationship model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.TeacherSubject">
+            <summary>
+            Teacher-Subject relationship model
+            </summary>
+        </member>
+        <member name="T:School_Yathu.Models.User">
+            <summary>
+            User model for authentication and authorization
             </summary>
         </member>
     </members>

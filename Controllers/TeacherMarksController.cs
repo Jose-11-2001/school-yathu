@@ -130,9 +130,10 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return BadRequest(new { message = "Student not found" });
             
-            int ct1 = dto.ContinuousTest1 ?? 0;
-            int ct2 = dto.ContinuousTest2 ?? 0;
-            int endTerm = dto.EndTermExam ?? 0;
+            // FIX: Changed from int to double to handle decimal values
+            double ct1 = dto.ContinuousTest1 ?? 0;
+            double ct2 = dto.ContinuousTest2 ?? 0;
+            double endTerm = dto.EndTermExam ?? 0;
             double overallPercentage = (ct1 * 0.20) + (ct2 * 0.20) + (endTerm * 0.60);
             int totalScoreInt = (int)Math.Round(overallPercentage);
             

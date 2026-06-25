@@ -4,45 +4,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace School_Yathu.Models
 {
     /// <summary>
-    /// Exam Result model - Stores exam results for students
+    /// Student Marks model (New - preferred)
     /// </summary>
-    public class ExamResult
+    public class StudentMark
     {
         [Key]
         public int Id { get; set; }
 
         [Required]
-        public int ExamId { get; set; }
-
-        [Required]
         public int StudentId { get; set; }
 
-        public int? SubjectId { get; set; }
+        [Required]
+        public int SubjectId { get; set; }
 
-        public int? EnteredByTeacherId { get; set; }
+        public double? Test1 { get; set; }
+        public double? Test2 { get; set; }
+        public double? EndTerm { get; set; }
 
-        public double? Score { get; set; }
+        [Required]
+        public int Year { get; set; }
 
-        [MaxLength(5)]
-        public string? Grade { get; set; }
-
-        [MaxLength(200)]
-        public string? Remark { get; set; }
+        [Required]
+        [MaxLength(20)]
+        public string Term { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation properties
-        [ForeignKey("ExamId")]
-        public virtual Exam? Exam { get; set; }
-
         [ForeignKey("StudentId")]
         public virtual Student? Student { get; set; }
 
         [ForeignKey("SubjectId")]
         public virtual Subject? Subject { get; set; }
-
-        [ForeignKey("EnteredByTeacherId")]
-        public virtual User? EnteredByTeacher { get; set; }
     }
 }

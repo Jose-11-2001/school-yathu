@@ -3,25 +3,40 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
+    /// <summary>
+    /// Exam model
+    /// </summary>
     public class Exam
     {
         [Key]
         public int Id { get; set; }
-        
+
         [Required]
-        public string Name { get; set; } = string.Empty;
-        
-        public string? Type { get; set; }
-        
-        public int? Year { get; set; }
-        
-        public string? Term { get; set; }
-        
-        public DateTime? ExamDate { get; set; }
-        
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        public int? SubjectId { get; set; }
+
+        public int? ClassId { get; set; }
+
+        public DateTime ExamDate { get; set; }
+
+        [MaxLength(200)]
+        public string? Venue { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
-        // Navigation property - Links to ExamResults
-        public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation properties
+        [ForeignKey("SubjectId")]
+        public virtual Subject? Subject { get; set; }
+
+        [ForeignKey("ClassId")]
+        public virtual Class? Class { get; set; }
+
+        public virtual ICollection<ExamResult>? ExamResults { get; set; }
     }
 }

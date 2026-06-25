@@ -15,10 +15,12 @@ namespace School_Yathu.Controllers
     public class StudentRegistrationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<StudentRegistrationController> _logger;
 
-        public StudentRegistrationController(ApplicationDbContext context)
+        public StudentRegistrationController(ApplicationDbContext context, ILogger<StudentRegistrationController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         /// <summary>
@@ -30,18 +32,26 @@ namespace School_Yathu.Controllers
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetClasses()
         {
-            var classes = await _context.Classes
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Name,
-                    c.Stream
-                })
-                .OrderBy(c => c.Name)
-                .ThenBy(c => c.Stream)
-                .ToListAsync();
+            try
+            {
+                var classes = await _context.Classes
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Name,
+                        c.Stream
+                    })
+                    .OrderBy(c => c.Name)
+                    .ThenBy(c => c.Stream)
+                    .ToListAsync();
 
-            return Ok(classes);
+                return Ok(classes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting classes");
+                return StatusCode(500, new { message = "An error occurred while retrieving classes" });
+            }
         }
 
         /// <summary>
@@ -54,49 +64,61 @@ namespace School_Yathu.Controllers
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetAvailableSubjects(string className, string stream, [FromQuery] string? root)
         {
-            var classEntity = await _context.Classes
-                .FirstOrDefaultAsync(c => c.Name == className && c.Stream == stream);
-
-            if (classEntity == null)
-                return NotFound(new { message = "Class not found" });
-
-            var classSubjects = await _context.ClassSubjects
-                .Include(cs => cs.Subject)
-                .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
-                .Select(cs => cs.Subject)
-                .ToListAsync();
-
-            var coreSubjectNames = new List<string> { "Mathematics", "English", "Chichewa" };
-            var humanitiesSubjects = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
-            var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
-
-            var coreSubjects = classSubjects
-                .Where(s => coreSubjectNames.Contains(s.Name))
-                .Select(s => s.Name)
-                .ToList();
-
-            var humanities = classSubjects
-                .Where(s => humanitiesSubjects.Contains(s.Name))
-                .Select(s => s.Name)
-                .ToList();
-
-            var sciences = classSubjects
-                .Where(s => scienceSubjects.Contains(s.Name))
-                .Select(s => s.Name)
-                .ToList();
-
-            return Ok(new
+            try
             {
-                coreSubjects = coreSubjects,
-                humanitiesSubjects = humanities,
-                scienceSubjects = sciences,
-                availableSubjects = classSubjects.Select(s => new
+                var classEntity = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.Name == className && c.Stream == stream);
+
+                if (classEntity == null)
+                    return NotFound(new { message = "Class not found" });
+
+                var classSubjects = await _context.ClassSubjects
+                    .Include(cs => cs.Subject)
+                    .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
+                    .Select(cs => cs.Subject)
+                    .ToListAsync();
+
+                // Define subject categories
+                var coreSubjectNames = new List<string> { "Mathematics", "English", "Chichewa" };
+                var humanitiesSubjectNames = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
+                var scienceSubjectNames = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
+
+                var coreSubjects = classSubjects
+                    .Where(s => s != null && coreSubjectNames.Contains(s.Name))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                var humanities = classSubjects
+                    .Where(s => s != null && humanitiesSubjectNames.Contains(s.Name))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                var sciences = classSubjects
+                    .Where(s => s != null && scienceSubjectNames.Contains(s.Name))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                return Ok(new
                 {
-                    s.Id,
-                    s.Name,
-                    s.Code
-                }).ToList()
-            });
+                    coreSubjects = coreSubjects,
+                    humanitiesSubjects = humanities,
+                    scienceSubjects = sciences,
+                    availableSubjects = classSubjects
+                        .Where(s => s != null)
+                        .Select(s => new
+                        {
+                            s.Id,
+                            s.Name,
+                            s.Code
+                        })
+                        .ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting available subjects for class: {ClassName}, stream: {Stream}", className, stream);
+                return StatusCode(500, new { message = "An error occurred while retrieving available subjects" });
+            }
         }
 
         /// <summary>
@@ -108,31 +130,84 @@ namespace School_Yathu.Controllers
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetRegisteredStudents([FromQuery] string? className, [FromQuery] string? stream)
         {
-            var query = _context.Students.AsQueryable();
+            try
+            {
+                var query = _context.Students.AsQueryable();
 
-            if (!string.IsNullOrEmpty(className))
-                query = query.Where(s => s.Class == className);
-            
-            if (!string.IsNullOrEmpty(stream))
-                query = query.Where(s => s.Stream == stream);
+                if (!string.IsNullOrEmpty(className))
+                    query = query.Where(s => s.Class == className);
 
-            var students = await query
-                .Select(s => new
-                {
-                    s.Id,
-                    s.AdmissionNumber,
-                    s.FullName,
-                    s.Class,
-                    s.Stream,
-                    s.CreatedAt,
-                    SubjectsCount = _context.StudentSubjects.Count(ss => ss.StudentId == s.Id && ss.IsActive)
-                })
-                .OrderBy(s => s.Class)
-                .ThenBy(s => s.Stream)
-                .ThenBy(s => s.FullName)
-                .ToListAsync();
+                if (!string.IsNullOrEmpty(stream))
+                    query = query.Where(s => s.Stream == stream);
 
-            return Ok(students);
+                var students = await query
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.AdmissionNumber,
+                        s.FullName,
+                        s.Class,
+                        s.Stream,
+                        s.Email,
+                        s.CreatedAt,
+                        SubjectsCount = _context.StudentSubjects.Count(ss => ss.StudentId == s.Id && ss.IsActive)
+                    })
+                    .OrderBy(s => s.Class)
+                    .ThenBy(s => s.Stream)
+                    .ThenBy(s => s.FullName)
+                    .ToListAsync();
+
+                return Ok(students);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting registered students");
+                return StatusCode(500, new { message = "An error occurred while retrieving students" });
+            }
+        }
+
+        /// <summary>
+        /// Get student subjects with teachers
+        /// </summary>
+        [HttpGet("student-subjects")]
+        [SwaggerOperation(Summary = "Get student subjects", Description = "Retrieves subjects for a student with teacher details")]
+        public async Task<IActionResult> GetStudentSubjects([FromQuery] string className, [FromQuery] string stream)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(className))
+                    return BadRequest(new { message = "Class is required" });
+
+                var classEntity = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.Name == className && (string.IsNullOrEmpty(stream) || c.Stream == stream));
+
+                if (classEntity == null)
+                    return NotFound(new { message = "Class not found" });
+
+                var subjects = await _context.ClassSubjects
+                    .Include(cs => cs.Subject)
+                    .Include(cs => cs.Teacher)
+                    .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
+                    .Select(cs => new
+                    {
+                        cs.Id,
+                        Name = cs.Subject != null ? cs.Subject.Name : "Unknown",
+                        Code = cs.Subject != null ? cs.Subject.Code : "N/A",
+                        Type = cs.Subject != null ? cs.Subject.Type : "Core",
+                        TeacherName = cs.Teacher != null ? cs.Teacher.Name : "Not assigned",
+                        TeacherEmail = cs.Teacher != null ? cs.Teacher.Email : null,
+                        ClassName = classEntity.Name,
+                        Stream = classEntity.Stream
+                    })
+                    .ToListAsync();
+
+                return Ok(new { subjects });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting student subjects");
+                return StatusCode(500, new { message = "An error occurred while retrieving subjects" });
+            }
         }
 
         /// <summary>
@@ -146,27 +221,36 @@ namespace School_Yathu.Controllers
         public async Task<IActionResult> RegisterStudent([FromBody] StudentRegistrationDTO dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
-            
+
             try
             {
+                // Validate input
+                if (dto == null)
+                    return BadRequest(new { message = "Invalid student data" });
+
                 var existingStudent = await _context.Students
                     .FirstOrDefaultAsync(s => s.AdmissionNumber == dto.AdmissionNumber);
-                
+
                 if (existingStudent != null)
                     return BadRequest(new { message = $"Student with admission number '{dto.AdmissionNumber}' already exists" });
 
                 bool isUpperForm = dto.Class.Contains("Form 3") || dto.Class.Contains("Form 4") ||
                                    dto.Class.Contains("Form3") || dto.Class.Contains("Form4");
-                
+
                 if (isUpperForm && string.IsNullOrEmpty(dto.Root))
                     return BadRequest(new { message = "Root (Humanities or Sciences) is required for Form 3 and Form 4 students" });
-                
+
                 if (!isUpperForm && !string.IsNullOrEmpty(dto.Root))
                     return BadRequest(new { message = "Root selection is only for Form 3 and Form 4 students" });
 
+                // Get class entity
                 var classEntity = await _context.Classes
                     .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
 
+                if (classEntity == null)
+                    return BadRequest(new { message = "Class not found. Please add the class first." });
+
+                // Create student
                 var student = new Student
                 {
                     AdmissionNumber = dto.AdmissionNumber,
@@ -174,13 +258,16 @@ namespace School_Yathu.Controllers
                     Class = dto.Class,
                     Stream = dto.Stream,
                     TeacherId = dto.TeacherId,
-                    ClassId = classEntity?.Id,
-                    CreatedAt = DateTime.UtcNow
+                    ClassId = classEntity.Id,
+                    Email = $"{dto.AdmissionNumber.ToLower()}@student.school.com",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
 
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
 
+                // Allocate subjects
                 var subjectIdsToAllocate = new List<int>();
 
                 if (isUpperForm)
@@ -218,6 +305,7 @@ namespace School_Yathu.Controllers
                     subjectIdsToAllocate.AddRange(classSubjects);
                 }
 
+                // Add selected subjects if any
                 if (dto.SelectedSubjectIds != null && dto.SelectedSubjectIds.Any())
                 {
                     foreach (var subjectId in dto.SelectedSubjectIds)
@@ -227,6 +315,7 @@ namespace School_Yathu.Controllers
                     }
                 }
 
+                // Create student subject allocations
                 var currentYear = DateTime.Now.Year;
                 foreach (var subjectId in subjectIdsToAllocate.Distinct())
                 {
@@ -252,8 +341,9 @@ namespace School_Yathu.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Create user account
                 var userAccount = await CreateStudentUserAccount(student);
-                
+
                 return Ok(new
                 {
                     message = $"Student {student.FullName} registered successfully!",
@@ -265,7 +355,7 @@ namespace School_Yathu.Controllers
                         student.Class,
                         student.Stream,
                         Root = isUpperForm ? dto.Root : null,
-                        SubjectsAllocated = subjectIdsToAllocate.Count,
+                        SubjectsAllocated = subjectIdsToAllocate.Distinct().Count(),
                         LoginCredentials = userAccount
                     }
                 });
@@ -273,6 +363,7 @@ namespace School_Yathu.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error registering student");
                 return StatusCode(500, new { message = $"Error registering student: {ex.Message}" });
             }
         }
@@ -287,30 +378,39 @@ namespace School_Yathu.Controllers
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetStudentDetails(int studentId)
         {
-            var student = await _context.Students.FindAsync(studentId);
-            if (student == null)
-                return NotFound(new { message = "Student not found" });
-
-            var allocatedSubjects = await _context.StudentSubjects
-                .Include(ss => ss.Subject)
-                .Where(ss => ss.StudentId == studentId && ss.IsActive)
-                .Select(ss => ss.SubjectId)
-                .ToListAsync();
-
-            bool isUpperForm = student.Class.Contains("Form 3") || student.Class.Contains("Form 4") ||
-                               student.Class.Contains("Form3") || student.Class.Contains("Form4");
-
-            return Ok(new
+            try
             {
-                student.Id,
-                student.AdmissionNumber,
-                student.FullName,
-                student.Class,
-                student.Stream,
-                student.TeacherId,
-                SelectedSubjectIds = allocatedSubjects,
-                Root = isUpperForm ? await GetStudentRoot(studentId) : null
-            });
+                var student = await _context.Students.FindAsync(studentId);
+                if (student == null)
+                    return NotFound(new { message = "Student not found" });
+
+                var allocatedSubjects = await _context.StudentSubjects
+                    .Include(ss => ss.Subject)
+                    .Where(ss => ss.StudentId == studentId && ss.IsActive)
+                    .Select(ss => ss.SubjectId)
+                    .ToListAsync();
+
+                bool isUpperForm = student.Class != null && 
+                    (student.Class.Contains("Form 3") || student.Class.Contains("Form 4") ||
+                     student.Class.Contains("Form3") || student.Class.Contains("Form4"));
+
+                return Ok(new
+                {
+                    student.Id,
+                    student.AdmissionNumber,
+                    student.FullName,
+                    student.Class,
+                    student.Stream,
+                    student.TeacherId,
+                    SelectedSubjectIds = allocatedSubjects,
+                    Root = isUpperForm ? await GetStudentRoot(studentId) : null
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting student details");
+                return StatusCode(500, new { message = "An error occurred while retrieving student details" });
+            }
         }
 
         /// <summary>
@@ -323,24 +423,47 @@ namespace School_Yathu.Controllers
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> UpdateStudent(int studentId, [FromBody] StudentRegistrationDTO dto)
         {
-            var student = await _context.Students.FindAsync(studentId);
-            if (student == null)
-                return NotFound(new { message = "Student not found" });
+            try
+            {
+                var student = await _context.Students.FindAsync(studentId);
+                if (student == null)
+                    return NotFound(new { message = "Student not found" });
 
-            student.FullName = dto.FullName;
-            student.Class = dto.Class;
-            student.Stream = dto.Stream;
-            student.TeacherId = dto.TeacherId;
-            student.UpdatedAt = DateTime.Now;
+                // Update fields
+                student.FullName = dto.FullName;
+                student.Class = dto.Class;
+                student.Stream = dto.Stream;
+                student.TeacherId = dto.TeacherId;
+                student.UpdatedAt = DateTime.UtcNow;
 
-            var classEntity = await _context.Classes
-                .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
-            student.ClassId = classEntity?.Id;
+                // Update class reference
+                var classEntity = await _context.Classes
+                    .FirstOrDefaultAsync(c => c.Name == dto.Class && c.Stream == dto.Stream);
+                student.ClassId = classEntity?.Id;
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Student updated successfully" });
+                return Ok(new 
+                { 
+                    message = "Student updated successfully",
+                    student = new
+                    {
+                        student.Id,
+                        student.AdmissionNumber,
+                        student.FullName,
+                        student.Class,
+                        student.Stream
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating student");
+                return StatusCode(500, new { message = "An error occurred while updating student" });
+            }
         }
+
+        #region Helper Methods
 
         private bool IsCoreSubject(string subjectName)
         {
@@ -362,58 +485,90 @@ namespace School_Yathu.Controllers
 
         private async Task<string> GetStudentRoot(int studentId)
         {
-            var subjects = await _context.StudentSubjects
-                .Include(ss => ss.Subject)
-                .Where(ss => ss.StudentId == studentId && ss.IsActive)
-                .Select(ss => ss.Subject!.Name)
-                .ToListAsync();
+            try
+            {
+                var subjects = await _context.StudentSubjects
+                    .Include(ss => ss.Subject)
+                    .Where(ss => ss.StudentId == studentId && ss.IsActive)
+                    .Select(ss => ss.Subject != null ? ss.Subject.Name : "")
+                    .ToListAsync();
 
-            var humanitiesCount = subjects.Count(IsHumanitiesSubject);
-            var sciencesCount = subjects.Count(IsScienceSubject);
+                var humanitiesSubjects = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
+                var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
 
-            if (humanitiesCount > sciencesCount) return "Humanities";
-            if (sciencesCount > humanitiesCount) return "Sciences";
-            return "Balanced";
+                var humanitiesCount = subjects.Count(s => humanitiesSubjects.Contains(s));
+                var sciencesCount = subjects.Count(s => scienceSubjects.Contains(s));
+
+                if (humanitiesCount > sciencesCount) 
+                    return "Humanities";
+                if (sciencesCount > humanitiesCount) 
+                    return "Sciences";
+                return "Balanced";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting student root for student ID: {StudentId}", studentId);
+                return "Unknown";
+            }
         }
 
         private async Task<object> CreateStudentUserAccount(Student student)
         {
-            var password = GenerateRandomPassword();
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == $"{student.AdmissionNumber.ToLower()}@student.school.com");
-
-            if (existingUser != null)
+            try
             {
+                var email = $"{student.AdmissionNumber.ToLower()}@student.school.com";
+                var password = GenerateRandomPassword();
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == email);
+
+                if (existingUser != null)
+                {
+                    // Reset password for existing user
+                    existingUser.PasswordHash = passwordHash;
+                    existingUser.MustChangePassword = true;
+                    existingUser.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    return new
+                    {
+                        Email = email,
+                        Password = password,
+                        Message = "User account already exists. Password has been reset."
+                    };
+                }
+
+                var user = new User
+                {
+                    Email = email,
+                    Name = student.FullName,
+                    PasswordHash = passwordHash,
+                    Role = "Student",
+                    IsActive = true,
+                    MustChangePassword = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
                 return new
                 {
-                    Email = existingUser.Email,
+                    Email = user.Email,
                     Password = password,
-                    Message = "User account already exists. Password reset sent."
+                    Message = "Student login credentials created successfully"
                 };
             }
-
-            var user = new User
+            catch (Exception ex)
             {
-                Email = $"{student.AdmissionNumber.ToLower()}@student.school.com",
-                Name = student.FullName,
-                PasswordHash = passwordHash,
-                Role = "Student",
-                IsActive = true,
-                MustChangePassword = true,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return new
-            {
-                Email = user.Email,
-                Password = password,
-                Message = "Student login credentials created"
-            };
+                _logger.LogError(ex, "Error creating student user account");
+                return new
+                {
+                    Message = "Student registered but user account creation failed",
+                    Error = ex.Message
+                };
+            }
         }
 
         private string GenerateRandomPassword()
@@ -423,5 +578,7 @@ namespace School_Yathu.Controllers
             return new string(Enumerable.Repeat(chars, 10)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        #endregion
     }
 }
