@@ -164,6 +164,51 @@
             Reset password (Admin only)
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetStudentNotifications">
+            <summary>
+            Get notifications for the logged-in student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetTeacherNotifications">
+            <summary>
+            Get notifications for the logged-in teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetAdminNotifications">
+            <summary>
+            Get notifications for the logged-in admin
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetUnreadCount">
+            <summary>
+            Get unread notification count for the logged-in user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.MarkAsRead(System.Int32)">
+            <summary>
+            Mark a notification as read
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.MarkAllAsRead">
+            <summary>
+            Mark all notifications as read for the logged-in user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.SendNotification(School_Yathu.DTOs.SendNotificationDTO)">
+            <summary>
+            Send a notification (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.SendEmailNotifications(School_Yathu.DTOs.SendNotificationDTO)">
+            <summary>
+            Send email notifications to users
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetTimeAgo(System.DateTime)">
+            <summary>
+            Get human-readable time ago string
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetPendingResults">
             <summary>
             Get pending results for approval
@@ -601,12 +646,7 @@
         </member>
         <member name="T:School_Yathu.Models.Notification">
             <summary>
-            Notification model for system notifications
-            </summary>
-        </member>
-        <member name="T:School_Yathu.Models.Student">
-            <summary>
-            Student model
+            Notification model
             </summary>
         </member>
         <member name="T:School_Yathu.Models.StudentMark">

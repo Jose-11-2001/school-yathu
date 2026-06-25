@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using School_Yathu.Models.Enums;
 
 namespace School_Yathu.Models
 {
     /// <summary>
-    /// Notification model for system notifications
+    /// Notification model
     /// </summary>
     public class Notification
     {
@@ -20,30 +19,26 @@ namespace School_Yathu.Models
         [MaxLength(1000)]
         public string Message { get; set; } = string.Empty;
 
-        // Recipient identifiers
-        public int? UserId { get; set; }        // Specific user (general)
-        public int? StudentId { get; set; }     // Specific student
-        public int? TeacherId { get; set; }     // Specific teacher
-        public int? AdminId { get; set; }       // Specific admin
-
-        // For targeting specific users (alternative naming)
-        public int? SpecificStudentId { get; set; }
-        public int? SpecificTeacherId { get; set; }
+        // Recipient identifiers - Use these only
+        public int? UserId { get; set; }
+        public int? StudentId { get; set; }
+        public int? TeacherId { get; set; }
+        public int? AdminId { get; set; }
 
         [MaxLength(50)]
-        public string? Type { get; set; } // result, deadline, enrollment, general, academic, exam
+        public string? Type { get; set; }
 
         [MaxLength(20)]
-        public string? Role { get; set; } // Student, Teacher, Admin, All
+        public string? Role { get; set; }
 
-        public string? Link { get; set; } // Optional link for action
+        public string? Link { get; set; }
 
         public bool IsRead { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ReadAt { get; set; }
 
-        // Navigation properties
+        // Navigation properties - Only ONE relationship per entity
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }
 
@@ -55,11 +50,5 @@ namespace School_Yathu.Models
 
         [ForeignKey("AdminId")]
         public virtual User? Admin { get; set; }
-
-        [ForeignKey("SpecificStudentId")]
-        public virtual Student? SpecificStudent { get; set; }
-
-        [ForeignKey("SpecificTeacherId")]
-        public virtual User? SpecificTeacher { get; set; }
     }
 }

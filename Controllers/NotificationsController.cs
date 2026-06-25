@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +6,7 @@ using School_Yathu.DTOs;
 using School_Yathu.Models;
 using School_Yathu.Services;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Security.Claims;
 
 namespace School_Yathu.Controllers
 {
@@ -30,11 +30,14 @@ namespace School_Yathu.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Get notifications for the logged-in student
+        /// </summary>
         [HttpGet("student")]
         [SwaggerOperation(Summary = "Get student notifications")]
         public async Task<IActionResult> GetStudentNotifications()
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var user = await _context.Users.FindAsync(userId);
             
             if (user == null || user.Role != "Student")
@@ -52,51 +55,48 @@ namespace School_Yathu.Controllers
                 return Ok(new NotificationListResponseDTO());
             }
 
+            // Get notifications for this student - Using only the navigation properties that exist
             var notificationsList = await _context.Notifications
-                .Where(n => n.UserId == userId || n.Role == "Student" || n.SpecificStudentId == student.Id)
+                .Where(n => n.UserId == userId || n.StudentId == student.Id || n.Role == "Student")
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            var notifications = new List<NotificationResponseDTO>();
-            foreach (var n in notificationsList)
+            var notifications = notificationsList.Select(n => new NotificationResponseDTO
             {
-                var response = new NotificationResponseDTO();
-                response.Id = n.Id;
-                response.Message = n.Message;
-                response.Title = n.Title;
-                response.IsRead = n.IsRead;
-                response.CreatedAt = n.CreatedAt;
-                response.Type = n.Type;
-                response.Link = n.Link;
-                response.Role = n.Role;
-                response.StudentId = n.StudentId;
-                response.TeacherId = n.TeacherId;
-                response.TimeAgo = GetTimeAgo(n.CreatedAt);
-                notifications.Add(response);
-            }
+                Id = n.Id,
+                Message = n.Message,
+                Title = n.Title,
+                IsRead = n.IsRead,
+                CreatedAt = n.CreatedAt,
+                Type = n.Type,
+                Link = n.Link,
+                Role = n.Role,
+                StudentId = n.StudentId,
+                TeacherId = n.TeacherId,
+                TimeAgo = GetTimeAgo(n.CreatedAt)
+            }).ToList();
 
-            var unreadCount = 0;
-            foreach (var n in notifications)
+            var unreadCount = notifications.Count(n => !n.IsRead);
+
+            return Ok(new NotificationListResponseDTO
             {
-                if (!n.IsRead) unreadCount++;
-            }
-
-            var result = new NotificationListResponseDTO();
-            result.Notifications = notifications;
-            result.TotalCount = notifications.Count;
-            result.UnreadCount = unreadCount;
-            result.Page = 1;
-            result.PageSize = 50;
-            result.TotalPages = 1;
-
-            return Ok(result);
+                Notifications = notifications,
+                TotalCount = notifications.Count,
+                UnreadCount = unreadCount,
+                Page = 1,
+                PageSize = 50,
+                TotalPages = 1
+            });
         }
 
+        /// <summary>
+        /// Get notifications for the logged-in teacher
+        /// </summary>
         [HttpGet("teacher")]
         [SwaggerOperation(Summary = "Get teacher notifications")]
         public async Task<IActionResult> GetTeacherNotifications()
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var user = await _context.Users.FindAsync(userId);
             
             if (user == null || user.Role != "Teacher")
@@ -104,101 +104,91 @@ namespace School_Yathu.Controllers
                 return Unauthorized();
             }
 
-            var teacher = await _context.Teachers
-                .FirstOrDefaultAsync(t => t.Email == user.Email);
-
+            // Get notifications for this teacher
             var notificationsList = await _context.Notifications
-                .Where(n => n.UserId == userId || n.Role == "Teacher" || n.SpecificTeacherId == teacher.Id)
+                .Where(n => n.UserId == userId || n.TeacherId == userId || n.Role == "Teacher")
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            var notifications = new List<NotificationResponseDTO>();
-            foreach (var n in notificationsList)
+            var notifications = notificationsList.Select(n => new NotificationResponseDTO
             {
-                var response = new NotificationResponseDTO();
-                response.Id = n.Id;
-                response.Message = n.Message;
-                response.Title = n.Title;
-                response.IsRead = n.IsRead;
-                response.CreatedAt = n.CreatedAt;
-                response.Type = n.Type;
-                response.Link = n.Link;
-                response.Role = n.Role;
-                response.StudentId = n.StudentId;
-                response.TeacherId = n.TeacherId;
-                response.TimeAgo = GetTimeAgo(n.CreatedAt);
-                notifications.Add(response);
-            }
+                Id = n.Id,
+                Message = n.Message,
+                Title = n.Title,
+                IsRead = n.IsRead,
+                CreatedAt = n.CreatedAt,
+                Type = n.Type,
+                Link = n.Link,
+                Role = n.Role,
+                StudentId = n.StudentId,
+                TeacherId = n.TeacherId,
+                TimeAgo = GetTimeAgo(n.CreatedAt)
+            }).ToList();
 
-            var unreadCount = 0;
-            foreach (var n in notifications)
+            var unreadCount = notifications.Count(n => !n.IsRead);
+
+            return Ok(new NotificationListResponseDTO
             {
-                if (!n.IsRead) unreadCount++;
-            }
-
-            var result = new NotificationListResponseDTO();
-            result.Notifications = notifications;
-            result.TotalCount = notifications.Count;
-            result.UnreadCount = unreadCount;
-            result.Page = 1;
-            result.PageSize = 50;
-            result.TotalPages = 1;
-
-            return Ok(result);
+                Notifications = notifications,
+                TotalCount = notifications.Count,
+                UnreadCount = unreadCount,
+                Page = 1,
+                PageSize = 50,
+                TotalPages = 1
+            });
         }
 
+        /// <summary>
+        /// Get notifications for the logged-in admin
+        /// </summary>
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Get admin notifications")]
         public async Task<IActionResult> GetAdminNotifications()
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
             var notificationsList = await _context.Notifications
                 .Where(n => n.UserId == userId || n.Role == "Admin")
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
-            var notifications = new List<NotificationResponseDTO>();
-            foreach (var n in notificationsList)
+            var notifications = notificationsList.Select(n => new NotificationResponseDTO
             {
-                var response = new NotificationResponseDTO();
-                response.Id = n.Id;
-                response.Message = n.Message;
-                response.Title = n.Title;
-                response.IsRead = n.IsRead;
-                response.CreatedAt = n.CreatedAt;
-                response.Type = n.Type;
-                response.Link = n.Link;
-                response.Role = n.Role;
-                response.StudentId = n.StudentId;
-                response.TeacherId = n.TeacherId;
-                response.TimeAgo = GetTimeAgo(n.CreatedAt);
-                notifications.Add(response);
-            }
+                Id = n.Id,
+                Message = n.Message,
+                Title = n.Title,
+                IsRead = n.IsRead,
+                CreatedAt = n.CreatedAt,
+                Type = n.Type,
+                Link = n.Link,
+                Role = n.Role,
+                StudentId = n.StudentId,
+                TeacherId = n.TeacherId,
+                TimeAgo = GetTimeAgo(n.CreatedAt)
+            }).ToList();
 
-            var unreadCount = 0;
-            foreach (var n in notifications)
+            var unreadCount = notifications.Count(n => !n.IsRead);
+
+            return Ok(new NotificationListResponseDTO
             {
-                if (!n.IsRead) unreadCount++;
-            }
-
-            var result = new NotificationListResponseDTO();
-            result.Notifications = notifications;
-            result.TotalCount = notifications.Count;
-            result.UnreadCount = unreadCount;
-            result.Page = 1;
-            result.PageSize = 50;
-            result.TotalPages = 1;
-
-            return Ok(result);
+                Notifications = notifications,
+                TotalCount = notifications.Count,
+                UnreadCount = unreadCount,
+                Page = 1,
+                PageSize = 50,
+                TotalPages = 1
+            });
         }
 
+        /// <summary>
+        /// Get unread notification count for the logged-in user
+        /// </summary>
         [HttpGet("unread-count")]
         [SwaggerOperation(Summary = "Get unread count")]
         public async Task<IActionResult> GetUnreadCount()
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             
             var count = await _context.Notifications
                 .CountAsync(n => n.UserId == userId && !n.IsRead);
@@ -206,11 +196,14 @@ namespace School_Yathu.Controllers
             return Ok(new { unreadCount = count });
         }
 
+        /// <summary>
+        /// Mark a notification as read
+        /// </summary>
         [HttpPut("{id}/read")]
         [SwaggerOperation(Summary = "Mark notification as read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
@@ -221,27 +214,33 @@ namespace School_Yathu.Controllers
             }
 
             notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            var response = new NotificationResponseDTO();
-            response.Id = notification.Id;
-            response.Message = notification.Message;
-            response.Title = notification.Title;
-            response.IsRead = notification.IsRead;
-            response.CreatedAt = notification.CreatedAt;
-            response.Type = notification.Type;
-            response.Link = notification.Link;
-            response.Role = notification.Role;
-            response.TimeAgo = GetTimeAgo(notification.CreatedAt);
+            var response = new NotificationResponseDTO
+            {
+                Id = notification.Id,
+                Message = notification.Message,
+                Title = notification.Title,
+                IsRead = notification.IsRead,
+                CreatedAt = notification.CreatedAt,
+                Type = notification.Type,
+                Link = notification.Link,
+                Role = notification.Role,
+                TimeAgo = GetTimeAgo(notification.CreatedAt)
+            };
 
             return Ok(response);
         }
 
+        /// <summary>
+        /// Mark all notifications as read for the logged-in user
+        /// </summary>
         [HttpPut("read-all")]
         [SwaggerOperation(Summary = "Mark all as read")]
         public async Task<IActionResult> MarkAllAsRead()
         {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
             var notifications = await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
@@ -250,6 +249,7 @@ namespace School_Yathu.Controllers
             foreach (var notification in notifications)
             {
                 notification.IsRead = true;
+                notification.ReadAt = DateTime.UtcNow;
             }
 
             await _context.SaveChangesAsync();
@@ -257,6 +257,9 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "All notifications marked as read", count = notifications.Count });
         }
 
+        /// <summary>
+        /// Send a notification (Admin only)
+        /// </summary>
         [HttpPost("send")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Send notification")]
@@ -297,6 +300,9 @@ namespace School_Yathu.Controllers
             }
         }
 
+        /// <summary>
+        /// Send email notifications to users
+        /// </summary>
         private async Task<bool> SendEmailNotifications(SendNotificationDTO dto)
         {
             try
@@ -315,7 +321,7 @@ namespace School_Yathu.Controllers
                         if (student != null)
                         {
                             var user = await _context.Users
-                                .FirstOrDefaultAsync(u => u.Email == $"{student.AdmissionNumber.ToLower()}@maranatha.ac.mw");
+                                .FirstOrDefaultAsync(u => u.Email == $"{student.AdmissionNumber.ToLower()}@student.school.com");
                             if (user != null)
                             {
                                 users.Add(user);
@@ -333,15 +339,11 @@ namespace School_Yathu.Controllers
                 {
                     if (dto.TeacherId.HasValue)
                     {
-                        var teacher = await _context.Teachers.FindAsync(dto.TeacherId.Value);
-                        if (teacher != null)
+                        var user = await _context.Users
+                            .FirstOrDefaultAsync(u => u.Id == dto.TeacherId.Value && u.Role == "Teacher");
+                        if (user != null)
                         {
-                            var user = await _context.Users
-                                .FirstOrDefaultAsync(u => u.Email == teacher.Email);
-                            if (user != null)
-                            {
-                                users.Add(user);
-                            }
+                            users.Add(user);
                         }
                     }
                     else
@@ -351,6 +353,12 @@ namespace School_Yathu.Controllers
                             .ToListAsync();
                     }
                 }
+                else if (dto.Role == "Admin")
+                {
+                    users = await _context.Users
+                        .Where(u => u.Role == "Admin" && u.IsActive)
+                        .ToListAsync();
+                }
 
                 foreach (var user in users)
                 {
@@ -359,7 +367,7 @@ namespace School_Yathu.Controllers
                         UserEmail = user.Email,
                         UserName = user.Name,
                         Message = dto.Message,
-                        Subject = dto.Subject ?? "New Notification from Maranatha Secondary School",
+                        Subject = dto.Subject ?? "New Notification from School",
                         Type = dto.Type ?? "general",
                         Link = dto.Link
                     };
@@ -376,6 +384,9 @@ namespace School_Yathu.Controllers
             }
         }
 
+        /// <summary>
+        /// Get human-readable time ago string
+        /// </summary>
         private string GetTimeAgo(DateTime dateTime)
         {
             var timeSpan = DateTime.UtcNow - dateTime;

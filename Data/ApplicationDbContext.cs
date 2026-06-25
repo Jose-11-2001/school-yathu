@@ -113,89 +113,89 @@ namespace School_Yathu.Data
         }
 
         private void ConfigureStudent(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Student>(entity =>
-            {
-                // Primary Key
-                entity.HasKey(s => s.Id);
+{
+    modelBuilder.Entity<Student>(entity =>
+    {
+        // Primary Key
+        entity.HasKey(s => s.Id);
 
-                // Properties
-                entity.Property(s => s.AdmissionNumber)
-                    .IsRequired()
-                    .HasMaxLength(50);
+        // Properties
+        entity.Property(s => s.AdmissionNumber)
+            .IsRequired()
+            .HasMaxLength(50);
 
-                entity.Property(s => s.FullName)
-                    .IsRequired()
-                    .HasMaxLength(100);
+        entity.Property(s => s.FullName)
+            .IsRequired()
+            .HasMaxLength(100);
 
-                entity.Property(s => s.Class)
-                    .HasMaxLength(50);
+        entity.Property(s => s.Class)
+            .HasMaxLength(50);
 
-                entity.Property(s => s.Stream)
-                    .HasMaxLength(50);
+        entity.Property(s => s.Stream)
+            .HasMaxLength(50);
 
-                entity.Property(s => s.Email)
-                    .HasMaxLength(100);
+        entity.Property(s => s.Email)
+            .HasMaxLength(100);
 
-                entity.Property(s => s.PhoneNumber)
-                    .HasMaxLength(20);
+        entity.Property(s => s.PhoneNumber)
+            .HasMaxLength(20);
 
-                entity.Property(s => s.Address)
-                    .HasMaxLength(200);
+        entity.Property(s => s.Address)
+            .HasMaxLength(200);
 
-                entity.Property(s => s.Gender)
-                    .HasMaxLength(10);
+        entity.Property(s => s.Gender)
+            .HasMaxLength(10);
 
-                // Indexes
-                entity.HasIndex(s => s.AdmissionNumber)
-                    .IsUnique()
-                    .HasDatabaseName("IX_Students_AdmissionNumber");
+        // Indexes
+        entity.HasIndex(s => s.AdmissionNumber)
+            .IsUnique()
+            .HasDatabaseName("IX_Students_AdmissionNumber");
 
-                entity.HasIndex(s => s.Email)
-                    .IsUnique(false)
-                    .HasDatabaseName("IX_Students_Email");
+        entity.HasIndex(s => s.Email)
+            .IsUnique(false)
+            .HasDatabaseName("IX_Students_Email");
 
-                entity.HasIndex(s => new { s.Class, s.Stream })
-                    .HasDatabaseName("IX_Students_Class_Stream");
+        entity.HasIndex(s => new { s.Class, s.Stream })
+            .HasDatabaseName("IX_Students_Class_Stream");
 
-                // Relationships
-                entity.HasOne(s => s.Teacher)
-                    .WithMany(u => u.Students)
-                    .HasForeignKey(s => s.TeacherId)
-                    .OnDelete(DeleteBehavior.SetNull);
+        // Relationships - Only ONE notification relationship
+        entity.HasOne(s => s.Teacher)
+            .WithMany(u => u.Students)
+            .HasForeignKey(s => s.TeacherId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasOne(s => s.ClassEntity)
-                    .WithMany(c => c.Students)
-                    .HasForeignKey(s => s.ClassId)
-                    .OnDelete(DeleteBehavior.SetNull);
+        entity.HasOne(s => s.ClassEntity)
+            .WithMany(c => c.Students)
+            .HasForeignKey(s => s.ClassId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-                entity.HasMany(s => s.Notifications)
-                    .WithOne(n => n.SpecificStudent)
-                    .HasForeignKey(n => n.SpecificStudentId)
-                    .OnDelete(DeleteBehavior.Restrict);
+        // This is the ONLY notification relationship - REMOVED SpecificStudent
+        entity.HasMany(s => s.Notifications)
+            .WithOne(n => n.Student)
+            .HasForeignKey(n => n.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasMany(s => s.ExamResults)
-                    .WithOne(er => er.Student)
-                    .HasForeignKey(er => er.StudentId)
-                    .OnDelete(DeleteBehavior.Cascade);
+        entity.HasMany(s => s.ExamResults)
+            .WithOne(er => er.Student)
+            .HasForeignKey(er => er.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(s => s.StudentSubjects)
-                    .WithOne(ss => ss.Student)
-                    .HasForeignKey(ss => ss.StudentId)
-                    .OnDelete(DeleteBehavior.Cascade);
+        entity.HasMany(s => s.StudentSubjects)
+            .WithOne(ss => ss.Student)
+            .HasForeignKey(ss => ss.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(s => s.Marks)
-                    .WithOne(m => m.Student)
-                    .HasForeignKey(m => m.StudentId)
-                    .OnDelete(DeleteBehavior.Cascade);
+        entity.HasMany(s => s.Marks)
+            .WithOne(m => m.Student)
+            .HasForeignKey(m => m.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(s => s.StudentMarks)
-                    .WithOne(sm => sm.Student)
-                    .HasForeignKey(sm => sm.StudentId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-        }
-
+        entity.HasMany(s => s.StudentMarks)
+            .WithOne(sm => sm.Student)
+            .HasForeignKey(sm => sm.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+}
         private void ConfigureClass(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Class>(entity =>
@@ -598,54 +598,74 @@ namespace School_Yathu.Data
         }
 
         private void ConfigureNotification(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Notification>(entity =>
-            {
-                // Primary Key
-                entity.HasKey(n => n.Id);
+{
+    modelBuilder.Entity<Notification>(entity =>
+    {
+        // Primary Key
+        entity.HasKey(n => n.Id);
 
-                // Properties
-                entity.Property(n => n.Title)
-                    .IsRequired()
-                    .HasMaxLength(200);
+        // Properties
+        entity.Property(n => n.Title)
+            .IsRequired()
+            .HasMaxLength(200);
 
-                entity.Property(n => n.Message)
-                    .IsRequired()
-                    .HasMaxLength(1000);
+        entity.Property(n => n.Message)
+            .IsRequired()
+            .HasMaxLength(1000);
 
-                entity.Property(n => n.Type)
-                    .HasMaxLength(50);
+        entity.Property(n => n.Type)
+            .HasMaxLength(50);
 
-                // Indexes
-                entity.HasIndex(n => n.CreatedAt)
-                    .HasDatabaseName("IX_Notifications_CreatedAt");
+        entity.Property(n => n.Role)
+            .HasMaxLength(20);
 
-                entity.HasIndex(n => n.IsRead)
-                    .HasDatabaseName("IX_Notifications_IsRead");
+        entity.Property(n => n.Link)
+            .HasMaxLength(500);
 
-                entity.HasIndex(n => n.StudentId)
-                    .HasDatabaseName("IX_Notifications_StudentId");
+        // Indexes for performance
+        entity.HasIndex(n => n.CreatedAt)
+            .HasDatabaseName("IX_Notifications_CreatedAt");
 
-                entity.HasIndex(n => n.TeacherId)
-                    .HasDatabaseName("IX_Notifications_TeacherId");
+        entity.HasIndex(n => n.IsRead)
+            .HasDatabaseName("IX_Notifications_IsRead");
 
-                // Relationships
-                entity.HasOne(n => n.Student)
-                    .WithMany(s => s.Notifications)
-                    .HasForeignKey(n => n.StudentId)
-                    .OnDelete(DeleteBehavior.Restrict);
+        entity.HasIndex(n => n.UserId)
+            .HasDatabaseName("IX_Notifications_UserId");
 
-                entity.HasOne(n => n.Teacher)
-                    .WithMany(u => u.Notifications)
-                    .HasForeignKey(n => n.TeacherId)
-                    .OnDelete(DeleteBehavior.Restrict);
+        entity.HasIndex(n => n.StudentId)
+            .HasDatabaseName("IX_Notifications_StudentId");
 
-                entity.HasOne(n => n.User)
-                    .WithMany(u => u.Notifications)
-                    .HasForeignKey(n => n.UserId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-        }
+        entity.HasIndex(n => n.TeacherId)
+            .HasDatabaseName("IX_Notifications_TeacherId");
+
+        entity.HasIndex(n => n.AdminId)
+            .HasDatabaseName("IX_Notifications_AdminId");
+
+        entity.HasIndex(n => new { n.Type, n.CreatedAt })
+            .HasDatabaseName("IX_Notifications_Type_CreatedAt");
+
+        // Relationships - Only ONE relationship per navigation
+        entity.HasOne(n => n.User)
+            .WithMany(u => u.Notifications)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(n => n.Student)
+            .WithMany(s => s.Notifications)
+            .HasForeignKey(n => n.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(n => n.Teacher)
+            .WithMany() // No navigation property on User for this relationship
+            .HasForeignKey(n => n.TeacherId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        entity.HasOne(n => n.Admin)
+            .WithMany() // No navigation property on User for this relationship
+            .HasForeignKey(n => n.AdminId)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+}
 
         private void ConfigureTeacherSubjectAllocation(ModelBuilder modelBuilder)
         {

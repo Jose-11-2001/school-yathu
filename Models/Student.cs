@@ -1,12 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using School_Yathu.Models.Enums;
 
 namespace School_Yathu.Models
 {
-    /// <summary>
-    /// Student model
-    /// </summary>
     public class Student
     {
         [Key]
@@ -58,7 +54,7 @@ namespace School_Yathu.Models
 
         public virtual ICollection<StudentMark>? StudentMarks { get; set; }
         public virtual ICollection<StudentSubject>? StudentSubjects { get; set; }
-        public virtual ICollection<Notification>? Notifications { get; set; }
+        public virtual ICollection<Notification>? Notifications { get; set; } // Only ONE notification collection
         public virtual ICollection<Marks>? Marks { get; set; }
         public virtual ICollection<ExamResult>? ExamResults { get; set; }
     }
