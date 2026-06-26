@@ -693,5 +693,17 @@
         <member name="M:school_yathu.Migrations.YourMigrationName.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:school_yathu.Migrations.AddUpdatedAtColumn">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>
