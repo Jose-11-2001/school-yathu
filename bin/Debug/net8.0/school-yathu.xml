@@ -705,5 +705,17 @@
         <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:school_yathu.Migrations.FixTeacherRelationships">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.FixTeacherRelationships.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.FixTeacherRelationships.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.FixTeacherRelationships.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>
