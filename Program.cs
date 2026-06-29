@@ -95,14 +95,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// 6. CORS – Allow all for initial deployment
+// ✅ FIXED: CORS - Allow your frontend domain
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://school-frontend.vercel.app",
+                "https://school-frontend-git-main-josephs-projects.vercel.app",
+                "https://*.vercel.app"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();  // ✅ Critical for Authorization headers
     });
 });
 
@@ -137,9 +144,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
-// app.UseHttpsRedirection(); // ❌ IMPORTANT: Comment this out for Render!
+// ✅ Use the correct CORS policy
+app.UseCors("AllowFrontend");
 
-app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -155,7 +162,6 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.EnsureCreated();
         Console.WriteLine("Database connection successful");
         
-        // Check admin
         var adminExists = dbContext.Users.Any(u => u.Email == "ntcheu@gmail.com");
         Console.WriteLine($"Admin exists: {adminExists}");
         
@@ -177,7 +183,6 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("Default Admin created!");
         }
         
-        // Seed subjects
         if (!dbContext.Subjects.Any())
         {
             Console.WriteLine("Seeding subjects...");
