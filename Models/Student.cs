@@ -57,5 +57,9 @@ namespace School_Yathu.Models
         public virtual ICollection<Notification>? Notifications { get; set; } // Only ONE notification collection
         public virtual ICollection<Marks>? Marks { get; set; }
         public virtual ICollection<ExamResult>? ExamResults { get; set; }
+        public int? DepartmentId { get; set; }
+
+[ForeignKey("DepartmentId")]
+public virtual Department? Department { get; set; }
     }
 }

@@ -3,9 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    /// <summary>
-    /// User model for authentication and authorization
-    /// </summary>
     public class User
     {
         [Key]
@@ -44,6 +41,16 @@ namespace School_Yathu.Models
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = false;
 
+        // Department
+        public int? DepartmentId { get; set; }
+        [ForeignKey("DepartmentId")]
+        public virtual Department? Department { get; set; }
+
+        // Form Teacher
+        public int? FormTeacherClassId { get; set; }
+        [ForeignKey("FormTeacherClassId")]
+        public virtual Class? FormTeacherClass { get; set; }
+
         // Navigation properties
         public virtual ICollection<Class>? ClassesAsTeacher { get; set; }
         public virtual ICollection<ClassSubject>? ClassSubjects { get; set; }
@@ -52,5 +59,8 @@ namespace School_Yathu.Models
         public virtual ICollection<StudentSubject>? StudentSubjects { get; set; }
         public virtual ICollection<TeacherSubject>? TeacherSubjects { get; set; }
         public virtual ICollection<ExamResult>? ExamResults { get; set; }
+        public virtual ICollection<FormTeacherClass>? FormTeacherClasses { get; set; }
+        public virtual ICollection<Marks>? EnteredMarks { get; set; }
+        public virtual ICollection<Marks>? ApprovedMarks { get; set; }
     }
 }

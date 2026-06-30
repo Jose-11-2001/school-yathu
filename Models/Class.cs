@@ -32,5 +32,9 @@ namespace School_Yathu.Models
         public virtual ICollection<Student>? Students { get; set; }
         public virtual ICollection<Marks>? Marks { get; set; }
         public virtual ICollection<Exam>? Exams { get; set; }
+        public int? FormTeacherId { get; set; }
+
+        [ForeignKey("FormTeacherId")]
+        public virtual User? FormTeacher { get; set; }
     }
 }

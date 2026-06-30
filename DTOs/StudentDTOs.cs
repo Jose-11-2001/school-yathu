@@ -180,37 +180,6 @@ namespace School_Yathu.DTOs
     /// <summary>
     /// DTO for entering student marks
     /// </summary>
-    public class MarksEntryDTO
-    {
-        [Required(ErrorMessage = "Student ID is required")]
-        public int StudentId { get; set; }
-
-        [Required(ErrorMessage = "Subject ID is required")]
-        public int SubjectId { get; set; }
-
-        [Range(0, 100, ErrorMessage = "Test 1 score must be between 0 and 100")]
-        public double? ContinuousTest1 { get; set; }
-
-        [Range(0, 100, ErrorMessage = "Test 2 score must be between 0 and 100")]
-        public double? ContinuousTest2 { get; set; }
-
-        [Range(0, 100, ErrorMessage = "End term exam score must be between 0 and 100")]
-        public double? EndTermExam { get; set; }
-
-        [Range(0, 100, ErrorMessage = "Total score must be between 0 and 100")]
-        public double? TotalScore { get; set; }
-
-        [Required(ErrorMessage = "Year is required")]
-        [Range(2000, 2100, ErrorMessage = "Year must be between 2000 and 2100")]
-        public int Year { get; set; }
-
-        [Required(ErrorMessage = "Term is required")]
-        [StringLength(20, ErrorMessage = "Term cannot exceed 20 characters")]
-        public string Term { get; set; } = string.Empty;
-
-        public string? Grade { get; set; }
-        public string? Remark { get; set; }
-    }
 
     /// <summary>
     /// DTO for student marks response - UPDATED with Test1, Test2, EndTerm

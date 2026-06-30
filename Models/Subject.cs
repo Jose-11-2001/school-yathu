@@ -23,6 +23,12 @@ namespace School_Yathu.Models
 
         public int? MaxMarks { get; set; }
 
+        // ✅ ADD THESE PROPERTIES
+        public int? DepartmentId { get; set; }
+
+        [ForeignKey("DepartmentId")]
+        public virtual Department? Department { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 

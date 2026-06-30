@@ -5,6 +5,7 @@ using School_Yathu.Data;
 using School_Yathu.DTOs;
 using School_Yathu.Models;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Security.Claims;
 
 namespace School_Yathu.Controllers
 {
@@ -555,12 +556,13 @@ namespace School_Yathu.Controllers
 
             await _context.SaveChangesAsync();
         }
-
-        public class TeacherSubjectAllocationDTO
-        {
-            public int ClassId { get; set; }
-            public int SubjectId { get; set; }
-            public int TeacherId { get; set; }
-        }
     }
+
+    // ❌ REMOVE THIS INNER CLASS - It's now in DTOs/SubjectAllocationDTOs.cs
+    // public class TeacherSubjectAllocationDTO
+    // {
+    //     public int ClassId { get; set; }
+    //     public int SubjectId { get; set; }
+    //     public int TeacherId { get; set; }
+    // }
 }
