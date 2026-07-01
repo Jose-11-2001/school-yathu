@@ -837,11 +837,6 @@
             DTO for student subject selection response
             </summary>
         </member>
-        <member name="T:School_Yathu.Models.Class">
-            <summary>
-            Class model
-            </summary>
-        </member>
         <member name="T:School_Yathu.Models.ClassSubject">
             <summary>
             Class-Subject relationship model

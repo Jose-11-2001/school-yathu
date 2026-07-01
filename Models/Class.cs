@@ -3,9 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace School_Yathu.Models
 {
-    /// <summary>
-    /// Class model
-    /// </summary>
     public class Class
     {
         [Key]
@@ -18,7 +15,8 @@ namespace School_Yathu.Models
         [MaxLength(50)]
         public string? Stream { get; set; } // "East", "West", "North", "South"
 
-        public int? TeacherId { get; set; }
+        public int? TeacherId { get; set; } // Class Teacher
+        public int? FormTeacherId { get; set; } // Form Teacher
         public int? Capacity { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -26,15 +24,14 @@ namespace School_Yathu.Models
 
         // Navigation properties
         [ForeignKey("TeacherId")]
-        public virtual User? Teacher { get; set; }
+        public virtual User? Teacher { get; set; } // Class Teacher
+
+        [ForeignKey("FormTeacherId")]
+        public virtual User? FormTeacher { get; set; } // Form Teacher
 
         public virtual ICollection<ClassSubject>? ClassSubjects { get; set; }
         public virtual ICollection<Student>? Students { get; set; }
         public virtual ICollection<Marks>? Marks { get; set; }
         public virtual ICollection<Exam>? Exams { get; set; }
-        public int? FormTeacherId { get; set; }
-
-        [ForeignKey("FormTeacherId")]
-        public virtual User? FormTeacher { get; set; }
     }
 }
