@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://school-frontend.vercel.app",
+                "https://secondary-grading-system.vercel.app",
                 "https://school-frontend-git-main-josephs-projects.vercel.app",
                 "https://*.vercel.app"
             )
