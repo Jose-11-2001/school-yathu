@@ -53,6 +53,85 @@ namespace School_Yathu.Controllers
                 .ToListAsync();
             return Ok(teachers);
         }
+        // ==================== DEPUTY HEAD TEACHER MANAGEMENT ====================
+
+/// <summary>
+/// Get all deputy head teachers
+/// </summary>
+[HttpGet("deputies")]
+[SwaggerOperation(Summary = "Get all deputy head teachers")]
+public async Task<IActionResult> GetDeputies()
+{
+    var deputies = await _context.Users
+        .Where(u => u.Role == "DeputyHeadTeacher" && u.IsActive)
+        .Select(u => new
+        {
+            u.Id,
+            u.Email,
+            u.Name,
+            u.PhoneNumber,
+            u.EmployeeId,
+            u.Qualification,
+            u.HireDate,
+            u.CreatedAt,
+            u.IsActive,
+            u.MustChangePassword,
+            PendingTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id && da.Status == "Pending"),
+            TotalTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id)
+        })
+        .ToListAsync();
+    return Ok(deputies);
+}
+
+/// <summary>
+/// Add a new deputy head teacher
+/// </summary>
+[HttpPost("deputies")]
+[SwaggerOperation(Summary = "Add a new deputy head teacher")]
+public async Task<IActionResult> AddDeputy([FromBody] CreateDeputyDTO dto)
+{
+    if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+        return BadRequest(new { message = "Email already exists" });
+
+    var deputy = new User
+    {
+        Email = dto.Email,
+        Name = dto.Name,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+        PhoneNumber = dto.PhoneNumber,
+        EmployeeId = dto.EmployeeId,
+        Qualification = dto.Qualification,
+        HireDate = dto.HireDate.HasValue ? DateTime.SpecifyKind(dto.HireDate.Value, DateTimeKind.Utc) : DateTime.UtcNow,
+        DepartmentId = dto.DepartmentId,
+        Role = "DeputyHeadTeacher",
+        CreatedAt = DateTime.UtcNow,
+        IsActive = true,
+        MustChangePassword = true
+    };
+
+    _context.Users.Add(deputy);
+    await _context.SaveChangesAsync();
+    return Ok(new { message = "Deputy head teacher added successfully", deputyId = deputy.Id });
+}
+
+/// <summary>
+/// Delete/Deactivate a deputy head teacher
+/// </summary>
+[HttpDelete("deputies/{id}")]
+[SwaggerOperation(Summary = "Delete a deputy head teacher")]
+public async Task<IActionResult> DeleteDeputy(int id)
+{
+    var deputy = await _context.Users.FindAsync(id);
+    if (deputy == null)
+        return NotFound(new { message = "Deputy head teacher not found" });
+
+    if (deputy.Role != "DeputyHeadTeacher")
+        return BadRequest(new { message = "User is not a deputy head teacher" });
+
+    deputy.IsActive = false;
+    await _context.SaveChangesAsync();
+    return Ok(new { message = "Deputy head teacher deactivated successfully" });
+}
 
         /// <summary>
         /// Add a new teacher with department
@@ -1059,6 +1138,19 @@ namespace School_Yathu.Controllers
         public string? Qualification { get; set; }
         public int? DepartmentId { get; set; }
     }
+    // Add this to AdminController.cs after the existing DTOs
+
+public class CreateDeputyDTO
+{
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? EmployeeId { get; set; }
+    public string? Qualification { get; set; }
+    public DateTime? HireDate { get; set; }
+    public int? DepartmentId { get; set; }
+}
 
     public class ApproveResultsDTO
     {

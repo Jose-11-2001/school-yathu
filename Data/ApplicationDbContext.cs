@@ -30,6 +30,7 @@ namespace School_Yathu.Data
         public DbSet<FormTeacherClass> FormTeacherClasses { get; set; }
         public DbSet<StudentSubjectSelection> StudentSubjectSelections { get; set; }
         public DbSet<ClassRanking> ClassRankings { get; set; }
+        public DbSet<DeputyAssignment> DeputyAssignments { get; set; } // NEW
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +53,7 @@ namespace School_Yathu.Data
             ConfigureDepartment(modelBuilder);
             ConfigureFormTeacherClass(modelBuilder);
             ConfigureStudentSubjectSelection(modelBuilder);
+            ConfigureDeputyAssignment(modelBuilder); // NEW
         }
 
         #region Entity Configurations
@@ -132,6 +134,13 @@ namespace School_Yathu.Data
                     .HasForeignKey(n => n.UserId)
                     .OnDelete(DeleteBehavior.Restrict)
                     .HasConstraintName("FK_Notifications_UserId");
+
+                // ✅ Relationship: DeputyAssignments for this user
+                entity.HasMany(u => u.DeputyAssignments)
+                    .WithOne(da => da.Deputy)
+                    .HasForeignKey(da => da.DeputyId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_DeputyAssignments_DeputyId");
             });
         }
 
@@ -892,6 +901,37 @@ namespace School_Yathu.Data
                     .HasForeignKey(sss => sss.ApprovedByFormTeacherId)
                     .OnDelete(DeleteBehavior.SetNull)
                     .HasConstraintName("FK_StudentSubjectSelections_ApprovedByFormTeacherId");
+            });
+        }
+
+        private void ConfigureDeputyAssignment(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DeputyAssignment>(entity =>
+            {
+                entity.HasKey(da => da.Id);
+
+                entity.Property(da => da.Task)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(da => da.Description)
+                    .HasMaxLength(500);
+
+                entity.Property(da => da.Status)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.HasIndex(da => da.DeputyId)
+                    .HasDatabaseName("IX_DeputyAssignments_DeputyId");
+
+                entity.HasIndex(da => da.Status)
+                    .HasDatabaseName("IX_DeputyAssignments_Status");
+
+                entity.HasOne(da => da.Deputy)
+                    .WithMany(u => u.DeputyAssignments)
+                    .HasForeignKey(da => da.DeputyId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_DeputyAssignments_DeputyId");
             });
         }
 

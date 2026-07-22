@@ -9,6 +9,21 @@
             Get all teachers with department info
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AdminController.GetDeputies">
+            <summary>
+            Get all deputy head teachers
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AddDeputy(School_Yathu.Controllers.CreateDeputyDTO)">
+            <summary>
+            Add a new deputy head teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.DeleteDeputy(System.Int32)">
+            <summary>
+            Delete/Deactivate a deputy head teacher
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.AdminController.AddTeacher(School_Yathu.DTOs.CreateTeacherDTO)">
             <summary>
             Add a new teacher with department
@@ -249,9 +264,59 @@
             Reset password (Admin only)
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GenerateEmailFromName(System.String,System.String)">
+            <summary>
+            Generate email from name based on role
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GetRoleSuffix(System.String)">
+            <summary>
+            Get the email suffix based on role (for validation)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.ValidateEmailByRole(System.String,System.String)">
+            <summary>
+            Validate email format based on role
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GenerateRandomPassword">
+            <summary>
+            Generate random password
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.GenerateJwtToken(School_Yathu.Models.User)">
+            <summary>
+            Generate JWT token
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.ContactsController.GetContacts">
             <summary>
             Get all contact information for the logged-in user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.DeputyController.GetAssignments(System.String)">
+            <summary>
+            Get all deputy assignments (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.DeputyController.GetMyAssignments(System.String)">
+            <summary>
+            Get assignments for the logged-in deputy
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.DeputyController.AssignTask(School_Yathu.Controllers.AssignDeputyTaskDTO)">
+            <summary>
+            Assign a task to a deputy (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.DeputyController.UpdateStatus(System.Int32,School_Yathu.Controllers.UpdateAssignmentStatusDTO)">
+            <summary>
+            Update assignment status (Deputy only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.DeputyController.GetDashboardStats">
+            <summary>
+            Get deputy dashboard statistics
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.FormTeacherController.GetMyClasses">
@@ -412,6 +477,11 @@
         <member name="M:School_Yathu.Controllers.StudentController.GetAllStudents">
             <summary>
             Get all students (Admin/Teacher only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.GetStudentDetails(System.Int32)">
+            <summary>
+            Get detailed student information including subjects and marks
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetStudentByEmail(System.String)">
@@ -923,6 +993,18 @@
             <inheritdoc />
         </member>
         <member name="M:school_yathu.Migrations.FixTeacherRelationships.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:school_yathu.Migrations.AddDeputyAssignment">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDeputyAssignment.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDeputyAssignment.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDeputyAssignment.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

@@ -10,7 +10,6 @@ using School_Yathu.Models;
 using System.Text.RegularExpressions;
 using Swashbuckle.AspNetCore.Annotations;
 
-
 namespace School_Yathu.Controllers
 {
     [ApiController]
@@ -41,10 +40,10 @@ namespace School_Yathu.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
                 return BadRequest(new { message = "Email already exists" });
             
-            if (registerDto.Role == "Teacher" && !registerDto.Email.EndsWith("@gmail.com"))
-            {
-                return BadRequest(new { message = "Teacher must use a valid email address (e.g., name@gmail.com)" });
-            }
+            // Email validation based on role
+            var emailValidation = ValidateEmailByRole(registerDto.Email, registerDto.Role);
+            if (!emailValidation.IsValid)
+                return BadRequest(new { message = emailValidation.Message });
             
             var user = new User
             {
@@ -84,7 +83,11 @@ namespace School_Yathu.Controllers
         public IActionResult GenerateEmail([FromBody] GenerateEmailDTO dto)
         {
             var email = GenerateEmailFromName(dto.Name, dto.Role);
-            return Ok(new { email = email });
+            return Ok(new { 
+                email = email,
+                role = dto.Role,
+                name = dto.Name
+            });
         }
         
         /// <summary>
@@ -181,39 +184,148 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Password reset successfully", newPassword = newPassword });
         }
         
+        /// <summary>
+        /// Generate email from name based on role
+        /// </summary>
         private string GenerateEmailFromName(string name, string role)
         {
-            var cleanName = Regex.Replace(name.ToLower(), @"\s+", "");
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            // Clean the name: remove extra spaces, convert to lowercase
+            var cleanName = Regex.Replace(name.Trim(), @"\s+", " ");
+            var parts = cleanName.Split(' ');
             
-            if (role == "Teacher")
+            // Get first name and last name
+            var firstName = parts[0];
+            var lastName = parts.Length > 1 ? parts[parts.Length - 1] : firstName;
+            
+            var roleLower = role?.ToLower() ?? "student";
+            
+            // For Students: Use full name without spaces (e.g., josephmbukwa@gmail.com)
+            if (roleLower == "student")
             {
-                var parts = name.Trim().Split(' ');
-                if (parts.Length >= 2)
-                {
-                    var firstNameInitial = parts[0].Substring(0, 1);
-                    var lastName = parts[parts.Length - 1];
-                    return $"{firstNameInitial}{lastName}@gmail.com".ToLower();
-                }
-                else
-                {
-                    return $"{cleanName}@gmail.com".ToLower();
-                }
+                var fullName = cleanName.Replace(" ", "").ToLower();
+                return $"{fullName}@gmail.com";
             }
-            else
+            
+            // For Teachers: First initial + last name (e.g., jmbukwa@gmail.com)
+            if (roleLower == "teacher")
             {
-                return $"{cleanName}@gmail.com".ToLower();
+                var firstNameInitial = firstName.Substring(0, 1).ToLower();
+                var lastNameLower = lastName.ToLower();
+                var baseEmail = $"{firstNameInitial}{lastNameLower}";
+                return $"{baseEmail}@gmail.com";
             }
+            
+            // For Deputy Head Teacher: First initial + last name + "dht"
+            if (roleLower == "deputyheadteacher")
+            {
+                var firstNameInitial = firstName.Substring(0, 1).ToLower();
+                var lastNameLower = lastName.ToLower();
+                var baseEmail = $"{firstNameInitial}{lastNameLower}dht";
+                return $"{baseEmail}@gmail.com";
+            }
+            
+            // For Head of Department: First initial + last name + "hod"
+            if (roleLower == "headofdepartment")
+            {
+                var firstNameInitial = firstName.Substring(0, 1).ToLower();
+                var lastNameLower = lastName.ToLower();
+                var baseEmail = $"{firstNameInitial}{lastNameLower}hod";
+                return $"{baseEmail}@gmail.com";
+            }
+            
+            // For Form Teacher: First initial + last name + "ft"
+            if (roleLower == "formteacher")
+            {
+                var firstNameInitial = firstName.Substring(0, 1).ToLower();
+                var lastNameLower = lastName.ToLower();
+                var baseEmail = $"{firstNameInitial}{lastNameLower}ft";
+                return $"{baseEmail}@gmail.com";
+            }
+            
+            // Default: First initial + last name (for Admin and others)
+            var defaultFirstNameInitial = firstName.Substring(0, 1).ToLower();
+            var defaultLastNameLower = lastName.ToLower();
+            return $"{defaultFirstNameInitial}{defaultLastNameLower}@gmail.com";
         }
         
+        /// <summary>
+        /// Get the email suffix based on role (for validation)
+        /// </summary>
+        private string GetRoleSuffix(string role)
+        {
+            return role switch
+            {
+                "admin" => "",  // Admin uses custom email like ntcheu@gmail.com
+                "deputyheadteacher" => "dht",
+                "headofdepartment" => "hod",
+                "formteacher" => "ft",
+                "teacher" => "",  // No suffix for regular teachers
+                "student" => "",  // No suffix for students
+                _ => "" // Default: no suffix
+            };
+        }
+        
+        /// <summary>
+        /// Validate email format based on role
+        /// </summary>
+        private (bool IsValid, string Message) ValidateEmailByRole(string email, string role)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return (false, "Email is required");
+
+            if (!email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase))
+                return (false, "Email must end with @gmail.com");
+
+            var roleLower = role?.ToLower() ?? "student";
+            var username = email.Replace("@gmail.com", "").ToLower();
+            
+            // Special case: Admin can use any email (like ntcheu@gmail.com)
+            if (roleLower == "admin")
+            {
+                return (true, "Valid admin email");
+            }
+            
+            // Deputy Head Teacher - must end with "dht"
+            if (roleLower == "deputyheadteacher" && !username.EndsWith("dht"))
+                return (false, "Deputy Head Teacher email must end with 'dht' (e.g., jmbukwadht@gmail.com)");
+            
+            // Head of Department - must end with "hod"
+            if (roleLower == "headofdepartment" && !username.EndsWith("hod"))
+                return (false, "Head of Department email must end with 'hod' (e.g., jmbukwahod@gmail.com)");
+            
+            // Form Teacher - must end with "ft"
+            if (roleLower == "formteacher" && !username.EndsWith("ft"))
+                return (false, "Form Teacher email must end with 'ft' (e.g., jmbukwaft@gmail.com)");
+            
+            // Teacher - should not have role suffixes
+            if (roleLower == "teacher" && (username.EndsWith("hod") || username.EndsWith("ft") || username.EndsWith("dht")))
+                return (false, "Teacher email should not contain role suffixes (hod, ft, dht)");
+            
+            // Student - should not have role suffixes
+            if (roleLower == "student" && (username.EndsWith("hod") || username.EndsWith("ft") || username.EndsWith("dht")))
+                return (false, "Student email should not contain role suffixes (hod, ft, dht)");
+
+            return (true, "Valid email format");
+        }
+        
+        /// <summary>
+        /// Generate random password
+        /// </summary>
         private string GenerateRandomPassword()
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
             var random = new Random();
-            var password = new string(Enumerable.Repeat(chars, 8)
+            var password = new string(Enumerable.Repeat(chars, 10)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
             return password;
         }
         
+        /// <summary>
+        /// Generate JWT token
+        /// </summary>
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

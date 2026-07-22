@@ -60,6 +60,100 @@ namespace School_Yathu.Controllers
         }
 
         /// <summary>
+        /// Get detailed student information including subjects and marks
+        /// </summary>
+        [HttpGet("student-details/{id}")]
+        [Authorize(Roles = "Admin,Teacher,DeputyHeadTeacher")]
+        [SwaggerOperation(Summary = "Get student details", Description = "Retrieves comprehensive student information including subjects and marks")]
+        public async Task<IActionResult> GetStudentDetails(int id)
+        {
+            try
+            {
+                var student = await _context.Students
+                    .Include(s => s.StudentSubjects)
+                        .ThenInclude(ss => ss.Subject)
+                    .Include(s => s.StudentSubjects)
+                        .ThenInclude(ss => ss.Teacher)
+                    .Include(s => s.Marks)
+                        .ThenInclude(m => m.Subject)
+                    .FirstOrDefaultAsync(s => s.Id == id);
+
+                if (student == null)
+                    return NotFound(new { message = "Student not found" });
+
+                // Get subjects list - FIXED: Using null check instead of ?? operator
+                var subjectsList = new List<object>();
+                if (student.StudentSubjects != null)
+                {
+                    subjectsList = student.StudentSubjects
+                        .Where(ss => ss.IsActive)
+                        .Select(ss => new
+                        {
+                            ss.SubjectId,
+                            SubjectName = ss.Subject != null ? ss.Subject.Name : "Unknown",
+                            TeacherName = ss.Teacher != null ? ss.Teacher.Name : "Not Assigned",
+                            ss.AcademicYear,
+                            ss.Term
+                        })
+                        .ToList<object>();
+                }
+
+                // Get marks list - FIXED: Using null check instead of ?? operator
+                var marksList = new List<object>();
+                if (student.Marks != null)
+                {
+                    marksList = student.Marks
+                        .Where(m => m.TotalScore.HasValue)
+                        .Select(m => new
+                        {
+                            m.SubjectId,
+                            SubjectName = m.Subject != null ? m.Subject.Name : "Unknown",
+                            m.ContinuousTest1,
+                            m.ContinuousTest2,
+                            m.EndTermExam,
+                            m.TotalScore,
+                            m.Grade,
+                            m.Remark,
+                            m.Year,
+                            m.Term
+                        })
+                        .ToList<object>();
+                }
+
+                var response = new
+                {
+                    student.Id,
+                    student.AdmissionNumber,
+                    student.FullName,
+                    student.Class,
+                    student.Stream,
+                    student.Email,
+                    student.PhoneNumber,
+                    student.Address,
+                    student.Gender,
+                    student.DateOfBirth,
+                    student.CreatedAt,
+                    student.UpdatedAt,
+                    Subjects = subjectsList,
+                    Marks = marksList,
+                    PerformanceSummary = student.Marks != null && student.Marks.Any(m => m.TotalScore.HasValue) ? new
+                    {
+                        TotalSubjects = student.Marks.Select(m => m.SubjectId).Distinct().Count(),
+                        AverageScore = student.Marks.Where(m => m.TotalScore.HasValue).Average(m => m.TotalScore ?? 0),
+                        TotalMarks = student.Marks.Where(m => m.TotalScore.HasValue).Sum(m => m.TotalScore ?? 0)
+                    } : null
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting student details for ID: {StudentId}", id);
+                return StatusCode(500, new { message = "An error occurred while retrieving student details" });
+            }
+        }
+
+        /// <summary>
         /// Get student by email
         /// </summary>
         [HttpGet("student-by-email")]
@@ -1152,7 +1246,7 @@ namespace School_Yathu.Controllers
                     {
                         var notification = new Notification
                         {
-                            Title = "📝 Subject Selection Pending",
+                            Title = "Subject Selection Pending",
                             Message = $"Student {student.FullName} has selected a subject for approval.",
                             Type = "SubjectSelection",
                             TeacherId = teacherId,
