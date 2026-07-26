@@ -95,21 +95,46 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// ✅ FIXED: CORS - Allow your frontend domain
+// ===== CORS - UPDATED WITH MORE ORIGINS =====
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+    
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5173",
+                // Local development
                 "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:5175",
+                "http://localhost:4200",
+                "http://localhost:8080",
+                "http://localhost:5500",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5173",
+                
+                // Vercel deployments
                 "https://secondary-grading-system.vercel.app",
                 "https://school-frontend-git-main-josephs-projects.vercel.app",
-                "https://*.vercel.app"
+                "https://*.vercel.app",
+                
+                // Render deployments
+                "https://*.onrender.com",
+                
+                // Your frontend URL - ADD YOURS HERE
+                "https://your-frontend-url.vercel.app",
+                "https://your-frontend-url.netlify.app",
+                "https://your-custom-domain.com"
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials();  // ✅ Critical for Authorization headers
+            .AllowCredentials();
     });
 });
 
@@ -144,8 +169,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
-// ✅ Use the correct CORS policy
-app.UseCors("AllowFrontend");
+// ===== USE CORS - Try AllowAll first, then specific =====
+// Option 1: Use AllowAll (most permissive, good for testing)
+app.UseCors("AllowAll");
+
+// Option 2: Use specific frontend policy (comment out above and uncomment below)
+// app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
