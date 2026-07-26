@@ -7,28 +7,27 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace school_yathu.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUpdatedAtToUser : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Subjects",
+                name: "ClassRankings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    MaxMarks = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Class = table.Column<string>(type: "text", nullable: true),
+                    Stream = table.Column<string>(type: "text", nullable: true),
+                    Year = table.Column<int>(type: "integer", nullable: true),
+                    Term = table.Column<string>(type: "text", nullable: true),
+                    RankingsJson = table.Column<string>(type: "text", nullable: false),
+                    CalculatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Subjects", x => x.Id);
+                    table.PrimaryKey("PK_ClassRankings", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -52,30 +51,6 @@ namespace school_yathu.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    EmployeeId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Qualification = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    HireDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    MustChangePassword = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Classes",
                 columns: table => new
                 {
@@ -84,6 +59,7 @@ namespace school_yathu.Migrations
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Stream = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     TeacherId = table.Column<int>(type: "integer", nullable: true),
+                    FormTeacherId = table.Column<int>(type: "integer", nullable: true),
                     Capacity = table.Column<int>(type: "integer", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -97,12 +73,6 @@ namespace school_yathu.Migrations
                         column: x => x.TeacherId1,
                         principalTable: "Teachers",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Classes_Users_TeacherId",
-                        column: x => x.TeacherId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -123,15 +93,9 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_ClassSubjects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ClassSubjects_Classes_ClassId",
+                        name: "FK_ClassSubjects_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ClassSubjects_Subjects_SubjectId",
-                        column: x => x.SubjectId,
-                        principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -139,10 +103,78 @@ namespace school_yathu.Migrations
                         column: x => x.TeacherId1,
                         principalTable: "Teachers",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Departments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    HeadOfDepartmentId = table.Column<int>(type: "integer", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Departments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Subjects",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    MaxMarks = table.Column<int>(type: "integer", nullable: true),
+                    DepartmentId = table.Column<int>(type: "integer", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subjects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ClassSubjects_Users_TeacherId",
-                        column: x => x.TeacherId,
-                        principalTable: "Users",
+                        name: "FK_Subjects_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    EmployeeId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Qualification = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    HireDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    MustChangePassword = table.Column<bool>(type: "boolean", nullable: false),
+                    DepartmentId = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
@@ -166,17 +198,69 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_Exams", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Exams_Classes_ClassId",
+                        name: "FK_Exams_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Exams_Subjects_SubjectId",
+                        name: "FK_Exams_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DeputyAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DeputyId = table.Column<int>(type: "integer", nullable: false),
+                    Task = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeputyAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DeputyAssignments_DeputyId",
+                        column: x => x.DeputyId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FormTeacherClasses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    TeacherId = table.Column<int>(type: "integer", nullable: false),
+                    ClassId = table.Column<int>(type: "integer", nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FormTeacherClasses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FormTeacherClasses_ClassId",
+                        column: x => x.ClassId,
+                        principalTable: "Classes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FormTeacherClasses_TeacherId",
+                        column: x => x.TeacherId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -198,19 +282,25 @@ namespace school_yathu.Migrations
                     ClassId = table.Column<int>(type: "integer", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DepartmentId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Students", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Students_Classes_ClassId",
+                        name: "FK_Students_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Students_Users_TeacherId",
+                        name: "FK_Students_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Students_TeacherId",
                         column: x => x.TeacherId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -233,19 +323,19 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_TeacherSubjectAllocations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TeacherSubjectAllocations_Classes_ClassId",
+                        name: "FK_TeacherSubjectAllocations_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TeacherSubjectAllocations_Subjects_SubjectId",
+                        name: "FK_TeacherSubjectAllocations_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TeacherSubjectAllocations_Users_TeacherId",
+                        name: "FK_TeacherSubjectAllocations_TeacherId",
                         column: x => x.TeacherId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -270,27 +360,27 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_TeacherSubjects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TeacherSubjects_Classes_ClassId",
+                        name: "FK_TeacherSubjects_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_TeacherSubjects_Subjects_SubjectId",
+                        name: "FK_TeacherSubjects_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TeacherSubjects_TeacherId",
+                        column: x => x.TeacherId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_TeacherSubjects_Teachers_TeacherId1",
                         column: x => x.TeacherId1,
                         principalTable: "Teachers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TeacherSubjects_Users_TeacherId",
-                        column: x => x.TeacherId,
-                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -309,41 +399,35 @@ namespace school_yathu.Migrations
                     Grade = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: true),
                     Remark = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UserId = table.Column<int>(type: "integer", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ExamResults", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExamResults_Exams_ExamId",
-                        column: x => x.ExamId,
-                        principalTable: "Exams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ExamResults_Students_StudentId",
-                        column: x => x.StudentId,
-                        principalTable: "Students",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ExamResults_Subjects_SubjectId",
-                        column: x => x.SubjectId,
-                        principalTable: "Subjects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ExamResults_Users_EnteredByTeacherId",
+                        name: "FK_ExamResults_EnteredByTeacherId",
                         column: x => x.EnteredByTeacherId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_ExamResults_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
+                        name: "FK_ExamResults_ExamId",
+                        column: x => x.ExamId,
+                        principalTable: "Exams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExamResults_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Students",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExamResults_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -375,19 +459,31 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_Marks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Marks_Classes_ClassId",
+                        name: "FK_Marks_ApprovedByAdminId",
+                        column: x => x.ApprovedByAdminId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Marks_ClassId",
                         column: x => x.ClassId,
                         principalTable: "Classes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Marks_Students_StudentId",
+                        name: "FK_Marks_EnteredByTeacherId",
+                        column: x => x.EnteredByTeacherId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Marks_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Marks_Subjects_SubjectId",
+                        name: "FK_Marks_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "Id",
@@ -396,16 +492,6 @@ namespace school_yathu.Migrations
                         name: "FK_Marks_Teachers_TeacherId",
                         column: x => x.TeacherId,
                         principalTable: "Teachers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Marks_Users_ApprovedByAdminId",
-                        column: x => x.ApprovedByAdminId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Marks_Users_EnteredByTeacherId",
-                        column: x => x.EnteredByTeacherId,
-                        principalTable: "Users",
                         principalColumn: "Id");
                 });
 
@@ -432,25 +518,25 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_Notifications", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Notifications_Students_StudentId",
-                        column: x => x.StudentId,
-                        principalTable: "Students",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_AdminId",
+                        name: "FK_Notifications_AdminId",
                         column: x => x.AdminId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Notifications_Users_TeacherId",
+                        name: "FK_Notifications_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Students",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Notifications_TeacherId",
                         column: x => x.TeacherId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Notifications_Users_UserId",
+                        name: "FK_Notifications_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -477,13 +563,13 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_StudentMarks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StudentMarks_Students_StudentId",
+                        name: "FK_StudentMarks_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StudentMarks_Subjects_SubjectId",
+                        name: "FK_StudentMarks_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "Id",
@@ -510,29 +596,79 @@ namespace school_yathu.Migrations
                 {
                     table.PrimaryKey("PK_StudentSubjects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StudentSubjects_Students_StudentId",
+                        name: "FK_StudentSubjects_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StudentSubjects_Subjects_SubjectId",
+                        name: "FK_StudentSubjects_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StudentSubjects_Teachers_TeacherId1",
-                        column: x => x.TeacherId1,
-                        principalTable: "Teachers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_StudentSubjects_Users_TeacherId",
+                        name: "FK_StudentSubjects_TeacherId",
                         column: x => x.TeacherId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_StudentSubjects_Teachers_TeacherId1",
+                        column: x => x.TeacherId1,
+                        principalTable: "Teachers",
+                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateTable(
+                name: "StudentSubjectSelections",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    StudentId = table.Column<int>(type: "integer", nullable: false),
+                    SubjectId = table.Column<int>(type: "integer", nullable: false),
+                    AcademicYear = table.Column<int>(type: "integer", nullable: false),
+                    Term = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    IsApproved = table.Column<bool>(type: "boolean", nullable: false),
+                    ApprovedByFormTeacherId = table.Column<int>(type: "integer", nullable: true),
+                    ApprovedByTeacherId = table.Column<int>(type: "integer", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentSubjectSelections", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StudentSubjectSelections_ApprovedByFormTeacherId",
+                        column: x => x.ApprovedByFormTeacherId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_StudentSubjectSelections_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Students",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_StudentSubjectSelections_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_StudentSubjectSelections_Users_ApprovedByTeacherId",
+                        column: x => x.ApprovedByTeacherId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Classes_FormTeacherId",
+                table: "Classes",
+                column: "FormTeacherId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Classes_Name_Stream",
@@ -572,6 +708,21 @@ namespace school_yathu.Migrations
                 column: "TeacherId1");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Departments_HeadOfDepartmentId",
+                table: "Departments",
+                column: "HeadOfDepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeputyAssignments_DeputyId",
+                table: "DeputyAssignments",
+                column: "DeputyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeputyAssignments_Status",
+                table: "DeputyAssignments",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExamResults_EnteredByTeacherId",
                 table: "ExamResults",
                 column: "EnteredByTeacherId");
@@ -593,11 +744,6 @@ namespace school_yathu.Migrations
                 column: "SubjectId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExamResults_UserId",
-                table: "ExamResults",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Exams_ClassId",
                 table: "Exams",
                 column: "ClassId");
@@ -611,6 +757,17 @@ namespace school_yathu.Migrations
                 name: "IX_Exams_SubjectId",
                 table: "Exams",
                 column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FormTeacherClasses_ClassId",
+                table: "FormTeacherClasses",
+                column: "ClassId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FormTeacherClasses_TeacherId_ClassId",
+                table: "FormTeacherClasses",
+                columns: new[] { "TeacherId", "ClassId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Marks_ApprovedByAdminId",
@@ -706,6 +863,11 @@ namespace school_yathu.Migrations
                 column: "ClassId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Students_DepartmentId",
+                table: "Students",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Students_Email",
                 table: "Students",
                 column: "Email");
@@ -737,9 +899,35 @@ namespace school_yathu.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StudentSubjectSelections_ApprovedByFormTeacherId",
+                table: "StudentSubjectSelections",
+                column: "ApprovedByFormTeacherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentSubjectSelections_ApprovedByTeacherId",
+                table: "StudentSubjectSelections",
+                column: "ApprovedByTeacherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentSubjectSelections_StudentId_SubjectId_Year",
+                table: "StudentSubjectSelections",
+                columns: new[] { "StudentId", "SubjectId", "AcademicYear" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentSubjectSelections_SubjectId",
+                table: "StudentSubjectSelections",
+                column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Subjects_Code",
                 table: "Subjects",
                 column: "Code");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Subjects_DepartmentId",
+                table: "Subjects",
+                column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Subjects_Name",
@@ -785,6 +973,11 @@ namespace school_yathu.Migrations
                 column: "TeacherId1");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_DepartmentId",
+                table: "Users",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email",
@@ -794,16 +987,69 @@ namespace school_yathu.Migrations
                 name: "IX_Users_EmployeeId",
                 table: "Users",
                 column: "EmployeeId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Classes_FormTeacherId",
+                table: "Classes",
+                column: "FormTeacherId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Classes_TeacherId",
+                table: "Classes",
+                column: "TeacherId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ClassSubjects_SubjectId",
+                table: "ClassSubjects",
+                column: "SubjectId",
+                principalTable: "Subjects",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ClassSubjects_TeacherId",
+                table: "ClassSubjects",
+                column: "TeacherId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Departments_HeadOfDepartmentId",
+                table: "Departments",
+                column: "HeadOfDepartmentId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Departments_HeadOfDepartmentId",
+                table: "Departments");
+
+            migrationBuilder.DropTable(
+                name: "ClassRankings");
+
             migrationBuilder.DropTable(
                 name: "ClassSubjects");
 
             migrationBuilder.DropTable(
+                name: "DeputyAssignments");
+
+            migrationBuilder.DropTable(
                 name: "ExamResults");
+
+            migrationBuilder.DropTable(
+                name: "FormTeacherClasses");
 
             migrationBuilder.DropTable(
                 name: "Marks");
@@ -816,6 +1062,9 @@ namespace school_yathu.Migrations
 
             migrationBuilder.DropTable(
                 name: "StudentSubjects");
+
+            migrationBuilder.DropTable(
+                name: "StudentSubjectSelections");
 
             migrationBuilder.DropTable(
                 name: "TeacherSubjectAllocations");
@@ -840,6 +1089,9 @@ namespace school_yathu.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Departments");
         }
     }
 }

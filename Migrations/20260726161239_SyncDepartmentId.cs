@@ -5,7 +5,7 @@
 namespace school_yathu.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUpdatedAtColumn : Migration
+    public partial class SyncDepartmentId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

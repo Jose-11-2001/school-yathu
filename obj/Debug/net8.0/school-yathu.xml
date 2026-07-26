@@ -234,6 +234,16 @@
             Get allocation summary statistics
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AuthController.Login(School_Yathu.Controllers.LoginDTO)">
+            <summary>
+            Login user - Auto creates admin if doesn't exist
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AuthController.EnsureAdminExistsAsync">
+            <summary>
+            Ensure admin account exists in the database
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.AuthController.Register(School_Yathu.Controllers.RegisterDTO)">
             <summary>
             Register a new user (Admin only)
@@ -247,11 +257,6 @@
         <member name="M:School_Yathu.Controllers.AuthController.GeneratePassword">
             <summary>
             Generate random password
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.Login(School_Yathu.Controllers.LoginDTO)">
-            <summary>
-            Login user
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.AuthController.ChangePassword(School_Yathu.Controllers.ChangePasswordDTO)">
@@ -947,64 +952,28 @@
             Teacher-Subject relationship model
             </summary>
         </member>
-        <member name="T:school_yathu.Migrations.AddUpdatedAtToUser">
+        <member name="T:school_yathu.Migrations.InitialCreate">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:school_yathu.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:school_yathu.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtToUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:school_yathu.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
-        <member name="T:school_yathu.Migrations.YourMigrationName">
+        <member name="T:school_yathu.Migrations.SyncDepartmentId">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.YourMigrationName.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:school_yathu.Migrations.SyncDepartmentId.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.YourMigrationName.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:school_yathu.Migrations.SyncDepartmentId.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:school_yathu.Migrations.YourMigrationName.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:school_yathu.Migrations.AddUpdatedAtColumn">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddUpdatedAtColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:school_yathu.Migrations.FixTeacherRelationships">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.FixTeacherRelationships.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.FixTeacherRelationships.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.FixTeacherRelationships.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:school_yathu.Migrations.AddDeputyAssignment">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddDeputyAssignment.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddDeputyAssignment.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddDeputyAssignment.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:school_yathu.Migrations.SyncDepartmentId.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

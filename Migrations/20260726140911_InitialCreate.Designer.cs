@@ -12,8 +12,8 @@ using School_Yathu.Data;
 namespace school_yathu.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260626122719_FixTeacherRelationships")]
-    partial class FixTeacherRelationships
+    [Migration("20260726140911_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,9 @@ namespace school_yathu.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("FormTeacherId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -59,6 +62,8 @@ namespace school_yathu.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FormTeacherId");
+
                     b.HasIndex("TeacherId");
 
                     b.HasIndex("TeacherId1");
@@ -68,6 +73,38 @@ namespace school_yathu.Migrations
                         .HasDatabaseName("IX_Classes_Name_Stream");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.ClassRanking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Class")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RankingsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Stream")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Term")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClassRankings");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.ClassSubject", b =>
@@ -114,6 +151,81 @@ namespace school_yathu.Migrations
                         .HasDatabaseName("IX_ClassSubjects_ClassId_SubjectId");
 
                     b.ToTable("ClassSubjects");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("HeadOfDepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeadOfDepartmentId");
+
+                    b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.DeputyAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DeputyId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Task")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeputyId")
+                        .HasDatabaseName("IX_DeputyAssignments_DeputyId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_DeputyAssignments_Status");
+
+                    b.ToTable("DeputyAssignments");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Exam", b =>
@@ -202,9 +314,6 @@ namespace school_yathu.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("EnteredByTeacherId");
@@ -213,13 +322,42 @@ namespace school_yathu.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.HasIndex("UserId");
-
                     b.HasIndex("ExamId", "StudentId")
                         .IsUnique()
                         .HasDatabaseName("IX_ExamResults_ExamId_StudentId");
 
                     b.ToTable("ExamResults");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.FormTeacherClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("TeacherId", "ClassId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FormTeacherClasses_TeacherId_ClassId");
+
+                    b.ToTable("FormTeacherClasses");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Marks", b =>
@@ -418,6 +556,9 @@ namespace school_yathu.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -455,6 +596,8 @@ namespace school_yathu.Migrations
                         .HasDatabaseName("IX_Students_AdmissionNumber");
 
                     b.HasIndex("ClassId");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("Email")
                         .HasDatabaseName("IX_Students_Email");
@@ -572,6 +715,60 @@ namespace school_yathu.Migrations
                     b.ToTable("StudentSubjects");
                 });
 
+            modelBuilder.Entity("School_Yathu.Models.StudentSubjectSelection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AcademicYear")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ApprovedByFormTeacherId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ApprovedByTeacherId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Term")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByFormTeacherId");
+
+                    b.HasIndex("ApprovedByTeacherId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("StudentId", "SubjectId", "AcademicYear")
+                        .IsUnique()
+                        .HasDatabaseName("IX_StudentSubjectSelections_StudentId_SubjectId_Year");
+
+                    b.ToTable("StudentSubjectSelections");
+                });
+
             modelBuilder.Entity("School_Yathu.Models.Subject", b =>
                 {
                     b.Property<int>("Id")
@@ -586,6 +783,9 @@ namespace school_yathu.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -610,6 +810,8 @@ namespace school_yathu.Migrations
 
                     b.HasIndex("Code")
                         .HasDatabaseName("IX_Subjects_Code");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("Name")
                         .IsUnique()
@@ -748,6 +950,9 @@ namespace school_yathu.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -793,6 +998,8 @@ namespace school_yathu.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Email");
@@ -805,6 +1012,12 @@ namespace school_yathu.Migrations
 
             modelBuilder.Entity("School_Yathu.Models.Class", b =>
                 {
+                    b.HasOne("School_Yathu.Models.User", "FormTeacher")
+                        .WithMany("FormTeacherClasses")
+                        .HasForeignKey("FormTeacherId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Classes_FormTeacherId");
+
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany("ClassesAsTeacher")
                         .HasForeignKey("TeacherId")
@@ -815,6 +1028,8 @@ namespace school_yathu.Migrations
                         .WithMany("Classes")
                         .HasForeignKey("TeacherId1");
 
+                    b.Navigation("FormTeacher");
+
                     b.Navigation("Teacher");
                 });
 
@@ -824,17 +1039,21 @@ namespace school_yathu.Migrations
                         .WithMany("ClassSubjects")
                         .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_ClassSubjects_ClassId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("ClassSubjects")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_ClassSubjects_SubjectId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany("ClassSubjects")
-                        .HasForeignKey("TeacherId");
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_ClassSubjects_TeacherId");
 
                     b.HasOne("School_Yathu.Models.Teacher", null)
                         .WithMany("ClassSubjects")
@@ -847,17 +1066,42 @@ namespace school_yathu.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("School_Yathu.Models.Department", b =>
+                {
+                    b.HasOne("School_Yathu.Models.User", "HeadOfDepartment")
+                        .WithMany()
+                        .HasForeignKey("HeadOfDepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Departments_HeadOfDepartmentId");
+
+                    b.Navigation("HeadOfDepartment");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.DeputyAssignment", b =>
+                {
+                    b.HasOne("School_Yathu.Models.User", "Deputy")
+                        .WithMany("DeputyAssignments")
+                        .HasForeignKey("DeputyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_DeputyAssignments_DeputyId");
+
+                    b.Navigation("Deputy");
+                });
+
             modelBuilder.Entity("School_Yathu.Models.Exam", b =>
                 {
                     b.HasOne("School_Yathu.Models.Class", "Class")
                         .WithMany("Exams")
                         .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Exams_ClassId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("Exams")
                         .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Exams_SubjectId");
 
                     b.Navigation("Class");
 
@@ -867,30 +1111,30 @@ namespace school_yathu.Migrations
             modelBuilder.Entity("School_Yathu.Models.ExamResult", b =>
                 {
                     b.HasOne("School_Yathu.Models.User", "EnteredByTeacher")
-                        .WithMany()
+                        .WithMany("ExamResults")
                         .HasForeignKey("EnteredByTeacherId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_ExamResults_EnteredByTeacherId");
 
                     b.HasOne("School_Yathu.Models.Exam", "Exam")
                         .WithMany("ExamResults")
                         .HasForeignKey("ExamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_ExamResults_ExamId");
 
                     b.HasOne("School_Yathu.Models.Student", "Student")
                         .WithMany("ExamResults")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_ExamResults_StudentId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("ExamResults")
                         .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("School_Yathu.Models.User", null)
-                        .WithMany("ExamResults")
-                        .HasForeignKey("UserId");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK_ExamResults_SubjectId");
 
                     b.Navigation("EnteredByTeacher");
 
@@ -901,32 +1145,60 @@ namespace school_yathu.Migrations
                     b.Navigation("Subject");
                 });
 
+            modelBuilder.Entity("School_Yathu.Models.FormTeacherClass", b =>
+                {
+                    b.HasOne("School_Yathu.Models.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_FormTeacherClasses_ClassId");
+
+                    b.HasOne("School_Yathu.Models.User", "Teacher")
+                        .WithMany("FormTeacherClassAssignments")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_FormTeacherClasses_TeacherId");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("School_Yathu.Models.Marks", b =>
                 {
                     b.HasOne("School_Yathu.Models.User", "ApprovedByAdmin")
-                        .WithMany()
-                        .HasForeignKey("ApprovedByAdminId");
+                        .WithMany("ApprovedMarks")
+                        .HasForeignKey("ApprovedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Marks_ApprovedByAdminId");
 
                     b.HasOne("School_Yathu.Models.Class", "Class")
                         .WithMany("Marks")
                         .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Marks_ClassId");
 
                     b.HasOne("School_Yathu.Models.User", "EnteredByTeacher")
-                        .WithMany()
-                        .HasForeignKey("EnteredByTeacherId");
+                        .WithMany("EnteredMarks")
+                        .HasForeignKey("EnteredByTeacherId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Marks_EnteredByTeacherId");
 
                     b.HasOne("School_Yathu.Models.Student", "Student")
                         .WithMany("Marks")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Marks_StudentId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("Marks")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_Marks_SubjectId");
 
                     b.HasOne("School_Yathu.Models.Teacher", null)
                         .WithMany("Marks")
@@ -948,17 +1220,20 @@ namespace school_yathu.Migrations
                     b.HasOne("School_Yathu.Models.User", "Admin")
                         .WithMany()
                         .HasForeignKey("AdminId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Notifications_AdminId");
 
                     b.HasOne("School_Yathu.Models.Student", "Student")
                         .WithMany("Notifications")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Notifications_StudentId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany()
                         .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Notifications_TeacherId");
 
                     b.HasOne("School_Yathu.Models.User", "User")
                         .WithMany("Notifications")
@@ -980,14 +1255,22 @@ namespace school_yathu.Migrations
                     b.HasOne("School_Yathu.Models.Class", "ClassEntity")
                         .WithMany("Students")
                         .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Students_ClassId");
+
+                    b.HasOne("School_Yathu.Models.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany("Students")
                         .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Students_TeacherId");
 
                     b.Navigation("ClassEntity");
+
+                    b.Navigation("Department");
 
                     b.Navigation("Teacher");
                 });
@@ -998,13 +1281,15 @@ namespace school_yathu.Migrations
                         .WithMany("StudentMarks")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentMarks_StudentId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("StudentMarks")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentMarks_SubjectId");
 
                     b.Navigation("Student");
 
@@ -1017,18 +1302,21 @@ namespace school_yathu.Migrations
                         .WithMany("StudentSubjects")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentSubjects_StudentId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("StudentSubjects")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentSubjects_SubjectId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany("StudentSubjects")
                         .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_StudentSubjects_TeacherId");
 
                     b.HasOne("School_Yathu.Models.Teacher", null)
                         .WithMany("StudentSubjects")
@@ -1041,18 +1329,66 @@ namespace school_yathu.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("School_Yathu.Models.StudentSubjectSelection", b =>
+                {
+                    b.HasOne("School_Yathu.Models.User", "ApprovedByFormTeacher")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByFormTeacherId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_StudentSubjectSelections_ApprovedByFormTeacherId");
+
+                    b.HasOne("School_Yathu.Models.User", "ApprovedByTeacher")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByTeacherId");
+
+                    b.HasOne("School_Yathu.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentSubjectSelections_StudentId");
+
+                    b.HasOne("School_Yathu.Models.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_StudentSubjectSelections_SubjectId");
+
+                    b.Navigation("ApprovedByFormTeacher");
+
+                    b.Navigation("ApprovedByTeacher");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.Subject", b =>
+                {
+                    b.HasOne("School_Yathu.Models.Department", "Department")
+                        .WithMany("Subjects")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Subjects_DepartmentId");
+
+                    b.Navigation("Department");
+                });
+
             modelBuilder.Entity("School_Yathu.Models.TeacherSubject", b =>
                 {
                     b.HasOne("School_Yathu.Models.Class", "Class")
                         .WithMany()
                         .HasForeignKey("ClassId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_TeacherSubjects_ClassId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany("TeacherSubjects")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TeacherSubjects_SubjectId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany("TeacherSubjects")
@@ -1080,25 +1416,39 @@ namespace school_yathu.Migrations
                         .WithMany()
                         .HasForeignKey("ClassId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TeacherSubjectAllocations_ClassId");
 
                     b.HasOne("School_Yathu.Models.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TeacherSubjectAllocations_SubjectId");
 
                     b.HasOne("School_Yathu.Models.User", "Teacher")
                         .WithMany()
                         .HasForeignKey("TeacherId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TeacherSubjectAllocations_TeacherId");
 
                     b.Navigation("Class");
 
                     b.Navigation("Subject");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.User", b =>
+                {
+                    b.HasOne("School_Yathu.Models.Department", "Department")
+                        .WithMany("Teachers")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Users_DepartmentId");
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Class", b =>
@@ -1110,6 +1460,13 @@ namespace school_yathu.Migrations
                     b.Navigation("Marks");
 
                     b.Navigation("Students");
+                });
+
+            modelBuilder.Entity("School_Yathu.Models.Department", b =>
+                {
+                    b.Navigation("Subjects");
+
+                    b.Navigation("Teachers");
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Exam", b =>
@@ -1162,11 +1519,21 @@ namespace school_yathu.Migrations
 
             modelBuilder.Entity("School_Yathu.Models.User", b =>
                 {
+                    b.Navigation("ApprovedMarks");
+
                     b.Navigation("ClassSubjects");
 
                     b.Navigation("ClassesAsTeacher");
 
+                    b.Navigation("DeputyAssignments");
+
+                    b.Navigation("EnteredMarks");
+
                     b.Navigation("ExamResults");
+
+                    b.Navigation("FormTeacherClassAssignments");
+
+                    b.Navigation("FormTeacherClasses");
 
                     b.Navigation("Notifications");
 
