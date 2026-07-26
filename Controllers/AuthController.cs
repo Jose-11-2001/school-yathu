@@ -20,7 +20,6 @@ namespace School_Yathu.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         
-        // HARDCODED ADMIN CREDENTIALS
         private const string ADMIN_EMAIL = "ntcheu@gmail.com";
         private const string ADMIN_PASSWORD = "admin123";
         private const string ADMIN_NAME = "Headteacher";
@@ -31,16 +30,12 @@ namespace School_Yathu.Controllers
             _configuration = configuration;
         }
         
-        /// <summary>
-        /// Login user - Auto creates admin if doesn't exist
-        /// </summary>
         [HttpPost("login")]
         [SwaggerOperation(Summary = "Login", Description = "Authenticates a user and returns a JWT token")]
         [SwaggerResponse(200, "Login successful", typeof(object))]
         [SwaggerResponse(401, "Invalid credentials")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
-            // SPECIAL: If trying to login as admin, auto-create if doesn't exist
             if (loginDto.Email?.ToLower() == ADMIN_EMAIL.ToLower())
             {
                 await EnsureAdminExistsAsync();
@@ -53,9 +48,7 @@ namespace School_Yathu.Controllers
             
             var token = GenerateJwtToken(user);
             
-            // Log the response
             Console.WriteLine($"✅ Login successful for: {user.Email}, Role: {user.Role}");
-            Console.WriteLine($"✅ Token generated: {token.Substring(0, 20)}...");
             
             return Ok(new
             {
@@ -69,9 +62,6 @@ namespace School_Yathu.Controllers
             });
         }
         
-        /// <summary>
-        /// Ensure admin account exists in the database
-        /// </summary>
         private async Task EnsureAdminExistsAsync()
         {
             var adminExists = await _context.Users.AnyAsync(u => u.Email == ADMIN_EMAIL);
@@ -99,9 +89,6 @@ namespace School_Yathu.Controllers
             }
         }
         
-        /// <summary>
-        /// Register a new user (Admin only)
-        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         [SwaggerOperation(Summary = "Register new user", Description = "Creates a new teacher or student account (Admin only)")]
@@ -113,7 +100,6 @@ namespace School_Yathu.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
                 return BadRequest(new { message = "Email already exists" });
             
-            // Email validation based on role
             var emailValidation = ValidateEmailByRole(registerDto.Email, registerDto.Role);
             if (!emailValidation.IsValid)
                 return BadRequest(new { message = emailValidation.Message });
@@ -145,48 +131,27 @@ namespace School_Yathu.Controllers
             });
         }
         
-        /// <summary>
-        /// Generate email from name
-        /// </summary>
         [HttpPost("generate-email")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Generate email from name", Description = "Auto-generates an email based on user name and role")]
-        [SwaggerResponse(200, "Generated email", typeof(object))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public IActionResult GenerateEmail([FromBody] GenerateEmailDTO dto)
         {
             var email = GenerateEmailFromName(dto.Name, dto.Role);
-            return Ok(new { 
-                email = email,
-                role = dto.Role,
-                name = dto.Name
-            });
+            return Ok(new { email, role = dto.Role, name = dto.Name });
         }
         
-        /// <summary>
-        /// Generate random password
-        /// </summary>
         [HttpPost("generate-password")]
         [Authorize(Roles = "Admin")]
         [SwaggerOperation(Summary = "Generate random password", Description = "Generates a secure random password")]
-        [SwaggerResponse(200, "Generated password", typeof(object))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public IActionResult GeneratePassword()
         {
             var password = GenerateRandomPassword();
-            return Ok(new { password = password });
+            return Ok(new { password });
         }
         
-        /// <summary>
-        /// Change password
-        /// </summary>
-        [HttpPost("change-password")]
         [Authorize]
+        [HttpPost("change-password")]
         [SwaggerOperation(Summary = "Change password", Description = "Changes the current user's password")]
-        [SwaggerResponse(200, "Password changed successfully")]
-        [SwaggerResponse(400, "Current password is incorrect")]
-        [SwaggerResponse(404, "User not found")]
-        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -205,15 +170,9 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Password changed successfully" });
         }
         
-        /// <summary>
-        /// Reset password (Admin only)
-        /// </summary>
         [Authorize(Roles = "Admin")]
         [HttpPost("reset-password/{userId}")]
         [SwaggerOperation(Summary = "Reset password", Description = "Resets a user's password (Admin only)")]
-        [SwaggerResponse(200, "Password reset successfully", typeof(object))]
-        [SwaggerResponse(404, "User not found")]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> ResetPassword(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -225,12 +184,9 @@ namespace School_Yathu.Controllers
             user.MustChangePassword = true;
             await _context.SaveChangesAsync();
             
-            return Ok(new { message = "Password reset successfully", newPassword = newPassword });
+            return Ok(new { message = "Password reset successfully", newPassword });
         }
         
-        /// <summary>
-        /// Generate JWT token
-        /// </summary>
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -255,93 +211,35 @@ namespace School_Yathu.Controllers
             return tokenHandler.WriteToken(token);
         }
         
-        /// <summary>
-        /// Generate email from name based on role
-        /// </summary>
         private string GenerateEmailFromName(string name, string role)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
 
-            // Clean the name: remove extra spaces, convert to lowercase
             var cleanName = Regex.Replace(name.Trim(), @"\s+", " ");
             var parts = cleanName.Split(' ');
-            
-            // Get first name and last name
             var firstName = parts[0];
             var lastName = parts.Length > 1 ? parts[parts.Length - 1] : firstName;
-            
             var roleLower = role?.ToLower() ?? "student";
             
-            // For Students: Use full name without spaces (e.g., josephmbukwa@gmail.com)
             if (roleLower == "student")
             {
                 var fullName = cleanName.Replace(" ", "").ToLower();
                 return $"{fullName}@gmail.com";
             }
             
-            // For Teachers: First initial + last name (e.g., jmbukwa@gmail.com)
-            if (roleLower == "teacher")
+            var firstNameInitial = firstName.Substring(0, 1).ToLower();
+            var lastNameLower = lastName.ToLower();
+            var suffix = roleLower switch
             {
-                var firstNameInitial = firstName.Substring(0, 1).ToLower();
-                var lastNameLower = lastName.ToLower();
-                var baseEmail = $"{firstNameInitial}{lastNameLower}";
-                return $"{baseEmail}@gmail.com";
-            }
-            
-            // For Deputy Head Teacher: First initial + last name + "dht"
-            if (roleLower == "deputyheadteacher")
-            {
-                var firstNameInitial = firstName.Substring(0, 1).ToLower();
-                var lastNameLower = lastName.ToLower();
-                var baseEmail = $"{firstNameInitial}{lastNameLower}dht";
-                return $"{baseEmail}@gmail.com";
-            }
-            
-            // For Head of Department: First initial + last name + "hod"
-            if (roleLower == "headofdepartment")
-            {
-                var firstNameInitial = firstName.Substring(0, 1).ToLower();
-                var lastNameLower = lastName.ToLower();
-                var baseEmail = $"{firstNameInitial}{lastNameLower}hod";
-                return $"{baseEmail}@gmail.com";
-            }
-            
-            // For Form Teacher: First initial + last name + "ft"
-            if (roleLower == "formteacher")
-            {
-                var firstNameInitial = firstName.Substring(0, 1).ToLower();
-                var lastNameLower = lastName.ToLower();
-                var baseEmail = $"{firstNameInitial}{lastNameLower}ft";
-                return $"{baseEmail}@gmail.com";
-            }
-            
-            // Default: First initial + last name (for Admin and others)
-            var defaultFirstNameInitial = firstName.Substring(0, 1).ToLower();
-            var defaultLastNameLower = lastName.ToLower();
-            return $"{defaultFirstNameInitial}{defaultLastNameLower}@gmail.com";
-        }
-        
-        /// <summary>
-        /// Get the email suffix based on role (for validation)
-        /// </summary>
-        private string GetRoleSuffix(string role)
-        {
-            return role switch
-            {
-                "admin" => "",  // Admin uses custom email like ntcheu@gmail.com
+                "teacher" => "",
                 "deputyheadteacher" => "dht",
                 "headofdepartment" => "hod",
                 "formteacher" => "ft",
-                "teacher" => "",  // No suffix for regular teachers
-                "student" => "",  // No suffix for students
-                _ => "" // Default: no suffix
+                _ => ""
             };
+            return $"{firstNameInitial}{lastNameLower}{suffix}@gmail.com";
         }
         
-        /// <summary>
-        /// Validate email format based on role
-        /// </summary>
         private (bool IsValid, string Message) ValidateEmailByRole(string email, string role)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -353,45 +251,26 @@ namespace School_Yathu.Controllers
             var roleLower = role?.ToLower() ?? "student";
             var username = email.Replace("@gmail.com", "").ToLower();
             
-            // Special case: Admin can use any email (like ntcheu@gmail.com)
             if (roleLower == "admin")
-            {
                 return (true, "Valid admin email");
-            }
             
-            // Deputy Head Teacher - must end with "dht"
             if (roleLower == "deputyheadteacher" && !username.EndsWith("dht"))
-                return (false, "Deputy Head Teacher email must end with 'dht' (e.g., jmbukwadht@gmail.com)");
+                return (false, "Deputy Head Teacher email must end with 'dht'");
             
-            // Head of Department - must end with "hod"
             if (roleLower == "headofdepartment" && !username.EndsWith("hod"))
-                return (false, "Head of Department email must end with 'hod' (e.g., jmbukwahod@gmail.com)");
+                return (false, "Head of Department email must end with 'hod'");
             
-            // Form Teacher - must end with "ft"
             if (roleLower == "formteacher" && !username.EndsWith("ft"))
-                return (false, "Form Teacher email must end with 'ft' (e.g., jmbukwaft@gmail.com)");
+                return (false, "Form Teacher email must end with 'ft'");
             
-            // Teacher - should not have role suffixes
-            if (roleLower == "teacher" && (username.EndsWith("hod") || username.EndsWith("ft") || username.EndsWith("dht")))
-                return (false, "Teacher email should not contain role suffixes (hod, ft, dht)");
-            
-            // Student - should not have role suffixes
-            if (roleLower == "student" && (username.EndsWith("hod") || username.EndsWith("ft") || username.EndsWith("dht")))
-                return (false, "Student email should not contain role suffixes (hod, ft, dht)");
-
             return (true, "Valid email format");
         }
         
-        /// <summary>
-        /// Generate random password
-        /// </summary>
         private string GenerateRandomPassword()
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
             var random = new Random();
-            var password = new string(Enumerable.Repeat(chars, 10)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-            return password;
+            return new string(Enumerable.Repeat(chars, 10).Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
     
