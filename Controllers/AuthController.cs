@@ -20,10 +20,79 @@ namespace School_Yathu.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         
+        // HARDCODED ADMIN CREDENTIALS
+        private const string ADMIN_EMAIL = "ntcheu@gmail.com";
+        private const string ADMIN_PASSWORD = "Admin@123";
+        private const string ADMIN_NAME = "System Administrator";
+        
         public AuthController(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
+        }
+        
+        /// <summary>
+        /// Login user - Auto creates admin if doesn't exist
+        /// </summary>
+        [HttpPost("login")]
+        [SwaggerOperation(Summary = "Login", Description = "Authenticates a user and returns a JWT token")]
+        [SwaggerResponse(200, "Login successful", typeof(object))]
+        [SwaggerResponse(401, "Invalid credentials")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
+        {
+            // SPECIAL: If trying to login as admin, auto-create if doesn't exist
+            if (loginDto.Email?.ToLower() == ADMIN_EMAIL.ToLower())
+            {
+                await EnsureAdminExistsAsync();
+            }
+            
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+                return Unauthorized(new { message = "Invalid credentials" });
+            
+            var mustChangePassword = user.MustChangePassword;
+            var token = GenerateJwtToken(user);
+            
+            return Ok(new
+            {
+                token,
+                user.Id,
+                user.Name,
+                user.Email,
+                user.Role,
+                mustChangePassword,
+                message = "Login successful"
+            });
+        }
+        
+        /// <summary>
+        /// Ensure admin account exists in the database
+        /// </summary>
+        private async Task EnsureAdminExistsAsync()
+        {
+            var adminExists = await _context.Users.AnyAsync(u => u.Email == ADMIN_EMAIL);
+            
+            if (!adminExists)
+            {
+                var admin = new User
+                {
+                    Email = ADMIN_EMAIL,
+                    Name = ADMIN_NAME,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(ADMIN_PASSWORD),
+                    PhoneNumber = "+265999999999",
+                    EmployeeId = "ADMIN001",
+                    Qualification = "System Administrator",
+                    HireDate = DateTime.UtcNow,
+                    Role = "Admin",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true,
+                    MustChangePassword = false // Set to true if you want them to change password on first login
+                };
+                
+                _context.Users.Add(admin);
+                await _context.SaveChangesAsync();
+            }
         }
         
         /// <summary>
@@ -102,35 +171,6 @@ namespace School_Yathu.Controllers
         {
             var password = GenerateRandomPassword();
             return Ok(new { password = password });
-        }
-        
-        /// <summary>
-        /// Login user
-        /// </summary>
-        [HttpPost("login")]
-        [SwaggerOperation(Summary = "Login", Description = "Authenticates a user and returns a JWT token")]
-        [SwaggerResponse(200, "Login successful", typeof(object))]
-        [SwaggerResponse(401, "Invalid credentials")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
-            
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
-                return Unauthorized(new { message = "Invalid credentials" });
-            
-            var mustChangePassword = user.MustChangePassword;
-            var token = GenerateJwtToken(user);
-            
-            return Ok(new
-            {
-                token,
-                user.Id,
-                user.Name,
-                user.Email,
-                user.Role,
-                mustChangePassword,
-                message = "Login successful"
-            });
         }
         
         /// <summary>
