@@ -22,8 +22,8 @@ namespace School_Yathu.Controllers
         
         // HARDCODED ADMIN CREDENTIALS
         private const string ADMIN_EMAIL = "ntcheu@gmail.com";
-        private const string ADMIN_PASSWORD = "Admin@123";
-        private const string ADMIN_NAME = "System Administrator";
+        private const string ADMIN_PASSWORD = "admin123";
+        private const string ADMIN_NAME = "Headteacher";
         
         public AuthController(ApplicationDbContext context, IConfiguration configuration)
         {
@@ -51,17 +51,20 @@ namespace School_Yathu.Controllers
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 return Unauthorized(new { message = "Invalid credentials" });
             
-            var mustChangePassword = user.MustChangePassword;
             var token = GenerateJwtToken(user);
+            
+            // Log the response
+            Console.WriteLine($"✅ Login successful for: {user.Email}, Role: {user.Role}");
+            Console.WriteLine($"✅ Token generated: {token.Substring(0, 20)}...");
             
             return Ok(new
             {
                 token,
-                user.Id,
-                user.Name,
-                user.Email,
-                user.Role,
-                mustChangePassword,
+                id = user.Id,
+                name = user.Name,
+                email = user.Email,
+                role = user.Role,
+                mustChangePassword = user.MustChangePassword,
                 message = "Login successful"
             });
         }
@@ -87,11 +90,12 @@ namespace School_Yathu.Controllers
                     Role = "Admin",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true,
-                    MustChangePassword = false // Set to true if you want them to change password on first login
+                    MustChangePassword = false
                 };
                 
                 _context.Users.Add(admin);
                 await _context.SaveChangesAsync();
+                Console.WriteLine("✅ Default Admin created!");
             }
         }
         
@@ -222,6 +226,33 @@ namespace School_Yathu.Controllers
             await _context.SaveChangesAsync();
             
             return Ok(new { message = "Password reset successfully", newPassword = newPassword });
+        }
+        
+        /// <summary>
+        /// Generate JWT token
+        /// </summary>
+        private string GenerateJwtToken(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "school-yathu-secret-key-32-chars-long!");
+            
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role)
+                }),
+                Expires = DateTime.UtcNow.AddDays(1),
+                Issuer = _configuration["Jwt:Issuer"] ?? "SchoolYathuAPI",
+                Audience = _configuration["Jwt:Audience"] ?? "SchoolYathuClient",
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
         
         /// <summary>
@@ -361,33 +392,6 @@ namespace School_Yathu.Controllers
             var password = new string(Enumerable.Repeat(chars, 10)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
             return password;
-        }
-        
-        /// <summary>
-        /// Generate JWT token
-        /// </summary>
-        private string GenerateJwtToken(User user)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "school-yathu-secret-key-32-chars-long!");
-            
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Name),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role)
-                }),
-                Expires = DateTime.UtcNow.AddDays(1),
-                Issuer = _configuration["Jwt:Issuer"] ?? "SchoolYathuAPI",
-                Audience = _configuration["Jwt:Audience"] ?? "SchoolYathuClient",
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
         }
     }
     
