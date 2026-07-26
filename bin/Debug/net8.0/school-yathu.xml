@@ -976,5 +976,17 @@
         <member name="M:school_yathu.Migrations.SyncDepartmentId.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:school_yathu.Migrations.AddDepartmentIdColumn">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

@@ -41,8 +41,10 @@ namespace School_Yathu.Models
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = false;
 
-        // Department
+        // ===== EXPLICIT COLUMN MAPPING =====
+        [Column("DepartmentId")]
         public int? DepartmentId { get; set; }
+        
         [ForeignKey("DepartmentId")]
         public virtual Department? Department { get; set; }
 
@@ -58,9 +60,6 @@ namespace School_Yathu.Models
         public virtual ICollection<ExamResult>? ExamResults { get; set; }
         public virtual ICollection<Marks>? EnteredMarks { get; set; }
         public virtual ICollection<Marks>? ApprovedMarks { get; set; }
-        
-        // Deputy Head Teacher assignments
         public virtual ICollection<DeputyAssignment>? DeputyAssignments { get; set; }
-        
     }
 }
