@@ -45,6 +45,9 @@ namespace School_Yathu.Controllers
                         s.Class,
                         s.Stream,
                         s.Email,
+                        s.PhoneNumber,
+                        s.Gender,
+                        s.IsActive,
                         s.CreatedAt
                     })
                     .OrderByDescending(s => s.CreatedAt)
@@ -81,7 +84,7 @@ namespace School_Yathu.Controllers
                 if (student == null)
                     return NotFound(new { message = "Student not found" });
 
-                // Get subjects list - FIXED: Using null check instead of ?? operator
+                // Get subjects list with null safety
                 var subjectsList = new List<object>();
                 if (student.StudentSubjects != null)
                 {
@@ -98,7 +101,7 @@ namespace School_Yathu.Controllers
                         .ToList<object>();
                 }
 
-                // Get marks list - FIXED: Using null check instead of ?? operator
+                // Get marks list with null safety
                 var marksList = new List<object>();
                 if (student.Marks != null)
                 {
@@ -132,6 +135,7 @@ namespace School_Yathu.Controllers
                     student.Address,
                     student.Gender,
                     student.DateOfBirth,
+                    student.IsActive,
                     student.CreatedAt,
                     student.UpdatedAt,
                     Subjects = subjectsList,
@@ -187,6 +191,7 @@ namespace School_Yathu.Controllers
                     Class = student.Class,
                     Stream = student.Stream,
                     Email = student.Email,
+                    PhoneNumber = student.PhoneNumber,
                     CreatedAt = student.CreatedAt,
                     UpdatedAt = student.UpdatedAt
                 });
@@ -224,6 +229,7 @@ namespace School_Yathu.Controllers
                     Class = student.Class,
                     Stream = student.Stream,
                     Email = student.Email,
+                    PhoneNumber = student.PhoneNumber,
                     CreatedAt = student.CreatedAt,
                     UpdatedAt = student.UpdatedAt
                 });
@@ -261,6 +267,7 @@ namespace School_Yathu.Controllers
                     Class = student.Class,
                     Stream = student.Stream,
                     Email = student.Email,
+                    PhoneNumber = student.PhoneNumber,
                     CreatedAt = student.CreatedAt,
                     UpdatedAt = student.UpdatedAt
                 });
@@ -302,7 +309,12 @@ namespace School_Yathu.Controllers
                     Class = dto.Class,
                     Stream = dto.Stream,
                     Email = dto.Email,
-                    CreatedAt = DateTime.UtcNow
+                    PhoneNumber = dto.PhoneNumber,
+                    Address = dto.Address,
+                    DateOfBirth = dto.DateOfBirth,
+                    Gender = dto.Gender,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
 
                 _context.Students.Add(student);
@@ -318,7 +330,8 @@ namespace School_Yathu.Controllers
                         student.FullName,
                         student.Class,
                         student.Stream,
-                        student.Email
+                        student.Email,
+                        student.PhoneNumber
                     }
                 });
             }
@@ -355,6 +368,21 @@ namespace School_Yathu.Controllers
                 if (!string.IsNullOrEmpty(dto.Email))
                     student.Email = dto.Email;
 
+                if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                    student.PhoneNumber = dto.PhoneNumber;
+
+                if (!string.IsNullOrEmpty(dto.Address))
+                    student.Address = dto.Address;
+
+                if (!string.IsNullOrEmpty(dto.Gender))
+                    student.Gender = dto.Gender;
+
+                if (dto.DateOfBirth.HasValue)
+                    student.DateOfBirth = dto.DateOfBirth.Value;
+
+                if (dto.IsActive.HasValue)
+                    student.IsActive = dto.IsActive.Value;
+
                 student.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
@@ -369,7 +397,12 @@ namespace School_Yathu.Controllers
                         student.FullName,
                         student.Class,
                         student.Stream,
-                        student.Email
+                        student.Email,
+                        student.PhoneNumber,
+                        student.Address,
+                        student.Gender,
+                        student.DateOfBirth,
+                        student.IsActive
                     }
                 });
             }
@@ -381,12 +414,40 @@ namespace School_Yathu.Controllers
         }
 
         /// <summary>
-        /// Delete a student
+        /// Delete a student (Soft delete - sets IsActive to false)
         /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        [SwaggerOperation(Summary = "Delete student", Description = "Permanently deletes a student")]
+        [SwaggerOperation(Summary = "Delete student", Description = "Soft deletes a student by setting IsActive to false")]
         public async Task<IActionResult> DeleteStudent(int id)
+        {
+            try
+            {
+                var student = await _context.Students.FindAsync(id);
+                if (student == null)
+                    return NotFound(new { message = "Student not found" });
+
+                // Soft delete instead of hard delete
+                student.IsActive = false;
+                student.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Student deactivated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting student");
+                return StatusCode(500, new { message = "An error occurred while deleting student" });
+            }
+        }
+
+        /// <summary>
+        /// Permanently delete a student (Hard delete - Admin only)
+        /// </summary>
+        [HttpDelete("permanent/{id}")]
+        [Authorize(Roles = "Admin")]
+        [SwaggerOperation(Summary = "Permanently delete student", Description = "Permanently removes a student from the database")]
+        public async Task<IActionResult> PermanentDeleteStudent(int id)
         {
             try
             {
@@ -397,11 +458,11 @@ namespace School_Yathu.Controllers
                 _context.Students.Remove(student);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Student deleted successfully" });
+                return Ok(new { message = "Student permanently deleted successfully" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting student");
+                _logger.LogError(ex, "Error permanently deleting student");
                 return StatusCode(500, new { message = "An error occurred while deleting student" });
             }
         }
@@ -433,10 +494,11 @@ namespace School_Yathu.Controllers
                 var allocations = await _context.ClassSubjects
                     .Include(cs => cs.Subject)
                     .Include(cs => cs.Teacher)
-                    .Where(cs => cs.ClassId == classEntity.Id)
+                    .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
                     .Select(cs => new StudentSubjectDTO
                     {
                         Id = cs.Id,
+                        SubjectId = cs.SubjectId,
                         Name = cs.Subject != null ? cs.Subject.Name : "Unknown",
                         Code = cs.Subject != null ? cs.Subject.Code : "N/A",
                         Type = cs.Subject != null ? cs.Subject.Type : "Core",
@@ -726,7 +788,7 @@ namespace School_Yathu.Controllers
         }
 
         /// <summary>
-        /// Get class rankings for a specific class (UNIFIED VERSION - KEEP THIS ONE)
+        /// Get class rankings for a specific class
         /// </summary>
         [HttpGet("class-ranking")]
         [Authorize(Roles = "Admin,Teacher")]
@@ -738,26 +800,12 @@ namespace School_Yathu.Controllers
                 if (string.IsNullOrEmpty(className))
                     return BadRequest(new { message = "Class name is required" });
 
-                // Get teacher's assigned class if they are a Teacher
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
                 var students = await _context.Students
-                    .Where(s => s.Class == className)
+                    .Where(s => s.Class == className && s.IsActive)
                     .ToListAsync();
 
                 if (!students.Any())
                     return Ok(new { message = "No students found in this class", rankings = new List<object>() });
-
-                // If Teacher, verify they are assigned to this class
-                if (userRole == "Teacher")
-                {
-                    var isAssigned = await _context.Classes
-                        .AnyAsync(c => c.Name == className && c.TeacherId == userId);
-                    
-                    if (!isAssigned)
-                        return Unauthorized(new { message = "You are not assigned to this class" });
-                }
 
                 var classRankings = new List<object>();
 
@@ -814,7 +862,6 @@ namespace School_Yathu.Controllers
                     Term = term,
                     TotalStudents = students.Count,
                     Rankings = rankedStudents,
-                    GeneratedBy = User.Identity?.Name,
                     GeneratedAt = DateTime.UtcNow
                 });
             }
@@ -871,14 +918,6 @@ namespace School_Yathu.Controllers
                     .Take(5)
                     .ToListAsync();
 
-                // Get upcoming exams
-                var upcomingExams = await _context.Exams
-                    .Include(e => e.Subject)
-                    .Where(e => e.Class != null && e.Class.Name == student.Class && e.ExamDate > DateTime.UtcNow)
-                    .OrderBy(e => e.ExamDate)
-                    .Take(3)
-                    .ToListAsync();
-
                 return Ok(new
                 {
                     Student = new
@@ -912,14 +951,7 @@ namespace School_Yathu.Controllers
                         n.Message,
                         n.CreatedAt
                     }),
-                    UnreadNotificationCount = notifications.Count,
-                    UpcomingExams = upcomingExams.Select(e => new
-                    {
-                        e.Id,
-                        e.Title,
-                        e.ExamDate,
-                        SubjectName = e.Subject != null ? e.Subject.Name : "N/A"
-                    })
+                    UnreadNotificationCount = notifications.Count
                 });
             }
             catch (Exception ex)
@@ -968,16 +1000,15 @@ namespace School_Yathu.Controllers
         /// Calculate student ranking within their class
         /// </summary>
         private async Task<(int Position, int TotalStudents, string Grade, string Remarks, List<object> TopStudents)> CalculateStudentRanking(
-            int studentId, string className, string stream, int year, string term)
+            int studentId, string? className, string? stream, int year, string term)
         {
             // Handle null values
-            if (string.IsNullOrEmpty(className))
-                className = string.Empty;
-            if (string.IsNullOrEmpty(stream))
-                stream = string.Empty;
+            className ??= string.Empty;
+            stream ??= string.Empty;
 
             var classStudents = await _context.Students
-                .Where(s => s.Class != null && s.Class == className && s.Stream != null && s.Stream == stream)
+                .Where(s => s.Class != null && s.Class == className && 
+                           (s.Stream != null && s.Stream == stream || string.IsNullOrEmpty(stream)))
                 .Select(s => s.Id)
                 .ToListAsync();
 
@@ -1030,249 +1061,6 @@ namespace School_Yathu.Controllers
             return ("E", "Failed. Please work much harder!");
         }
 
-        /// <summary>
-        /// Get rankings for the teacher's assigned class
-        /// </summary>
-        [HttpGet("teacher-class-rankings")]
-        [Authorize(Roles = "Teacher")]
-        [SwaggerOperation(Summary = "Get teacher's class rankings", Description = "Retrieves rankings for the teacher's assigned class")]
-        public async Task<IActionResult> GetTeacherClassRankings([FromQuery] int year, [FromQuery] string term)
-        {
-            try
-            {
-                var teacherId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-                // Get the class assigned to this teacher
-                var teacherClass = await _context.Classes
-                    .FirstOrDefaultAsync(c => c.TeacherId == teacherId);
-
-                if (teacherClass == null)
-                    return NotFound(new { message = "You are not assigned to any class" });
-
-                // Get students in this class
-                var students = await _context.Students
-                    .Where(s => s.Class == teacherClass.Name && s.Stream == teacherClass.Stream)
-                    .ToListAsync();
-
-                if (!students.Any())
-                    return Ok(new { message = "No students found in your class", rankings = new List<object>() });
-
-                var classRankings = new List<object>();
-
-                foreach (var student in students)
-                {
-                    var marks = await _context.Marks
-                        .Include(m => m.Subject)
-                        .Where(m => m.StudentId == student.Id && m.Year == year && m.Term == term)
-                        .ToListAsync();
-
-                    if (marks.Any())
-                    {
-                        var totalScore = marks.Sum(m => m.TotalScore ?? 0);
-                        var average = marks.Average(m => m.TotalScore ?? 0);
-                        var gradeInfo = CalculateGradeAndRemarks(average);
-
-                        classRankings.Add(new
-                        {
-                            student.Id,
-                            student.AdmissionNumber,
-                            student.FullName,
-                            TotalMarks = totalScore,
-                            Average = Math.Round(average, 2),
-                            Grade = gradeInfo.Grade,
-                            Remark = gradeInfo.Remarks,
-                            SubjectScores = marks.Select(m => new
-                            {
-                                SubjectName = m.Subject != null ? m.Subject.Name : "Unknown",
-                                Score = m.TotalScore,
-                                Grade = m.Grade
-                            })
-                        });
-                    }
-                }
-
-                var rankedStudents = classRankings
-                    .OrderByDescending(s => ((dynamic)s).TotalMarks)
-                    .Select((s, index) => new
-                    {
-                        Position = index + 1,
-                        AdmissionNumber = ((dynamic)s).AdmissionNumber,
-                        FullName = ((dynamic)s).FullName,
-                        TotalMarks = ((dynamic)s).TotalMarks,
-                        Average = ((dynamic)s).Average,
-                        Grade = ((dynamic)s).Grade,
-                        Remark = ((dynamic)s).Remark,
-                        SubjectScores = ((dynamic)s).SubjectScores
-                    })
-                    .ToList();
-
-                return Ok(new
-                {
-                    Class = teacherClass.Name,
-                    Stream = teacherClass.Stream,
-                    Year = year,
-                    Term = term,
-                    TotalStudents = students.Count,
-                    Rankings = rankedStudents,
-                    TeacherName = User.Identity?.Name,
-                    GeneratedAt = DateTime.UtcNow
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting teacher class rankings");
-                return StatusCode(500, new { message = "An error occurred" });
-            }
-        }
-
-        /// <summary>
-        /// Get available subjects for student selection
-        /// </summary>
-        [HttpGet("available-subjects")]
-        [Authorize(Roles = "Student")]
-        [SwaggerOperation(Summary = "Get available subjects for selection")]
-        public async Task<IActionResult> GetAvailableSubjects()
-        {
-            try
-            {
-                var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                
-                var student = await _context.Students.FindAsync(studentId);
-                if (student == null)
-                    return NotFound(new { message = "Student not found" });
-
-                var classSubjects = await _context.ClassSubjects
-                    .Include(cs => cs.Subject)
-                    .Where(cs => cs.ClassId == student.ClassId && cs.IsActive)
-                    .Select(cs => cs.Subject)
-                    .ToListAsync();
-
-                var selectedSubjectIds = await _context.StudentSubjectSelections
-                    .Where(sss => sss.StudentId == studentId && !sss.IsApproved)
-                    .Select(sss => sss.SubjectId)
-                    .ToListAsync();
-
-                var approvedSubjectIds = await _context.StudentSubjects
-                    .Where(ss => ss.StudentId == studentId && ss.IsActive)
-                    .Select(ss => ss.SubjectId)
-                    .ToListAsync();
-
-                return Ok(new
-                {
-                    AvailableSubjects = classSubjects
-                        .Where(s => !approvedSubjectIds.Contains(s.Id))
-                        .Select(s => new
-                        {
-                            s.Id,
-                            s.Name,
-                            s.Code,
-                            s.Type,
-                            IsSelected = selectedSubjectIds.Contains(s.Id)
-                        }),
-                    SelectedSubjects = classSubjects
-                        .Where(s => selectedSubjectIds.Contains(s.Id))
-                        .Select(s => new
-                        {
-                            s.Id,
-                            s.Name,
-                            s.Code,
-                            s.Type
-                        }),
-                    ApprovedSubjects = classSubjects
-                        .Where(s => approvedSubjectIds.Contains(s.Id))
-                        .Select(s => new
-                        {
-                            s.Id,
-                            s.Name,
-                            s.Code,
-                            s.Type
-                        })
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting available subjects");
-                return StatusCode(500, new { message = "An error occurred" });
-            }
-        }
-
-        /// <summary>
-        /// Select a subject
-        /// </summary>
-        [HttpPost("select-subject")]
-        [Authorize(Roles = "Student")]
-        [SwaggerOperation(Summary = "Select a subject for approval")]
-        public async Task<IActionResult> SelectSubject([FromBody] SelectSubjectDTO dto)
-        {
-            try
-            {
-                var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                var currentYear = DateTime.Now.Year;
-
-                var student = await _context.Students.FindAsync(studentId);
-                if (student == null)
-                    return NotFound(new { message = "Student not found" });
-
-                var exists = await _context.StudentSubjectSelections
-                    .AnyAsync(sss => sss.StudentId == studentId && sss.SubjectId == dto.SubjectId);
-
-                if (exists)
-                    return BadRequest(new { message = "Subject already selected" });
-
-                var selection = new StudentSubjectSelection
-                {
-                    StudentId = studentId,
-                    SubjectId = dto.SubjectId,
-                    AcademicYear = currentYear,
-                    Term = dto.Term ?? "Term 1",
-                    CreatedAt = DateTime.UtcNow,
-                    IsApproved = false
-                };
-
-                _context.StudentSubjectSelections.Add(selection);
-                await _context.SaveChangesAsync();
-
-                // Send notification to form teacher
-                var classEntity = await _context.Classes.FindAsync(student.ClassId);
-                if (classEntity != null)
-                {
-                    var formTeachers = await _context.FormTeacherClasses
-                        .Include(ftc => ftc.Teacher)
-                        .Where(ftc => ftc.ClassId == classEntity.Id)
-                        .Select(ftc => ftc.TeacherId)
-                        .ToListAsync();
-
-                    foreach (var teacherId in formTeachers)
-                    {
-                        var notification = new Notification
-                        {
-                            Title = "Subject Selection Pending",
-                            Message = $"Student {student.FullName} has selected a subject for approval.",
-                            Type = "SubjectSelection",
-                            TeacherId = teacherId,
-                            CreatedAt = DateTime.UtcNow,
-                            IsRead = false
-                        };
-                        _context.Notifications.Add(notification);
-                    }
-                }
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "Subject selected successfully. Waiting for form teacher approval." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error selecting subject");
-                return StatusCode(500, new { message = "An error occurred" });
-            }
-        }
-
         #endregion
-    }
-
-    public class SelectSubjectDTO
-    {
-        public int SubjectId { get; set; }
-        public string? Term { get; set; }
     }
 }

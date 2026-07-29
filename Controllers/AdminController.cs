@@ -759,6 +759,7 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return NotFound(new { message = "Student not found" });
 
+            // Only update fields that are provided
             if (!string.IsNullOrEmpty(dto.FullName))
                 student.FullName = dto.FullName;
 
@@ -767,6 +768,24 @@ namespace School_Yathu.Controllers
 
             if (!string.IsNullOrEmpty(dto.Stream))
                 student.Stream = dto.Stream;
+
+            if (!string.IsNullOrEmpty(dto.Email))
+                student.Email = dto.Email;
+
+            if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                student.PhoneNumber = dto.PhoneNumber;
+
+            if (!string.IsNullOrEmpty(dto.Address))
+                student.Address = dto.Address;
+
+            if (!string.IsNullOrEmpty(dto.Gender))
+                student.Gender = dto.Gender;
+
+            if (dto.DateOfBirth.HasValue)
+                student.DateOfBirth = dto.DateOfBirth.Value;
+
+            if (dto.IsActive.HasValue)
+                student.IsActive = dto.IsActive.Value;
 
             student.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -781,6 +800,12 @@ namespace School_Yathu.Controllers
                     student.FullName,
                     student.Class,
                     student.Stream,
+                    student.Email,
+                    student.PhoneNumber,
+                    student.Address,
+                    student.Gender,
+                    student.DateOfBirth,
+                    student.IsActive,
                     student.UpdatedAt
                 }
             });
@@ -1277,12 +1302,7 @@ namespace School_Yathu.Controllers
         public int Capacity { get; set; }
     }
 
-    public class UpdateStudentDTO
-    {
-        public string? FullName { get; set; }
-        public string? Class { get; set; }
-        public string? Stream { get; set; }
-    }
+    // REMOVED: UpdateStudentDTO - Now using the one from DTOs/StudentDTOs.cs
 
     public class AllocateTeacherDTO
     {

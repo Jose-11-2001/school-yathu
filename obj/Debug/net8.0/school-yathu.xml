@@ -9,6 +9,21 @@
             Get all teachers with department info
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AddTeacher(School_Yathu.Controllers.CreateTeacherDTO)">
+            <summary>
+            Add a new teacher with department
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.UpdateTeacher(System.Int32,School_Yathu.Controllers.UpdateTeacherDTO)">
+            <summary>
+            Update an existing teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.DeleteTeacher(System.Int32)">
+            <summary>
+            Delete/Deactivate a teacher
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.AdminController.GetDeputies">
             <summary>
             Get all deputy head teachers
@@ -24,19 +39,19 @@
             Delete/Deactivate a deputy head teacher
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AddTeacher(School_Yathu.DTOs.CreateTeacherDTO)">
+        <member name="M:School_Yathu.Controllers.AdminController.AssignDeputyHeadTeacher(School_Yathu.Controllers.AssignDeputyDTO)">
             <summary>
-            Add a new teacher with department
+            Assign a teacher as Deputy Head Teacher
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateTeacher(System.Int32,School_Yathu.Controllers.UpdateTeacherDTO)">
+        <member name="M:School_Yathu.Controllers.AdminController.RemoveDeputyHeadTeacher">
             <summary>
-            Update an existing teacher
+            Remove Deputy Head Teacher (demote back to teacher)
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteTeacher(System.Int32)">
+        <member name="M:School_Yathu.Controllers.AdminController.GetDeputyStatus">
             <summary>
-            Delete/Deactivate a teacher
+            Get Deputy Head Teacher assignment status
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.AdminController.GetDepartments">
@@ -74,12 +89,12 @@
             Get all classes with form teachers
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AddClass(School_Yathu.DTOs.CreateClassDTO)">
+        <member name="M:School_Yathu.Controllers.AdminController.AddClass(School_Yathu.Controllers.CreateClassDTO)">
             <summary>
             Add a new class
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateClass(System.Int32,School_Yathu.DTOs.CreateClassDTO)">
+        <member name="M:School_Yathu.Controllers.AdminController.UpdateClass(System.Int32,School_Yathu.Controllers.CreateClassDTO)">
             <summary>
             Update an existing class
             </summary>
@@ -134,7 +149,7 @@
             Delete a subject
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AllocateTeacher(School_Yathu.DTOs.AllocateTeacherDTO)">
+        <member name="M:School_Yathu.Controllers.AdminController.AllocateTeacher(School_Yathu.Controllers.AllocateTeacherDTO)">
             <summary>
             Allocate a teacher to a subject
             </summary>
@@ -232,66 +247,6 @@
         <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAllocationSummary">
             <summary>
             Get allocation summary statistics
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.Login(School_Yathu.Controllers.LoginDTO)">
-            <summary>
-            Login user - Auto creates admin if doesn't exist
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.EnsureAdminExistsAsync">
-            <summary>
-            Ensure admin account exists in the database
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.Register(School_Yathu.Controllers.RegisterDTO)">
-            <summary>
-            Register a new user (Admin only)
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GenerateEmail(School_Yathu.Controllers.GenerateEmailDTO)">
-            <summary>
-            Generate email from name
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GeneratePassword">
-            <summary>
-            Generate random password
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.ChangePassword(School_Yathu.Controllers.ChangePasswordDTO)">
-            <summary>
-            Change password
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.ResetPassword(System.Int32)">
-            <summary>
-            Reset password (Admin only)
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GenerateEmailFromName(System.String,System.String)">
-            <summary>
-            Generate email from name based on role
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GetRoleSuffix(System.String)">
-            <summary>
-            Get the email suffix based on role (for validation)
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.ValidateEmailByRole(System.String,System.String)">
-            <summary>
-            Validate email format based on role
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GenerateRandomPassword">
-            <summary>
-            Generate random password
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AuthController.GenerateJwtToken(School_Yathu.Models.User)">
-            <summary>
-            Generate JWT token
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.ContactsController.GetContacts">
@@ -516,7 +471,12 @@
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.DeleteStudent(System.Int32)">
             <summary>
-            Delete a student
+            Delete a student (Soft delete - sets IsActive to false)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentController.PermanentDeleteStudent(System.Int32)">
+            <summary>
+            Permanently delete a student (Hard delete - Admin only)
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetStudentSubjects(System.String,System.String)">
@@ -551,7 +511,7 @@
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetClassRankings(System.String,System.Int32,System.String)">
             <summary>
-            Get class rankings for a specific class (UNIFIED VERSION - KEEP THIS ONE)
+            Get class rankings for a specific class
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentController.GetStudentDashboard">
@@ -572,21 +532,6 @@
         <member name="M:School_Yathu.Controllers.StudentController.CalculateGradeAndRemarks(System.Double)">
             <summary>
             Calculate grade and remarks based on score
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.StudentController.GetTeacherClassRankings(System.Int32,System.String)">
-            <summary>
-            Get rankings for the teacher's assigned class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.StudentController.GetAvailableSubjects">
-            <summary>
-            Get available subjects for student selection
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.StudentController.SelectSubject(School_Yathu.Controllers.SelectSubjectDTO)">
-            <summary>
-            Select a subject
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentNotificationsController.GetMyNotifications">

@@ -39,27 +39,29 @@ namespace School_Yathu.Models
 
         public int? TeacherId { get; set; }
         public int? ClassId { get; set; }
+        public int? DepartmentId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation properties
+        // ===== NAVIGATION PROPERTIES =====
+        
         [ForeignKey("TeacherId")]
         public virtual User? Teacher { get; set; }
 
         [ForeignKey("ClassId")]
         public virtual Class? ClassEntity { get; set; }
 
-        public virtual ICollection<StudentMark>? StudentMarks { get; set; }
-        public virtual ICollection<StudentSubject>? StudentSubjects { get; set; }
-        public virtual ICollection<Notification>? Notifications { get; set; } // Only ONE notification collection
-        public virtual ICollection<Marks>? Marks { get; set; }
-        public virtual ICollection<ExamResult>? ExamResults { get; set; }
-        public int? DepartmentId { get; set; }
+        [ForeignKey("DepartmentId")]
+        public virtual Department? Department { get; set; }
 
-[ForeignKey("DepartmentId")]
-public virtual Department? Department { get; set; }
+        // Collections
+        public virtual ICollection<StudentSubject>? StudentSubjects { get; set; }
+        public virtual ICollection<Marks>? Marks { get; set; }
+        public virtual ICollection<StudentMark>? StudentMarks { get; set; }
+        public virtual ICollection<Notification>? Notifications { get; set; }
+        public virtual ICollection<ExamResult>? ExamResults { get; set; }
     }
 }
