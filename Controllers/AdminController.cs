@@ -394,7 +394,8 @@ namespace School_Yathu.Controllers
             if (department == null)
                 return NotFound(new { message = "Department not found" });
 
-            if (department.Teachers.Any() || department.Subjects.Any())
+            if ((department.Teachers != null && department.Teachers.Any()) || 
+                (department.Subjects != null && department.Subjects.Any()))
                 return BadRequest(new { message = "Cannot delete department with assigned teachers or subjects" });
 
             _context.Departments.Remove(department);
@@ -887,7 +888,8 @@ namespace School_Yathu.Controllers
             if (subject == null)
                 return NotFound(new { message = "Subject not found" });
 
-            if (subject.ClassSubjects.Any() || subject.TeacherSubjects.Any())
+            if ((subject.ClassSubjects != null && subject.ClassSubjects.Any()) || 
+                (subject.TeacherSubjects != null && subject.TeacherSubjects.Any()))
                 return BadRequest(new { message = "Cannot delete subject with existing allocations" });
 
             _context.Subjects.Remove(subject);
@@ -1030,13 +1032,13 @@ namespace School_Yathu.Controllers
                 .Select(g => new
                 {
                     SubjectId = g.Key.SubjectId,
-                    SubjectName = g.First().Subject != null ? g.First().Subject.Name : "",
-                    ClassName = g.First().Class != null ? g.First().Class.Name : "",
+                    SubjectName = g.First().Subject != null ? g.First().Subject.Name : "Unknown Subject",
+                    ClassName = g.First().Class != null ? g.First().Class.Name : "Unknown Class",
                     Stream = g.First().Class != null ? g.First().Class.Stream : "",
                     Year = g.Key.Year,
                     Term = g.Key.Term,
                     StudentCount = g.Count(),
-                    EnteredByTeacher = g.First().EnteredByTeacher != null ? g.First().EnteredByTeacher.Name : ""
+                    EnteredByTeacher = g.First().EnteredByTeacher != null ? g.First().EnteredByTeacher.Name : "Unknown"
                 })
                 .ToListAsync();
 
@@ -1094,7 +1096,13 @@ namespace School_Yathu.Controllers
             }
 
             // Send notification to teachers
-            var teacherIds = marks.Select(m => m.EnteredByTeacherId).Where(t => t.HasValue).Select(t => t.Value).Distinct().ToList();
+            var teacherIds = marks
+                .Select(m => m.EnteredByTeacherId)
+                .Where(t => t.HasValue)
+                .Select(t => t.Value)
+                .Distinct()
+                .ToList();
+
             foreach (var teacherId in teacherIds)
             {
                 var notification = new Notification
@@ -1134,8 +1142,8 @@ namespace School_Yathu.Controllers
                 .Select(g => new
                 {
                     SubjectId = g.Key.SubjectId,
-                    SubjectName = g.First().Subject != null ? g.First().Subject.Name : "",
-                    ClassName = g.First().Class != null ? g.First().Class.Name : "",
+                    SubjectName = g.First().Subject != null ? g.First().Subject.Name : "Unknown Subject",
+                    ClassName = g.First().Class != null ? g.First().Class.Name : "Unknown Class",
                     Stream = g.First().Class != null ? g.First().Class.Stream : "",
                     Year = g.Key.Year,
                     Term = g.Key.Term,
@@ -1248,7 +1256,6 @@ namespace School_Yathu.Controllers
         public string Term { get; set; } = string.Empty;
     }
 
-    // Additional DTOs needed for other methods
     public class CreateTeacherDTO
     {
         public string Email { get; set; } = string.Empty;
