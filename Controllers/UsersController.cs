@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using School_Yathu.Data;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Security.Claims;
 
 namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,DeputyHeadTeacher")]
     [SwaggerTag("Users - Manage system users")]
     public class UsersController : ControllerBase
     {
@@ -26,7 +25,7 @@ namespace School_Yathu.Controllers
         [HttpGet("all")]
         [SwaggerOperation(Summary = "Get all users", Description = "Retrieves a list of all users with their roles")]
         [SwaggerResponse(200, "List of all users", typeof(List<object>))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _context.Users
@@ -56,12 +55,21 @@ namespace School_Yathu.Controllers
         [HttpGet("teachers")]
         [SwaggerOperation(Summary = "Get all teachers", Description = "Retrieves a list of all teachers")]
         [SwaggerResponse(200, "List of teachers", typeof(List<object>))]
-        [SwaggerResponse(401, "Unauthorized - Admin role required")]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetTeachers()
         {
             var teachers = await _context.Users
                 .Where(u => u.Role == "Teacher" && u.IsActive)
-                .Select(u => new { u.Id, u.Name, u.Email, u.PhoneNumber, u.EmployeeId, u.Qualification, u.MustChangePassword })
+                .Select(u => new 
+                { 
+                    u.Id, 
+                    u.Name, 
+                    u.Email, 
+                    u.PhoneNumber, 
+                    u.EmployeeId, 
+                    u.Qualification, 
+                    u.MustChangePassword 
+                })
                 .ToListAsync();
             
             return Ok(teachers);
@@ -72,6 +80,8 @@ namespace School_Yathu.Controllers
         /// </summary>
         [HttpGet("by-role/{role}")]
         [SwaggerOperation(Summary = "Get users by role", Description = "Retrieves users with a specific role")]
+        [SwaggerResponse(200, "List of users", typeof(List<object>))]
+        [SwaggerResponse(401, "Unauthorized")]
         public async Task<IActionResult> GetUsersByRole(string role)
         {
             var users = await _context.Users
@@ -93,10 +103,47 @@ namespace School_Yathu.Controllers
         }
 
         /// <summary>
+        /// Get user by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Get user by ID", Description = "Retrieves a user by their ID")]
+        [SwaggerResponse(200, "User details", typeof(object))]
+        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerResponse(404, "User not found")]
+        public async Task<IActionResult> GetUser(int id)
+        {
+            var user = await _context.Users
+                .Where(u => u.Id == id && u.IsActive)
+                .Select(u => new 
+                { 
+                    u.Id, 
+                    u.Name, 
+                    u.Email, 
+                    u.Role,
+                    u.PhoneNumber,
+                    u.EmployeeId,
+                    u.Qualification,
+                    u.IsActive,
+                    u.MustChangePassword,
+                    u.CreatedAt
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            return Ok(user);
+        }
+
+        /// <summary>
         /// Update a user
         /// </summary>
         [HttpPut("{id}")]
         [SwaggerOperation(Summary = "Update user", Description = "Updates a user's information")]
+        [SwaggerResponse(200, "User updated successfully", typeof(object))]
+        [SwaggerResponse(400, "Invalid request")]
+        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerResponse(404, "User not found")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
             var user = await _context.Users.FindAsync(id);
@@ -135,6 +182,10 @@ namespace School_Yathu.Controllers
         /// </summary>
         [HttpDelete("{id}")]
         [SwaggerOperation(Summary = "Delete user", Description = "Deactivates a user")]
+        [SwaggerResponse(200, "User deactivated successfully", typeof(object))]
+        [SwaggerResponse(400, "Cannot delete default admin")]
+        [SwaggerResponse(401, "Unauthorized")]
+        [SwaggerResponse(404, "User not found")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -149,36 +200,6 @@ namespace School_Yathu.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User deactivated successfully" });
-        }
-
-        /// <summary>
-        /// Get user by ID
-        /// </summary>
-        [HttpGet("{id}")]
-        [SwaggerOperation(Summary = "Get user by ID", Description = "Retrieves a user by their ID")]
-        public async Task<IActionResult> GetUser(int id)
-        {
-            var user = await _context.Users
-                .Where(u => u.Id == id && u.IsActive)
-                .Select(u => new 
-                { 
-                    u.Id, 
-                    u.Name, 
-                    u.Email, 
-                    u.Role,
-                    u.PhoneNumber,
-                    u.EmployeeId,
-                    u.Qualification,
-                    u.IsActive,
-                    u.MustChangePassword,
-                    u.CreatedAt
-                })
-                .FirstOrDefaultAsync();
-
-            if (user == null)
-                return NotFound(new { message = "User not found" });
-
-            return Ok(user);
         }
     }
 
