@@ -187,10 +187,22 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Password reset successfully", newPassword });
         }
         
+        // ============================================
+        // FIXED: JWT Token Generation with UTF8 Encoding
+        // ============================================
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "school-yathu-secret-key-32-chars-long!");
+            
+            // Try both jwt_key and jwt_Key (case-insensitive) - matching Program.cs
+            var jwtKey = _configuration["jwt_key"] ?? 
+                         _configuration["jwt_Key"] ?? 
+                         "school-yathu-secret-key-32-chars-long!";
+            
+            Console.WriteLine($"🔑 Generating token with key: {jwtKey.Substring(0, Math.Min(15, jwtKey.Length))}...");
+            
+            // Use UTF8 encoding (SAME as validation in Program.cs)
+            var key = Encoding.UTF8.GetBytes(jwtKey);
             
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -202,13 +214,17 @@ namespace School_Yathu.Controllers
                     new Claim(ClaimTypes.Role, user.Role)
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
-                Issuer = _configuration["Jwt:Issuer"] ?? "SchoolYathuAPI",
-                Audience = _configuration["Jwt:Audience"] ?? "SchoolYathuClient",
+                Issuer = "School_Yathu",
+                Audience = "School_Yathu-client",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            var tokenString = tokenHandler.WriteToken(token);
+            
+            Console.WriteLine($"✅ JWT Token generated for: {user.Email}");
+            
+            return tokenString;
         }
         
         private string GenerateEmailFromName(string name, string role)
