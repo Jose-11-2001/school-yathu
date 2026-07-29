@@ -137,6 +137,31 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
+// ============================================
+// 🔥 ADD REQUEST LOGGING MIDDLEWARE
+// ============================================
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"========================================");
+    Console.WriteLine($"📥 INCOMING REQUEST");
+    Console.WriteLine($"  Method: {context.Request.Method}");
+    Console.WriteLine($"  Path: {context.Request.Path}");
+    Console.WriteLine($"  Query: {context.Request.QueryString}");
+    Console.WriteLine($"  Headers: {string.Join(", ", context.Request.Headers.Select(h => $"{h.Key}: {h.Value}"))}");
+    
+    // Log the request body for POST/PUT requests
+    if (context.Request.Method == "POST" || context.Request.Method == "PUT")
+    {
+        context.Request.EnableBuffering();
+        var body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+        context.Request.Body.Position = 0;
+        Console.WriteLine($"  Body: {body}");
+    }
+    Console.WriteLine($"========================================");
+    
+    await next();
+});
+
 // ===== USE CORS - AllowAll =====
 app.UseCors("AllowAll");
 
