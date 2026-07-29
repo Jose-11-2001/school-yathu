@@ -53,85 +53,6 @@ namespace School_Yathu.Controllers
                 .ToListAsync();
             return Ok(teachers);
         }
-        // ==================== DEPUTY HEAD TEACHER MANAGEMENT ====================
-
-/// <summary>
-/// Get all deputy head teachers
-/// </summary>
-[HttpGet("deputies")]
-[SwaggerOperation(Summary = "Get all deputy head teachers")]
-public async Task<IActionResult> GetDeputies()
-{
-    var deputies = await _context.Users
-        .Where(u => u.Role == "DeputyHeadTeacher" && u.IsActive)
-        .Select(u => new
-        {
-            u.Id,
-            u.Email,
-            u.Name,
-            u.PhoneNumber,
-            u.EmployeeId,
-            u.Qualification,
-            u.HireDate,
-            u.CreatedAt,
-            u.IsActive,
-            u.MustChangePassword,
-            PendingTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id && da.Status == "Pending"),
-            TotalTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id)
-        })
-        .ToListAsync();
-    return Ok(deputies);
-}
-
-/// <summary>
-/// Add a new deputy head teacher
-/// </summary>
-[HttpPost("deputies")]
-[SwaggerOperation(Summary = "Add a new deputy head teacher")]
-public async Task<IActionResult> AddDeputy([FromBody] CreateDeputyDTO dto)
-{
-    if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-        return BadRequest(new { message = "Email already exists" });
-
-    var deputy = new User
-    {
-        Email = dto.Email,
-        Name = dto.Name,
-        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-        PhoneNumber = dto.PhoneNumber,
-        EmployeeId = dto.EmployeeId,
-        Qualification = dto.Qualification,
-        HireDate = dto.HireDate.HasValue ? DateTime.SpecifyKind(dto.HireDate.Value, DateTimeKind.Utc) : DateTime.UtcNow,
-        DepartmentId = dto.DepartmentId,
-        Role = "DeputyHeadTeacher",
-        CreatedAt = DateTime.UtcNow,
-        IsActive = true,
-        MustChangePassword = true
-    };
-
-    _context.Users.Add(deputy);
-    await _context.SaveChangesAsync();
-    return Ok(new { message = "Deputy head teacher added successfully", deputyId = deputy.Id });
-}
-
-/// <summary>
-/// Delete/Deactivate a deputy head teacher
-/// </summary>
-[HttpDelete("deputies/{id}")]
-[SwaggerOperation(Summary = "Delete a deputy head teacher")]
-public async Task<IActionResult> DeleteDeputy(int id)
-{
-    var deputy = await _context.Users.FindAsync(id);
-    if (deputy == null)
-        return NotFound(new { message = "Deputy head teacher not found" });
-
-    if (deputy.Role != "DeputyHeadTeacher")
-        return BadRequest(new { message = "User is not a deputy head teacher" });
-
-    deputy.IsActive = false;
-    await _context.SaveChangesAsync();
-    return Ok(new { message = "Deputy head teacher deactivated successfully" });
-}
 
         /// <summary>
         /// Add a new teacher with department
@@ -225,6 +146,169 @@ public async Task<IActionResult> DeleteDeputy(int id)
             teacher.IsActive = false;
             await _context.SaveChangesAsync();
             return Ok(new { message = "Teacher deactivated successfully" });
+        }
+
+        // ==================== DEPUTY HEAD TEACHER MANAGEMENT ====================
+
+        /// <summary>
+        /// Get all deputy head teachers
+        /// </summary>
+        [HttpGet("deputies")]
+        [SwaggerOperation(Summary = "Get all deputy head teachers")]
+        public async Task<IActionResult> GetDeputies()
+        {
+            var deputies = await _context.Users
+                .Where(u => u.Role == "DeputyHeadTeacher" && u.IsActive)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Email,
+                    u.Name,
+                    u.PhoneNumber,
+                    u.EmployeeId,
+                    u.Qualification,
+                    u.HireDate,
+                    u.CreatedAt,
+                    u.IsActive,
+                    u.MustChangePassword,
+                    PendingTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id && da.Status == "Pending"),
+                    TotalTasks = _context.DeputyAssignments.Count(da => da.DeputyId == u.Id)
+                })
+                .ToListAsync();
+            return Ok(deputies);
+        }
+
+        /// <summary>
+        /// Add a new deputy head teacher
+        /// </summary>
+        [HttpPost("deputies")]
+        [SwaggerOperation(Summary = "Add a new deputy head teacher")]
+        public async Task<IActionResult> AddDeputy([FromBody] CreateDeputyDTO dto)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                return BadRequest(new { message = "Email already exists" });
+
+            var deputy = new User
+            {
+                Email = dto.Email,
+                Name = dto.Name,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                PhoneNumber = dto.PhoneNumber,
+                EmployeeId = dto.EmployeeId,
+                Qualification = dto.Qualification,
+                HireDate = dto.HireDate.HasValue ? DateTime.SpecifyKind(dto.HireDate.Value, DateTimeKind.Utc) : DateTime.UtcNow,
+                DepartmentId = dto.DepartmentId,
+                Role = "DeputyHeadTeacher",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                MustChangePassword = true
+            };
+
+            _context.Users.Add(deputy);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Deputy head teacher added successfully", deputyId = deputy.Id });
+        }
+
+        /// <summary>
+        /// Delete/Deactivate a deputy head teacher
+        /// </summary>
+        [HttpDelete("deputies/{id}")]
+        [SwaggerOperation(Summary = "Delete a deputy head teacher")]
+        public async Task<IActionResult> DeleteDeputy(int id)
+        {
+            var deputy = await _context.Users.FindAsync(id);
+            if (deputy == null)
+                return NotFound(new { message = "Deputy head teacher not found" });
+
+            if (deputy.Role != "DeputyHeadTeacher")
+                return BadRequest(new { message = "User is not a deputy head teacher" });
+
+            deputy.IsActive = false;
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Deputy head teacher deactivated successfully" });
+        }
+
+        /// <summary>
+        /// Assign a teacher as Deputy Head Teacher
+        /// </summary>
+        [HttpPost("assign-deputy")]
+        [SwaggerOperation(Summary = "Assign Deputy Head Teacher")]
+        public async Task<IActionResult> AssignDeputyHeadTeacher([FromBody] AssignDeputyDTO dto)
+        {
+            var teacher = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == dto.TeacherId && u.Role == "Teacher");
+            
+            if (teacher == null)
+                return NotFound(new { message = "Teacher not found" });
+            
+            // Check if there's already a deputy head teacher
+            var existingDeputy = await _context.Users
+                .FirstOrDefaultAsync(u => u.Role == "DeputyHeadTeacher" && u.IsActive);
+            
+            if (existingDeputy != null && dto.ReplaceExisting)
+            {
+                // Demote the existing deputy back to teacher
+                existingDeputy.Role = "Teacher";
+                await _context.SaveChangesAsync();
+            }
+            else if (existingDeputy != null)
+            {
+                return BadRequest(new { message = "A Deputy Head Teacher already exists. Use 'ReplaceExisting' to replace them." });
+            }
+            
+            // Assign the teacher as Deputy Head Teacher
+            teacher.Role = "DeputyHeadTeacher";
+            await _context.SaveChangesAsync();
+            
+            // Send notification
+            var notification = new Notification
+            {
+                Title = "Deputy Head Teacher Appointment",
+                Message = $"You have been appointed as Deputy Head Teacher.",
+                Type = "DeputyAppointment",
+                TeacherId = dto.TeacherId,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Deputy Head Teacher assigned successfully" });
+        }
+
+        /// <summary>
+        /// Remove Deputy Head Teacher (demote back to teacher)
+        /// </summary>
+        [HttpPost("remove-deputy")]
+        [SwaggerOperation(Summary = "Remove Deputy Head Teacher")]
+        public async Task<IActionResult> RemoveDeputyHeadTeacher()
+        {
+            var deputy = await _context.Users
+                .FirstOrDefaultAsync(u => u.Role == "DeputyHeadTeacher" && u.IsActive);
+            
+            if (deputy == null)
+                return NotFound(new { message = "No Deputy Head Teacher found" });
+            
+            deputy.Role = "Teacher";
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Deputy Head Teacher removed successfully" });
+        }
+
+        /// <summary>
+        /// Get Deputy Head Teacher assignment status
+        /// </summary>
+        [HttpGet("deputy-status")]
+        [SwaggerOperation(Summary = "Get Deputy Head Teacher status")]
+        public async Task<IActionResult> GetDeputyStatus()
+        {
+            var deputy = await _context.Users
+                .FirstOrDefaultAsync(u => u.Role == "DeputyHeadTeacher" && u.IsActive);
+            
+            return Ok(new { 
+                hasDeputy = deputy != null,
+                deputy = deputy != null ? new { deputy.Id, deputy.Name, deputy.Email } : null
+            });
         }
 
         // ==================== DEPARTMENT MANAGEMENT ====================
@@ -346,7 +430,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
             // Send notification
             var notification = new Notification
             {
-                Title = "👔 Head of Department Appointment",
+                Title = "Head of Department Appointment",
                 Message = $"You have been appointed as Head of {department.Name} Department.",
                 Type = "HODAppointment",
                 TeacherId = dto.TeacherId,
@@ -449,7 +533,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
                 // Send notification
                 var notification = new Notification
                 {
-                    Title = "🏫 Form Teacher Assignment",
+                    Title = "Form Teacher Assignment",
                     Message = $"You have been assigned as Form Teacher for {newClass.Name} {newClass.Stream}",
                     Type = "FormTeacherAssignment",
                     TeacherId = dto.FormTeacherId.Value,
@@ -506,7 +590,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
                 // Send notification
                 var notification = new Notification
                 {
-                    Title = "🏫 Form Teacher Assignment",
+                    Title = "Form Teacher Assignment",
                     Message = $"You have been assigned as Form Teacher for {classEntity.Name} {classEntity.Stream}",
                     Type = "FormTeacherAssignment",
                     TeacherId = dto.FormTeacherId.Value,
@@ -585,7 +669,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
             // Send notification to teacher
             var notification = new Notification
             {
-                Title = "🏫 Form Teacher Assignment",
+                Title = "Form Teacher Assignment",
                 Message = $"You have been assigned as Form Teacher for {classEntity.Name} {classEntity.Stream}",
                 Type = "FormTeacherAssignment",
                 TeacherId = dto.TeacherId,
@@ -847,7 +931,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
             {
                 var notification = new Notification
                 {
-                    Title = "📚 Subject Allocation",
+                    Title = "Subject Allocation",
                     Message = $"You have been assigned to teach {subject.Name} for {classEntity.Name} {classEntity.Stream}",
                     Type = "SubjectAllocation",
                     TeacherId = dto.TeacherId,
@@ -998,7 +1082,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
                 {
                     var notification = new Notification
                     {
-                        Title = "📢 Exam Results Published",
+                        Title = "Exam Results Published",
                         Message = $"Your results for {subjectName} ({dto.Term} {dto.Year}) have been approved and published.",
                         Type = "ExamResults",
                         StudentId = studentId,
@@ -1015,7 +1099,7 @@ public async Task<IActionResult> DeleteDeputy(int id)
             {
                 var notification = new Notification
                 {
-                    Title = "✅ Results Approved",
+                    Title = "Results Approved",
                     Message = $"The results for {subjectName} ({dto.Term} {dto.Year}) have been approved by the Headteacher.",
                     Type = "Success",
                     TeacherId = teacherId,
@@ -1138,24 +1222,65 @@ public async Task<IActionResult> DeleteDeputy(int id)
         public string? Qualification { get; set; }
         public int? DepartmentId { get; set; }
     }
-    // Add this to AdminController.cs after the existing DTOs
 
-public class CreateDeputyDTO
-{
-    public string Email { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string? PhoneNumber { get; set; }
-    public string? EmployeeId { get; set; }
-    public string? Qualification { get; set; }
-    public DateTime? HireDate { get; set; }
-    public int? DepartmentId { get; set; }
-}
+    public class AssignDeputyDTO
+    {
+        public int TeacherId { get; set; }
+        public bool ReplaceExisting { get; set; } = false;
+    }
+
+    public class CreateDeputyDTO
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? EmployeeId { get; set; }
+        public string? Qualification { get; set; }
+        public DateTime? HireDate { get; set; }
+        public int? DepartmentId { get; set; }
+    }
 
     public class ApproveResultsDTO
     {
         public int SubjectId { get; set; }
         public int Year { get; set; }
         public string Term { get; set; } = string.Empty;
+    }
+
+    // Additional DTOs needed for other methods
+    public class CreateTeacherDTO
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? EmployeeId { get; set; }
+        public string? Qualification { get; set; }
+        public DateTime? HireDate { get; set; }
+        public int? DepartmentId { get; set; }
+    }
+
+    public class CreateClassDTO
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Stream { get; set; } = string.Empty;
+        public int? TeacherId { get; set; }
+        public int? FormTeacherId { get; set; }
+        public int Capacity { get; set; }
+    }
+
+    public class UpdateStudentDTO
+    {
+        public string? FullName { get; set; }
+        public string? Class { get; set; }
+        public string? Stream { get; set; }
+    }
+
+    public class AllocateTeacherDTO
+    {
+        public int ClassId { get; set; }
+        public int SubjectId { get; set; }
+        public int TeacherId { get; set; }
     }
 }

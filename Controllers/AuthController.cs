@@ -48,7 +48,37 @@ namespace School_Yathu.Controllers
             
             var token = GenerateJwtToken(user);
             
-            Console.WriteLine($"✅ Login successful for: {user.Email}, Role: {user.Role}");
+            // Check if user is assigned as Head of Department
+            bool isHeadOfDepartment = await _context.Departments
+                .AnyAsync(d => d.HeadOfDepartmentId == user.Id);
+            
+            // Check if user is assigned as Form Teacher
+            bool isFormTeacher = await _context.FormTeacherClasses
+                .AnyAsync(ft => ft.TeacherId == user.Id);
+            
+            // Check if user is assigned as Deputy Head Teacher
+            bool isDeputyHeadTeacher = user.Role == "DeputyHeadTeacher";
+            
+            // Determine the actual role for dashboard redirection
+            string dashboardRole = user.Role;
+            
+            // If user is a teacher but assigned as Head of Department
+            if (user.Role == "Teacher" && isHeadOfDepartment)
+            {
+                dashboardRole = "HeadOfDepartment";
+            }
+            // If user is a teacher but assigned as Form Teacher
+            else if (user.Role == "Teacher" && isFormTeacher)
+            {
+                dashboardRole = "FormTeacher";
+            }
+            // If user is a Deputy Head Teacher
+            else if (isDeputyHeadTeacher)
+            {
+                dashboardRole = "DeputyHeadTeacher";
+            }
+            
+            Console.WriteLine($"✅ Login successful for: {user.Email}, Role: {user.Role}, Dashboard Role: {dashboardRole}");
             
             return Ok(new
             {
@@ -57,7 +87,11 @@ namespace School_Yathu.Controllers
                 name = user.Name,
                 email = user.Email,
                 role = user.Role,
+                dashboardRole = dashboardRole,
                 mustChangePassword = user.MustChangePassword,
+                isHeadOfDepartment = isHeadOfDepartment,
+                isFormTeacher = isFormTeacher,
+                isDeputyHeadTeacher = isDeputyHeadTeacher,
                 message = "Login successful"
             });
         }
@@ -187,21 +221,16 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Password reset successfully", newPassword });
         }
         
-        // ============================================
-        // FIXED: JWT Token Generation with UTF8 Encoding
-        // ============================================
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             
-            // Try both jwt_key and jwt_Key (case-insensitive) - matching Program.cs
             var jwtKey = _configuration["jwt_key"] ?? 
                          _configuration["jwt_Key"] ?? 
                          "school-yathu-secret-key-32-chars-long!";
             
             Console.WriteLine($"🔑 Generating token with key: {jwtKey.Substring(0, Math.Min(15, jwtKey.Length))}...");
             
-            // Use UTF8 encoding (SAME as validation in Program.cs)
             var key = Encoding.UTF8.GetBytes(jwtKey);
             
             var tokenDescriptor = new SecurityTokenDescriptor
