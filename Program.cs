@@ -80,6 +80,14 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ===== FIX: JWT Key - Case Insensitive Loading =====
+// Try both jwt_key and jwt_Key (case-insensitive)
+var jwtKey = builder.Configuration["jwt_key"] ?? 
+             builder.Configuration["jwt_Key"] ?? 
+             "school-yathu-secret-key-32-chars-long!";
+
+Console.WriteLine($"🔑 JWT Key loaded: {jwtKey.Substring(0, Math.Min(15, jwtKey.Length))}...");
+
 // 5. JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -91,7 +99,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["jwt_Key"] ?? "school-yathu-secret-key-32-chars-long!"))
+                Encoding.UTF8.GetBytes(jwtKey))
+        };
+        
+        // Add event handlers for debugging
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"❌ JWT Authentication Failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine($"✅ JWT Token Validated for: {context.Principal?.Identity?.Name}");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Console.WriteLine($"🔒 JWT Challenge: {context.Error}, {context.ErrorDescription}");
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -147,7 +175,21 @@ app.Use(async (context, next) =>
     Console.WriteLine($"  Method: {context.Request.Method}");
     Console.WriteLine($"  Path: {context.Request.Path}");
     Console.WriteLine($"  Query: {context.Request.QueryString}");
-    Console.WriteLine($"  Headers: {string.Join(", ", context.Request.Headers.Select(h => $"{h.Key}: {h.Value}"))}");
+    
+    // Log Authorization header (truncated for security)
+    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+    if (authHeader != null)
+    {
+        Console.WriteLine($"  🔑 Auth: {authHeader.Substring(0, Math.Min(60, authHeader.Length))}...");
+    }
+    else
+    {
+        Console.WriteLine($"  🔑 Auth: None");
+    }
+    
+    // Log other important headers
+    Console.WriteLine($"  Origin: {context.Request.Headers["Origin"]}");
+    Console.WriteLine($"  Referer: {context.Request.Headers["Referer"]}");
     
     // Log the request body for POST/PUT requests
     if (context.Request.Method == "POST" || context.Request.Method == "PUT")
