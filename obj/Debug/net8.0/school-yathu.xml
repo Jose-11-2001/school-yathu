@@ -968,17 +968,5 @@
         <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
-        <member name="T:school_yathu.Migrations.AddSecondaryRolesToUser">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
     </members>
 </doc>

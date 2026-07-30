@@ -69,7 +69,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Classes_Name_Stream");
 
-                    b.ToTable("Classes");
+                    b.ToTable("Classes", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.ClassRanking", b =>
@@ -101,7 +101,7 @@ namespace school_yathu.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ClassRankings");
+                    b.ToTable("ClassRankings", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.ClassSubject", b =>
@@ -147,7 +147,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_ClassSubjects_ClassId_SubjectId");
 
-                    b.ToTable("ClassSubjects");
+                    b.ToTable("ClassSubjects", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Department", b =>
@@ -180,7 +180,7 @@ namespace school_yathu.Migrations
 
                     b.HasIndex("HeadOfDepartmentId");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.DeputyAssignment", b =>
@@ -222,7 +222,7 @@ namespace school_yathu.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_DeputyAssignments_Status");
 
-                    b.ToTable("DeputyAssignments");
+                    b.ToTable("DeputyAssignments", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Exam", b =>
@@ -270,7 +270,7 @@ namespace school_yathu.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Exams");
+                    b.ToTable("Exams", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.ExamResult", b =>
@@ -323,7 +323,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_ExamResults_ExamId_StudentId");
 
-                    b.ToTable("ExamResults");
+                    b.ToTable("ExamResults", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.FormTeacherClass", b =>
@@ -354,7 +354,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_FormTeacherClasses_TeacherId_ClassId");
 
-                    b.ToTable("FormTeacherClasses");
+                    b.ToTable("FormTeacherClasses", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Marks", b =>
@@ -443,7 +443,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Marks_StudentId_SubjectId_Year_Term");
 
-                    b.ToTable("Marks");
+                    b.ToTable("Marks", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Notification", b =>
@@ -520,7 +520,7 @@ namespace school_yathu.Migrations
                     b.HasIndex("Type", "CreatedAt")
                         .HasDatabaseName("IX_Notifications_Type_CreatedAt");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Student", b =>
@@ -604,7 +604,7 @@ namespace school_yathu.Migrations
                     b.HasIndex("Class", "Stream")
                         .HasDatabaseName("IX_Students_Class_Stream");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.StudentMark", b =>
@@ -655,7 +655,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_StudentMarks_StudentId_SubjectId_Year_Term");
 
-                    b.ToTable("StudentMarks");
+                    b.ToTable("StudentMarks", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.StudentSubject", b =>
@@ -709,7 +709,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_StudentSubjects_UniqueAllocation");
 
-                    b.ToTable("StudentSubjects");
+                    b.ToTable("StudentSubjects", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.StudentSubjectSelection", b =>
@@ -763,7 +763,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_StudentSubjectSelections_StudentId_SubjectId_Year");
 
-                    b.ToTable("StudentSubjectSelections");
+                    b.ToTable("StudentSubjectSelections", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Subject", b =>
@@ -814,7 +814,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Subjects_Name");
 
-                    b.ToTable("Subjects");
+                    b.ToTable("Subjects", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Teacher", b =>
@@ -853,7 +853,7 @@ namespace school_yathu.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teachers");
+                    b.ToTable("Teachers", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.TeacherSubject", b =>
@@ -897,7 +897,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_TeacherSubjects_TeacherId_SubjectId");
 
-                    b.ToTable("TeacherSubjects");
+                    b.ToTable("TeacherSubjects", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.TeacherSubjectAllocation", b =>
@@ -933,7 +933,7 @@ namespace school_yathu.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_TeacherSubjectAllocations_ClassId_SubjectId");
 
-                    b.ToTable("TeacherSubjectAllocations");
+                    b.ToTable("TeacherSubjectAllocations", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.User", b =>
@@ -991,10 +991,6 @@ namespace school_yathu.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string>("SecondaryRoles")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1009,7 +1005,7 @@ namespace school_yathu.Migrations
                     b.HasIndex("EmployeeId")
                         .HasDatabaseName("IX_Users_EmployeeId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("School_Yathu.Models.Class", b =>
