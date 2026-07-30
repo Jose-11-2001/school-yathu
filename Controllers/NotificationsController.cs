@@ -60,20 +60,14 @@ namespace School_Yathu.Controllers
         private readonly IEmailService? _emailService;
         private readonly ILogger<NotificationsController> _logger;
 
+        // ✅ SINGLE CONSTRUCTOR with optional IEmailService
         public NotificationsController(
             ApplicationDbContext context,
-            ILogger<NotificationsController> logger)
+            ILogger<NotificationsController> logger,
+            IEmailService? emailService = null)
         {
             _context = context;
             _logger = logger;
-        }
-
-        // Constructor with optional email service
-        public NotificationsController(
-            ApplicationDbContext context,
-            IEmailService emailService,
-            ILogger<NotificationsController> logger) : this(context, logger)
-        {
             _emailService = emailService;
         }
 
