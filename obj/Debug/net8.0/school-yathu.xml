@@ -604,9 +604,34 @@
             Get available subjects for the logged-in student
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetAllAllocations(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Get all student subject allocations (Form Teacher/Admin only)
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.StudentSubjectController.RegisterSubject(School_Yathu.Controllers.RegisterSubjectDTO)">
             <summary>
-            Register for a subject
+            Register a student for a subject (Form Teacher/Admin)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.BulkRegisterSubjects(School_Yathu.Controllers.BulkRegisterSubjectDTO)">
+            <summary>
+            Bulk register students for a subject (Form Teacher/Admin)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.RemoveAllocation(System.Int32)">
+            <summary>
+            Remove a subject allocation (Form Teacher/Admin)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetStudentAllocations(System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Get allocations for a specific student
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetClassSubjects(System.Int32)">
+            <summary>
+            Get subjects for a specific class (Form Teacher/Admin)
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.StudentSubjectController.GetMySubjects">
@@ -614,9 +639,14 @@
             Get subjects registered by the logged-in student
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetTeacherStudents">
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetTeacherStudents(System.Nullable{System.Int32})">
             <summary>
             Get students assigned to the logged-in teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.StudentSubjectController.GetAllocationSummary(System.Int32)">
+            <summary>
+            Get allocation summary statistics
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.SubjectsController.GetSubjects">
