@@ -369,6 +369,11 @@
             Get department performance report
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetMyNotifications(System.Boolean)">
+            <summary>
+            Get notifications for the current user based on their role
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.NotificationsController.GetStudentNotifications">
             <summary>
             Get notifications for the logged-in student
@@ -384,6 +389,16 @@
             Get notifications for the logged-in admin
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetNotificationsByRole(System.String,System.Boolean)">
+            <summary>
+            Get notifications for a specific role (Admin only)
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.GetUserNotifications(System.Int32,System.Boolean)">
+            <summary>
+            Get notifications for a specific user (Admin only)
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.NotificationsController.GetUnreadCount">
             <summary>
             Get unread notification count for the logged-in user
@@ -396,7 +411,12 @@
         </member>
         <member name="M:School_Yathu.Controllers.NotificationsController.MarkAllAsRead">
             <summary>
-            Mark all notifications as read for the logged-in user
+            Mark all notifications as read for the current user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.NotificationsController.CreateNotification(School_Yathu.DTOs.CreateNotificationDTO)">
+            <summary>
+            Create a notification (Admin only)
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.NotificationsController.SendNotification(School_Yathu.DTOs.SendNotificationDTO)">
@@ -404,14 +424,14 @@
             Send a notification (Admin only)
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.NotificationsController.SendEmailNotifications(School_Yathu.DTOs.SendNotificationDTO)">
+        <member name="M:School_Yathu.Controllers.NotificationsController.BroadcastNotification(School_Yathu.Controllers.BroadcastNotificationDTO)">
             <summary>
-            Send email notifications to users
+            Broadcast a notification to all users of a specific role
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.NotificationsController.GetTimeAgo(System.DateTime)">
+        <member name="M:School_Yathu.Controllers.NotificationsController.DeleteNotification(System.Int32)">
             <summary>
-            Get human-readable time ago string
+            Delete a notification
             </summary>
         </member>
         <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetPendingResults">
