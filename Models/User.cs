@@ -35,6 +35,12 @@ namespace School_Yathu.Models
         [MaxLength(30)]
         public string Role { get; set; } = "Student";
 
+        // ===== SECONDARY ROLES =====
+        // Additional roles assigned to the user (comma-separated)
+        // e.g., "Teacher,FormTeacher"
+        [MaxLength(200)]
+        public string? SecondaryRoles { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
@@ -48,7 +54,7 @@ namespace School_Yathu.Models
         [ForeignKey("DepartmentId")]
         public virtual Department? Department { get; set; }
 
-        // Navigation properties
+        // ===== NAVIGATION PROPERTIES =====
         public virtual ICollection<Class>? ClassesAsTeacher { get; set; }
         public virtual ICollection<Class>? FormTeacherClasses { get; set; }
         public virtual ICollection<FormTeacherClass>? FormTeacherClassAssignments { get; set; }

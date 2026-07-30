@@ -241,13 +241,11 @@ namespace School_Yathu.Controllers
             if (teacher == null)
                 return NotFound(new { message = "Teacher not found" });
             
-            // Check if there's already a deputy head teacher
             var existingDeputy = await _context.Users
                 .FirstOrDefaultAsync(u => u.Role == "DeputyHeadTeacher" && u.IsActive);
             
             if (existingDeputy != null && dto.ReplaceExisting)
             {
-                // Demote the existing deputy back to teacher
                 existingDeputy.Role = "Teacher";
                 await _context.SaveChangesAsync();
             }
@@ -256,11 +254,9 @@ namespace School_Yathu.Controllers
                 return BadRequest(new { message = "A Deputy Head Teacher already exists. Use 'ReplaceExisting' to replace them." });
             }
             
-            // Assign the teacher as Deputy Head Teacher
             teacher.Role = "DeputyHeadTeacher";
             await _context.SaveChangesAsync();
             
-            // Send notification
             var notification = new Notification
             {
                 Title = "Deputy Head Teacher Appointment",
@@ -424,11 +420,9 @@ namespace School_Yathu.Controllers
             department.HeadOfDepartmentId = dto.TeacherId;
             await _context.SaveChangesAsync();
 
-            // Update user role to HeadOfDepartment
             teacher.Role = "HeadOfDepartment";
             await _context.SaveChangesAsync();
 
-            // Send notification
             var notification = new Notification
             {
                 Title = "Head of Department Appointment",
@@ -520,7 +514,6 @@ namespace School_Yathu.Controllers
             _context.Classes.Add(newClass);
             await _context.SaveChangesAsync();
 
-            // If form teacher is assigned, add to FormTeacherClass
             if (dto.FormTeacherId.HasValue)
             {
                 var formTeacherClass = new FormTeacherClass
@@ -531,7 +524,6 @@ namespace School_Yathu.Controllers
                 };
                 _context.FormTeacherClasses.Add(formTeacherClass);
 
-                // Send notification
                 var notification = new Notification
                 {
                     Title = "Form Teacher Assignment",
@@ -564,7 +556,6 @@ namespace School_Yathu.Controllers
             classEntity.TeacherId = dto.TeacherId;
             classEntity.Capacity = dto.Capacity;
 
-            // Update form teacher
             if (dto.FormTeacherId.HasValue && dto.FormTeacherId != classEntity.FormTeacherId)
             {
                 classEntity.FormTeacherId = dto.FormTeacherId;
@@ -588,7 +579,6 @@ namespace School_Yathu.Controllers
                     _context.FormTeacherClasses.Add(formTeacherClass);
                 }
 
-                // Send notification
                 var notification = new Notification
                 {
                     Title = "Form Teacher Assignment",
@@ -667,7 +657,6 @@ namespace School_Yathu.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Send notification to teacher
             var notification = new Notification
             {
                 Title = "Form Teacher Assignment",
@@ -759,7 +748,6 @@ namespace School_Yathu.Controllers
             if (student == null)
                 return NotFound(new { message = "Student not found" });
 
-            // Only update fields that are provided
             if (!string.IsNullOrEmpty(dto.FullName))
                 student.FullName = dto.FullName;
 
@@ -949,7 +937,6 @@ namespace School_Yathu.Controllers
             _context.ClassSubjects.Add(allocation);
             await _context.SaveChangesAsync();
 
-            // Send notification to teacher
             var teacher = await _context.Users.FindAsync(dto.TeacherId);
             var subject = await _context.Subjects.FindAsync(dto.SubjectId);
             var classEntity = await _context.Classes.FindAsync(dto.ClassId);
@@ -1101,7 +1088,6 @@ namespace School_Yathu.Controllers
 
             var studentIds = marks.Select(m => m.StudentId).Distinct().ToList();
 
-            // Send notifications to students
             foreach (var studentId in studentIds)
             {
                 var student = await _context.Students.FindAsync(studentId);
@@ -1120,7 +1106,6 @@ namespace School_Yathu.Controllers
                 }
             }
 
-            // Send notification to teachers
             var teacherIds = marks
                 .Select(m => m.EnteredByTeacherId)
                 .Where(t => t.HasValue)
@@ -1202,6 +1187,75 @@ namespace School_Yathu.Controllers
             };
 
             return Ok(stats);
+        }
+
+        // ==================== SECONDARY ROLE MANAGEMENT ====================
+
+        /// <summary>
+        /// Assign secondary roles to a user
+        /// </summary>
+        [HttpPost("assign-secondary-roles")]
+        [SwaggerOperation(Summary = "Assign secondary roles to user")]
+        public async Task<IActionResult> AssignSecondaryRoles([FromBody] AssignSecondaryRolesDTO dto)
+        {
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            // Don't allow assigning secondary roles to Admin
+            if (user.Role == "Admin")
+                return BadRequest(new { message = "Admin cannot have secondary roles" });
+
+            user.SecondaryRoles = string.Join(",", dto.SecondaryRoles);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                message = "Secondary roles assigned successfully",
+                roles = dto.SecondaryRoles
+            });
+        }
+
+        /// <summary>
+        /// Get user's all roles
+        /// </summary>
+        [HttpGet("user-roles/{userId}")]
+        [SwaggerOperation(Summary = "Get user's all roles")]
+        public async Task<IActionResult> GetUserRoles(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            var secondaryRoles = string.IsNullOrEmpty(user.SecondaryRoles) 
+                ? new List<string>() 
+                : user.SecondaryRoles.Split(',').Select(r => r.Trim()).ToList();
+
+            var allRoles = new List<string> { user.Role };
+            allRoles.AddRange(secondaryRoles);
+
+            // Check assigned roles
+            var isHeadOfDepartment = await _context.Departments
+                .AnyAsync(d => d.HeadOfDepartmentId == user.Id);
+            var isFormTeacher = await _context.FormTeacherClasses
+                .AnyAsync(ft => ft.TeacherId == user.Id);
+
+            if (isHeadOfDepartment && !allRoles.Contains("HeadOfDepartment"))
+                allRoles.Add("HeadOfDepartment");
+            if (isFormTeacher && !allRoles.Contains("FormTeacher"))
+                allRoles.Add("FormTeacher");
+
+            return Ok(new
+            {
+                user.Id,
+                user.Name,
+                user.Email,
+                PrimaryRole = user.Role,
+                SecondaryRoles = secondaryRoles,
+                AllRoles = allRoles,
+                IsHeadOfDepartment = isHeadOfDepartment,
+                IsFormTeacher = isFormTeacher
+            });
         }
     }
 
@@ -1302,12 +1356,16 @@ namespace School_Yathu.Controllers
         public int Capacity { get; set; }
     }
 
-    // REMOVED: UpdateStudentDTO - Now using the one from DTOs/StudentDTOs.cs
-
     public class AllocateTeacherDTO
     {
         public int ClassId { get; set; }
         public int SubjectId { get; set; }
         public int TeacherId { get; set; }
+    }
+
+    public class AssignSecondaryRolesDTO
+    {
+        public int UserId { get; set; }
+        public List<string> SecondaryRoles { get; set; } = new List<string>();
     }
 }

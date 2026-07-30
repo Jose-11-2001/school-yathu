@@ -189,6 +189,16 @@
             Get system statistics
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.AdminController.AssignSecondaryRoles(School_Yathu.Controllers.AssignSecondaryRolesDTO)">
+            <summary>
+            Assign secondary roles to a user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.AdminController.GetUserRoles(System.Int32)">
+            <summary>
+            Get user's all roles
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAvailableSubjects">
             <summary>
             Get all available subjects
@@ -669,9 +679,34 @@
             Remove subject from teacher (Admin only)
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.UsersController.GetAllUsers">
+            <summary>
+            Get all users with their roles
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.UsersController.GetTeachers">
             <summary>
             Get all teachers
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.UsersController.GetUsersByRole(System.String)">
+            <summary>
+            Get users by role
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.UsersController.GetUser(System.Int32)">
+            <summary>
+            Get user by ID
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.UsersController.UpdateUser(System.Int32,School_Yathu.Controllers.UpdateUserDTO)">
+            <summary>
+            Update a user
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.UsersController.DeleteUser(System.Int32)">
+            <summary>
+            Delete/Deactivate a user
             </summary>
         </member>
         <member name="T:School_Yathu.DTOs.CreateNotificationDTO">
@@ -931,6 +966,18 @@
             <inheritdoc />
         </member>
         <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:school_yathu.Migrations.AddSecondaryRolesToUser">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.AddSecondaryRolesToUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>
