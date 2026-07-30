@@ -669,12 +669,12 @@
             Get allocation summary statistics
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.SubjectsController.GetSubjects">
+        <member name="M:School_Yathu.Controllers.SubjectController.GetSubjects">
             <summary>
             Get all subjects
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.SubjectsController.CreateSubject(School_Yathu.Models.Subject)">
+        <member name="M:School_Yathu.Controllers.SubjectController.CreateSubject(School_Yathu.Controllers.CreateSubjectDTO)">
             <summary>
             Create a new subject (Admin only)
             </summary>
