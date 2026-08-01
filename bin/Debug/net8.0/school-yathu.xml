@@ -4,201 +4,6 @@
         <name>school-yathu</name>
     </assembly>
     <members>
-        <member name="M:School_Yathu.Controllers.AdminController.GetTeachers">
-            <summary>
-            Get all teachers with department info
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AddTeacher(School_Yathu.Controllers.CreateTeacherDTO)">
-            <summary>
-            Add a new teacher with department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateTeacher(System.Int32,School_Yathu.Controllers.UpdateTeacherDTO)">
-            <summary>
-            Update an existing teacher
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteTeacher(System.Int32)">
-            <summary>
-            Delete/Deactivate a teacher
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetDeputies">
-            <summary>
-            Get all deputy head teachers
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AddDeputy(School_Yathu.Controllers.CreateDeputyDTO)">
-            <summary>
-            Add a new deputy head teacher
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteDeputy(System.Int32)">
-            <summary>
-            Delete/Deactivate a deputy head teacher
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AssignDeputyHeadTeacher(School_Yathu.Controllers.AssignDeputyDTO)">
-            <summary>
-            Assign a teacher as Deputy Head Teacher
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.RemoveDeputyHeadTeacher">
-            <summary>
-            Remove Deputy Head Teacher (demote back to teacher)
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetDeputyStatus">
-            <summary>
-            Get Deputy Head Teacher assignment status
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetDepartments">
-            <summary>
-            Get all departments with heads
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.CreateDepartment(School_Yathu.Controllers.CreateDepartmentDTO)">
-            <summary>
-            Create a new department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateDepartment(System.Int32,School_Yathu.Controllers.UpdateDepartmentDTO)">
-            <summary>
-            Update a department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteDepartment(System.Int32)">
-            <summary>
-            Delete a department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AssignHeadOfDepartment(School_Yathu.Controllers.AssignHeadOfDepartmentDTO)">
-            <summary>
-            Assign a Head of Department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.RemoveHeadOfDepartment(System.Int32)">
-            <summary>
-            Remove Head of Department
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetClasses">
-            <summary>
-            Get all classes with form teachers
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AddClass(School_Yathu.Controllers.CreateClassDTO)">
-            <summary>
-            Add a new class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateClass(System.Int32,School_Yathu.Controllers.CreateClassDTO)">
-            <summary>
-            Update an existing class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteClass(System.Int32)">
-            <summary>
-            Delete a class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AssignFormTeacher(School_Yathu.Controllers.AssignFormTeacherDTO)">
-            <summary>
-            Assign a form teacher to a class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetAllStudents(System.Nullable{System.Int32})">
-            <summary>
-            Get all students
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetStudentsByClass(System.Int32)">
-            <summary>
-            Get students by class
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateStudent(System.Int32,School_Yathu.DTOs.UpdateStudentDTO)">
-            <summary>
-            Update an existing student
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteStudent(System.Int32)">
-            <summary>
-            Delete a student
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetSubjects">
-            <summary>
-            Get all subjects
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.CreateSubject(School_Yathu.Controllers.CreateSubjectDTO)">
-            <summary>
-            Create a new subject
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.UpdateSubject(System.Int32,School_Yathu.Controllers.UpdateSubjectDTO)">
-            <summary>
-            Update a subject
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.DeleteSubject(System.Int32)">
-            <summary>
-            Delete a subject
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AllocateTeacher(School_Yathu.Controllers.AllocateTeacherDTO)">
-            <summary>
-            Allocate a teacher to a subject
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetClassAllocations(System.Int32)">
-            <summary>
-            Get class allocations
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetTeacherSubjects(System.Int32)">
-            <summary>
-            Get teacher's subjects
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.RemoveAllocation(System.Int32)">
-            <summary>
-            Remove an allocation
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetPendingResults">
-            <summary>
-            Get pending results for approval
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.ApproveResults(School_Yathu.Controllers.ApproveResultsDTO)">
-            <summary>
-            Approve results
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetApprovedResults">
-            <summary>
-            Get approved results
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetStatistics">
-            <summary>
-            Get system statistics
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.AssignSecondaryRoles(School_Yathu.Controllers.AssignSecondaryRolesDTO)">
-            <summary>
-            Assign secondary roles to a user
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.AdminController.GetUserRoles(System.Int32)">
-            <summary>
-            Get user's all roles
-            </summary>
-        </member>
         <member name="M:School_Yathu.Controllers.AdminSubjectAllocationController.GetAvailableSubjects">
             <summary>
             Get all available subjects
@@ -319,6 +124,21 @@
             Submit class results to Headteacher for approval
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.FormTeacherReportController.GetClassReport(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get class performance report for form teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.FormTeacherReportController.GetStudentReport(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get individual student report for form teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.FormTeacherReportController.GetSubjectPerformance(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get class subject performance report
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.HeadOfDepartmentController.GetMyDepartment">
             <summary>
             Get the department for the current Head of Department
@@ -434,6 +254,26 @@
             Delete a notification
             </summary>
         </member>
+        <member name="M:School_Yathu.Controllers.RankingsController.GetClassRankings(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get class rankings for Form Teacher
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.RankingsController.GetSubjectRankings(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get subject rankings for Head of Department
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.RankingsController.GetDepartmentRankings(System.Int32,System.Int32,System.String)">
+            <summary>
+            Get department rankings for Admin
+            </summary>
+        </member>
+        <member name="M:School_Yathu.Controllers.RankingsController.GetSchoolRankings(System.Int32,System.String)">
+            <summary>
+            Get overall school rankings for Admin
+            </summary>
+        </member>
         <member name="M:School_Yathu.Controllers.ResultsApprovalController.GetPendingResults">
             <summary>
             Get pending results for approval
@@ -444,7 +284,7 @@
             Get results details for a specific subject/term/year
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.ResultsApprovalController.ApproveResults(School_Yathu.Controllers.ApproveResultsDTO)">
+        <member name="M:School_Yathu.Controllers.ResultsApprovalController.ApproveResults(School_Yathu.DTOs.ApproveResultsDTO)">
             <summary>
             Approve results for a subject/term/year
             </summary>
@@ -669,16 +509,6 @@
             Get allocation summary statistics
             </summary>
         </member>
-        <member name="M:School_Yathu.Controllers.SubjectController.GetSubjects">
-            <summary>
-            Get all subjects
-            </summary>
-        </member>
-        <member name="M:School_Yathu.Controllers.SubjectController.CreateSubject(School_Yathu.Controllers.CreateSubjectDTO)">
-            <summary>
-            Create a new subject (Admin only)
-            </summary>
-        </member>
         <member name="M:School_Yathu.Controllers.TeacherMarksController.GetMyStudents">
             <summary>
             Get students assigned to the teacher
@@ -856,9 +686,6 @@
         </member>
         <member name="T:School_Yathu.DTOs.StudentMarkDTO">
             <summary>
-            DTO for entering student marks
-            </summary>
-            <summary>
             DTO for student marks response - UPDATED with Test1, Test2, EndTerm
             </summary>
         </member>
@@ -1016,6 +843,18 @@
             <inheritdoc />
         </member>
         <member name="M:school_yathu.Migrations.AddDepartmentIdColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:school_yathu.Migrations.MakeSubjectCodeUnique">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.MakeSubjectCodeUnique.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.MakeSubjectCodeUnique.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:school_yathu.Migrations.MakeSubjectCodeUnique.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

@@ -26,11 +26,7 @@ namespace School_Yathu.Controllers
 
         // ==================== TEACHER MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all teachers with department info
-        /// </summary>
         [HttpGet("teachers")]
-        [SwaggerOperation(Summary = "Get all teachers")]
         public async Task<IActionResult> GetTeachers()
         {
             var teachers = await _context.Users
@@ -54,11 +50,7 @@ namespace School_Yathu.Controllers
             return Ok(teachers);
         }
 
-        /// <summary>
-        /// Add a new teacher with department
-        /// </summary>
         [HttpPost("teachers")]
-        [SwaggerOperation(Summary = "Add a new teacher")]
         public async Task<IActionResult> AddTeacher([FromBody] CreateTeacherDTO dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
@@ -85,11 +77,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher added successfully", teacherId = teacher.Id });
         }
 
-        /// <summary>
-        /// Update an existing teacher
-        /// </summary>
         [HttpPut("teachers/{id}")]
-        [SwaggerOperation(Summary = "Update a teacher")]
         public async Task<IActionResult> UpdateTeacher(int id, [FromBody] UpdateTeacherDTO dto)
         {
             var teacher = await _context.Users.FindAsync(id);
@@ -129,11 +117,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher updated successfully" });
         }
 
-        /// <summary>
-        /// Delete/Deactivate a teacher
-        /// </summary>
         [HttpDelete("teachers/{id}")]
-        [SwaggerOperation(Summary = "Delete a teacher")]
         public async Task<IActionResult> DeleteTeacher(int id)
         {
             var teacher = await _context.Users.FindAsync(id);
@@ -150,11 +134,7 @@ namespace School_Yathu.Controllers
 
         // ==================== DEPUTY HEAD TEACHER MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all deputy head teachers
-        /// </summary>
         [HttpGet("deputies")]
-        [SwaggerOperation(Summary = "Get all deputy head teachers")]
         public async Task<IActionResult> GetDeputies()
         {
             var deputies = await _context.Users
@@ -178,11 +158,7 @@ namespace School_Yathu.Controllers
             return Ok(deputies);
         }
 
-        /// <summary>
-        /// Add a new deputy head teacher
-        /// </summary>
         [HttpPost("deputies")]
-        [SwaggerOperation(Summary = "Add a new deputy head teacher")]
         public async Task<IActionResult> AddDeputy([FromBody] CreateDeputyDTO dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
@@ -209,11 +185,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Deputy head teacher added successfully", deputyId = deputy.Id });
         }
 
-        /// <summary>
-        /// Delete/Deactivate a deputy head teacher
-        /// </summary>
         [HttpDelete("deputies/{id}")]
-        [SwaggerOperation(Summary = "Delete a deputy head teacher")]
         public async Task<IActionResult> DeleteDeputy(int id)
         {
             var deputy = await _context.Users.FindAsync(id);
@@ -228,11 +200,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Deputy head teacher deactivated successfully" });
         }
 
-        /// <summary>
-        /// Assign a teacher as Deputy Head Teacher
-        /// </summary>
         [HttpPost("assign-deputy")]
-        [SwaggerOperation(Summary = "Assign Deputy Head Teacher")]
         public async Task<IActionResult> AssignDeputyHeadTeacher([FromBody] AssignDeputyDTO dto)
         {
             var teacher = await _context.Users
@@ -272,11 +240,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Deputy Head Teacher assigned successfully" });
         }
 
-        /// <summary>
-        /// Remove Deputy Head Teacher (demote back to teacher)
-        /// </summary>
         [HttpPost("remove-deputy")]
-        [SwaggerOperation(Summary = "Remove Deputy Head Teacher")]
         public async Task<IActionResult> RemoveDeputyHeadTeacher()
         {
             var deputy = await _context.Users
@@ -291,11 +255,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Deputy Head Teacher removed successfully" });
         }
 
-        /// <summary>
-        /// Get Deputy Head Teacher assignment status
-        /// </summary>
         [HttpGet("deputy-status")]
-        [SwaggerOperation(Summary = "Get Deputy Head Teacher status")]
         public async Task<IActionResult> GetDeputyStatus()
         {
             var deputy = await _context.Users
@@ -309,11 +269,7 @@ namespace School_Yathu.Controllers
 
         // ==================== DEPARTMENT MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all departments with heads
-        /// </summary>
         [HttpGet("departments")]
-        [SwaggerOperation(Summary = "Get all departments")]
         public async Task<IActionResult> GetDepartments()
         {
             var departments = await _context.Departments
@@ -333,11 +289,7 @@ namespace School_Yathu.Controllers
             return Ok(departments);
         }
 
-        /// <summary>
-        /// Create a new department
-        /// </summary>
         [HttpPost("departments")]
-        [SwaggerOperation(Summary = "Create a new department")]
         public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentDTO dto)
         {
             var department = new Department
@@ -352,11 +304,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Department created successfully", departmentId = department.Id });
         }
 
-        /// <summary>
-        /// Update a department
-        /// </summary>
         [HttpPut("departments/{id}")]
-        [SwaggerOperation(Summary = "Update a department")]
         public async Task<IActionResult> UpdateDepartment(int id, [FromBody] UpdateDepartmentDTO dto)
         {
             var department = await _context.Departments.FindAsync(id);
@@ -375,11 +323,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Department updated successfully" });
         }
 
-        /// <summary>
-        /// Delete a department
-        /// </summary>
         [HttpDelete("departments/{id}")]
-        [SwaggerOperation(Summary = "Delete a department")]
         public async Task<IActionResult> DeleteDepartment(int id)
         {
             var department = await _context.Departments
@@ -400,11 +344,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Department deleted successfully" });
         }
 
-        /// <summary>
-        /// Assign a Head of Department
-        /// </summary>
         [HttpPost("assign-head-of-department")]
-        [SwaggerOperation(Summary = "Assign Head of Department")]
         public async Task<IActionResult> AssignHeadOfDepartment([FromBody] AssignHeadOfDepartmentDTO dto)
         {
             var department = await _context.Departments.FindAsync(dto.DepartmentId);
@@ -438,11 +378,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Head of Department assigned successfully" });
         }
 
-        /// <summary>
-        /// Remove Head of Department
-        /// </summary>
         [HttpPost("remove-head-of-department")]
-        [SwaggerOperation(Summary = "Remove Head of Department")]
         public async Task<IActionResult> RemoveHeadOfDepartment([FromBody] int departmentId)
         {
             var department = await _context.Departments.FindAsync(departmentId);
@@ -467,11 +403,7 @@ namespace School_Yathu.Controllers
 
         // ==================== CLASS MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all classes with form teachers
-        /// </summary>
         [HttpGet("classes")]
-        [SwaggerOperation(Summary = "Get all classes")]
         public async Task<IActionResult> GetClasses()
         {
             var classes = await _context.Classes
@@ -494,11 +426,7 @@ namespace School_Yathu.Controllers
             return Ok(classes);
         }
 
-        /// <summary>
-        /// Add a new class
-        /// </summary>
         [HttpPost("classes")]
-        [SwaggerOperation(Summary = "Add a new class")]
         public async Task<IActionResult> AddClass([FromBody] CreateClassDTO dto)
         {
             var newClass = new Class
@@ -540,11 +468,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class added successfully", classId = newClass.Id });
         }
 
-        /// <summary>
-        /// Update an existing class
-        /// </summary>
         [HttpPut("classes/{id}")]
-        [SwaggerOperation(Summary = "Update a class")]
         public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDTO dto)
         {
             var classEntity = await _context.Classes.FindAsync(id);
@@ -595,11 +519,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class updated successfully" });
         }
 
-        /// <summary>
-        /// Delete a class
-        /// </summary>
         [HttpDelete("classes/{id}")]
-        [SwaggerOperation(Summary = "Delete a class")]
         public async Task<IActionResult> DeleteClass(int id)
         {
             var classEntity = await _context.Classes.FindAsync(id);
@@ -617,11 +537,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Class deleted successfully" });
         }
 
-        /// <summary>
-        /// Assign a form teacher to a class
-        /// </summary>
         [HttpPost("assign-form-teacher")]
-        [SwaggerOperation(Summary = "Assign form teacher to class")]
         public async Task<IActionResult> AssignFormTeacher([FromBody] AssignFormTeacherDTO dto)
         {
             var classEntity = await _context.Classes.FindAsync(dto.ClassId);
@@ -674,11 +590,7 @@ namespace School_Yathu.Controllers
 
         // ==================== STUDENT MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all students
-        /// </summary>
         [HttpGet("all-students")]
-        [SwaggerOperation(Summary = "Get all students")]
         public async Task<IActionResult> GetAllStudents([FromQuery] int? classId)
         {
             var query = _context.Students.AsQueryable();
@@ -706,11 +618,7 @@ namespace School_Yathu.Controllers
             return Ok(students);
         }
 
-        /// <summary>
-        /// Get students by class
-        /// </summary>
         [HttpGet("students-by-class/{classId}")]
-        [SwaggerOperation(Summary = "Get students by class")]
         public async Task<IActionResult> GetStudentsByClass(int classId)
         {
             var classEntity = await _context.Classes.FindAsync(classId);
@@ -737,11 +645,7 @@ namespace School_Yathu.Controllers
             });
         }
 
-        /// <summary>
-        /// Update an existing student
-        /// </summary>
         [HttpPut("students/{id}")]
-        [SwaggerOperation(Summary = "Update a student")]
         public async Task<IActionResult> UpdateStudent(int id, [FromBody] UpdateStudentDTO dto)
         {
             var student = await _context.Students.FindAsync(id);
@@ -799,11 +703,7 @@ namespace School_Yathu.Controllers
             });
         }
 
-        /// <summary>
-        /// Delete a student
-        /// </summary>
         [HttpDelete("students/{id}")]
-        [SwaggerOperation(Summary = "Delete a student")]
         public async Task<IActionResult> DeleteStudent(int id)
         {
             var student = await _context.Students.FindAsync(id);
@@ -817,11 +717,7 @@ namespace School_Yathu.Controllers
 
         // ==================== SUBJECTS MANAGEMENT ====================
 
-        /// <summary>
-        /// Get all subjects
-        /// </summary>
         [HttpGet("subjects")]
-        [SwaggerOperation(Summary = "Get all subjects")]
         public async Task<IActionResult> GetSubjects()
         {
             var subjects = await _context.Subjects
@@ -839,11 +735,7 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
 
-        /// <summary>
-        /// Create a new subject
-        /// </summary>
         [HttpPost("subjects")]
-        [SwaggerOperation(Summary = "Create a new subject")]
         public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDTO dto)
         {
             var subject = new Subject
@@ -860,11 +752,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Subject created successfully", subjectId = subject.Id });
         }
 
-        /// <summary>
-        /// Update a subject
-        /// </summary>
         [HttpPut("subjects/{id}")]
-        [SwaggerOperation(Summary = "Update a subject")]
         public async Task<IActionResult> UpdateSubject(int id, [FromBody] UpdateSubjectDTO dto)
         {
             var subject = await _context.Subjects.FindAsync(id);
@@ -886,11 +774,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Subject updated successfully" });
         }
 
-        /// <summary>
-        /// Delete a subject
-        /// </summary>
         [HttpDelete("subjects/{id}")]
-        [SwaggerOperation(Summary = "Delete a subject")]
         public async Task<IActionResult> DeleteSubject(int id)
         {
             var subject = await _context.Subjects
@@ -913,11 +797,7 @@ namespace School_Yathu.Controllers
 
         // ==================== TEACHER-SUBJECT ALLOCATION ====================
 
-        /// <summary>
-        /// Allocate a teacher to a subject
-        /// </summary>
         [HttpPost("allocate-teacher")]
-        [SwaggerOperation(Summary = "Allocate teacher to subject")]
         public async Task<IActionResult> AllocateTeacher([FromBody] AllocateTeacherDTO dto)
         {
             var exists = await _context.ClassSubjects
@@ -959,11 +839,7 @@ namespace School_Yathu.Controllers
             return Ok(new { message = "Teacher allocated successfully" });
         }
 
-        /// <summary>
-        /// Get class allocations
-        /// </summary>
         [HttpGet("class-allocations/{classId}")]
-        [SwaggerOperation(Summary = "Get class allocations")]
         public async Task<IActionResult> GetClassAllocations(int classId)
         {
             var allocations = await _context.ClassSubjects
@@ -986,11 +862,7 @@ namespace School_Yathu.Controllers
             return Ok(allocations);
         }
 
-        /// <summary>
-        /// Get teacher's subjects
-        /// </summary>
         [HttpGet("teacher-subjects/{teacherId}")]
-        [SwaggerOperation(Summary = "Get teacher's subjects")]
         public async Task<IActionResult> GetTeacherSubjects(int teacherId)
         {
             var subjects = await _context.ClassSubjects
@@ -1011,11 +883,7 @@ namespace School_Yathu.Controllers
             return Ok(subjects);
         }
 
-        /// <summary>
-        /// Remove an allocation
-        /// </summary>
         [HttpDelete("allocations/{id}")]
-        [SwaggerOperation(Summary = "Remove an allocation")]
         public async Task<IActionResult> RemoveAllocation(int id)
         {
             var allocation = await _context.ClassSubjects.FindAsync(id);
@@ -1029,11 +897,7 @@ namespace School_Yathu.Controllers
 
         // ==================== RESULTS APPROVAL ====================
 
-        /// <summary>
-        /// Get pending results for approval
-        /// </summary>
         [HttpGet("pending-results")]
-        [SwaggerOperation(Summary = "Get pending results")]
         public async Task<IActionResult> GetPendingResults()
         {
             var pendingResults = await _context.Marks
@@ -1057,11 +921,7 @@ namespace School_Yathu.Controllers
             return Ok(pendingResults);
         }
 
-        /// <summary>
-        /// Approve results
-        /// </summary>
         [HttpPost("approve-results")]
-        [SwaggerOperation(Summary = "Approve results")]
         public async Task<IActionResult> ApproveResults([FromBody] ApproveResultsDTO dto)
         {
             var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -1137,11 +997,7 @@ namespace School_Yathu.Controllers
             });
         }
 
-        /// <summary>
-        /// Get approved results
-        /// </summary>
         [HttpGet("approved-results")]
-        [SwaggerOperation(Summary = "Get approved results")]
         public async Task<IActionResult> GetApprovedResults()
         {
             var approvedResults = await _context.Marks
@@ -1167,11 +1023,7 @@ namespace School_Yathu.Controllers
 
         // ==================== SYSTEM STATISTICS ====================
 
-        /// <summary>
-        /// Get system statistics
-        /// </summary>
         [HttpGet("statistics")]
-        [SwaggerOperation(Summary = "Get system statistics")]
         public async Task<IActionResult> GetStatistics()
         {
             var stats = new
@@ -1191,18 +1043,13 @@ namespace School_Yathu.Controllers
 
         // ==================== SECONDARY ROLE MANAGEMENT ====================
 
-        /// <summary>
-        /// Assign secondary roles to a user
-        /// </summary>
         [HttpPost("assign-secondary-roles")]
-        [SwaggerOperation(Summary = "Assign secondary roles to user")]
         public async Task<IActionResult> AssignSecondaryRoles([FromBody] AssignSecondaryRolesDTO dto)
         {
             var user = await _context.Users.FindAsync(dto.UserId);
             if (user == null)
                 return NotFound(new { message = "User not found" });
 
-            // Don't allow assigning secondary roles to Admin
             if (user.Role == "Admin")
                 return BadRequest(new { message = "Admin cannot have secondary roles" });
 
@@ -1216,11 +1063,7 @@ namespace School_Yathu.Controllers
             });
         }
 
-        /// <summary>
-        /// Get user's all roles
-        /// </summary>
         [HttpGet("user-roles/{userId}")]
-        [SwaggerOperation(Summary = "Get user's all roles")]
         public async Task<IActionResult> GetUserRoles(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -1234,7 +1077,6 @@ namespace School_Yathu.Controllers
             var allRoles = new List<string> { user.Role };
             allRoles.AddRange(secondaryRoles);
 
-            // Check assigned roles
             var isHeadOfDepartment = await _context.Departments
                 .AnyAsync(d => d.HeadOfDepartmentId == user.Id);
             var isFormTeacher = await _context.FormTeacherClasses
@@ -1257,115 +1099,5 @@ namespace School_Yathu.Controllers
                 IsFormTeacher = isFormTeacher
             });
         }
-    }
-
-    // ==================== DTOs ====================
-
-    public class CreateDepartmentDTO
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-    }
-
-    public class UpdateDepartmentDTO
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-    }
-
-    public class CreateSubjectDTO
-    {
-        public string Name { get; set; } = string.Empty;
-        public string? Code { get; set; }
-        public string? Type { get; set; }
-        public int? DepartmentId { get; set; }
-    }
-
-    public class UpdateSubjectDTO
-    {
-        public string? Name { get; set; }
-        public string? Code { get; set; }
-        public string? Type { get; set; }
-    }
-
-    public class AssignFormTeacherDTO
-    {
-        public int ClassId { get; set; }
-        public int TeacherId { get; set; }
-    }
-
-    public class AssignHeadOfDepartmentDTO
-    {
-        public int DepartmentId { get; set; }
-        public int TeacherId { get; set; }
-    }
-
-    public class UpdateTeacherDTO
-    {
-        public string? Name { get; set; }
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? EmployeeId { get; set; }
-        public string? Qualification { get; set; }
-        public int? DepartmentId { get; set; }
-    }
-
-    public class AssignDeputyDTO
-    {
-        public int TeacherId { get; set; }
-        public bool ReplaceExisting { get; set; } = false;
-    }
-
-    public class CreateDeputyDTO
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string? PhoneNumber { get; set; }
-        public string? EmployeeId { get; set; }
-        public string? Qualification { get; set; }
-        public DateTime? HireDate { get; set; }
-        public int? DepartmentId { get; set; }
-    }
-
-    public class ApproveResultsDTO
-    {
-        public int SubjectId { get; set; }
-        public int Year { get; set; }
-        public string Term { get; set; } = string.Empty;
-    }
-
-    public class CreateTeacherDTO
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string? PhoneNumber { get; set; }
-        public string? EmployeeId { get; set; }
-        public string? Qualification { get; set; }
-        public DateTime? HireDate { get; set; }
-        public int? DepartmentId { get; set; }
-    }
-
-    public class CreateClassDTO
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Stream { get; set; } = string.Empty;
-        public int? TeacherId { get; set; }
-        public int? FormTeacherId { get; set; }
-        public int Capacity { get; set; }
-    }
-
-    public class AllocateTeacherDTO
-    {
-        public int ClassId { get; set; }
-        public int SubjectId { get; set; }
-        public int TeacherId { get; set; }
-    }
-
-    public class AssignSecondaryRolesDTO
-    {
-        public int UserId { get; set; }
-        public List<string> SecondaryRoles { get; set; } = new List<string>();
     }
 }

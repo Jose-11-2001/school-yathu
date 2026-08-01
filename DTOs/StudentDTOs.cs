@@ -178,10 +178,6 @@ namespace School_Yathu.DTOs
     #region Marks and Results DTOs
 
     /// <summary>
-    /// DTO for entering student marks
-    /// </summary>
-
-    /// <summary>
     /// DTO for student marks response - UPDATED with Test1, Test2, EndTerm
     /// </summary>
     public class StudentMarkDTO
