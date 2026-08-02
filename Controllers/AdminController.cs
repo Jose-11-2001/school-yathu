@@ -11,7 +11,7 @@ namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,DeputyHeadTeacher")] // ✅ Added DeputyHeadTeacher
     [SwaggerTag("Admin Management - Teachers, Classes, Students, Departments")]
     public class AdminController : ControllerBase
     {
@@ -133,8 +133,10 @@ namespace School_Yathu.Controllers
         }
 
         // ==================== DEPUTY HEAD TEACHER MANAGEMENT ====================
+        // ✅ These endpoints remain Admin-only (Deputy cannot manage their own role)
 
         [HttpGet("deputies")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> GetDeputies()
         {
             var deputies = await _context.Users
@@ -159,6 +161,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpPost("deputies")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> AddDeputy([FromBody] CreateDeputyDTO dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
@@ -186,6 +189,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpDelete("deputies/{id}")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> DeleteDeputy(int id)
         {
             var deputy = await _context.Users.FindAsync(id);
@@ -201,6 +205,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpPost("assign-deputy")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> AssignDeputyHeadTeacher([FromBody] AssignDeputyDTO dto)
         {
             var teacher = await _context.Users
@@ -241,6 +246,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpPost("remove-deputy")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> RemoveDeputyHeadTeacher()
         {
             var deputy = await _context.Users
@@ -256,6 +262,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpGet("deputy-status")]
+        [Authorize(Roles = "Admin")] // Admin only
         public async Task<IActionResult> GetDeputyStatus()
         {
             var deputy = await _context.Users
@@ -727,6 +734,8 @@ namespace School_Yathu.Controllers
                     s.Name,
                     s.Code,
                     s.Type,
+                    s.Description,
+                    s.MaxMarks,
                     s.DepartmentId,
                     DepartmentName = s.Department != null ? s.Department.Name : "Not Assigned",
                     s.CreatedAt
@@ -736,23 +745,67 @@ namespace School_Yathu.Controllers
         }
 
         [HttpPost("subjects")]
+        [Authorize(Roles = "Admin")] // Admin only - Deputy cannot create subjects
         public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDTO dto)
         {
+            // Check if subject with same code already exists
+            if (!string.IsNullOrEmpty(dto.Code))
+            {
+                var existingSubject = await _context.Subjects
+                    .FirstOrDefaultAsync(s => s.Code == dto.Code.ToUpper());
+                
+                if (existingSubject != null)
+                    return BadRequest(new { message = $"Subject code '{dto.Code}' already exists" });
+            }
+
+            // Check if department exists
+            if (dto.DepartmentId.HasValue)
+            {
+                var department = await _context.Departments.FindAsync(dto.DepartmentId.Value);
+                if (department == null)
+                    return BadRequest(new { message = "Department not found" });
+            }
+
             var subject = new Subject
             {
                 Name = dto.Name,
-                Code = dto.Code,
-                Type = dto.Type,
+                Code = dto.Code?.ToUpper() ?? "",
+                Type = dto.Type ?? "Core",
+                Description = dto.Description,
+                MaxMarks = dto.MaxMarks ?? 100,
                 DepartmentId = dto.DepartmentId,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Subjects.Add(subject);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Subject created successfully", subjectId = subject.Id });
+
+            var createdSubject = await _context.Subjects
+                .Include(s => s.Department)
+                .Where(s => s.Id == subject.Id)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name,
+                    s.Code,
+                    s.Type,
+                    s.Description,
+                    s.MaxMarks,
+                    s.DepartmentId,
+                    Department = s.Department != null ? new
+                    {
+                        s.Department.Id,
+                        s.Department.Name
+                    } : null,
+                    s.CreatedAt
+                })
+                .FirstOrDefaultAsync();
+
+            return Ok(new { message = "Subject created successfully", subject = createdSubject });
         }
 
         [HttpPut("subjects/{id}")]
+        [Authorize(Roles = "Admin")] // Admin only - Deputy cannot update subjects
         public async Task<IActionResult> UpdateSubject(int id, [FromBody] UpdateSubjectDTO dto)
         {
             var subject = await _context.Subjects.FindAsync(id);
@@ -763,10 +816,30 @@ namespace School_Yathu.Controllers
                 subject.Name = dto.Name;
 
             if (!string.IsNullOrEmpty(dto.Code))
-                subject.Code = dto.Code;
+            {
+                var existingCode = await _context.Subjects
+                    .FirstOrDefaultAsync(s => s.Code == dto.Code.ToUpper() && s.Id != id);
+                if (existingCode != null)
+                    return BadRequest(new { message = $"Subject code '{dto.Code}' already exists" });
+                subject.Code = dto.Code.ToUpper();
+            }
 
             if (!string.IsNullOrEmpty(dto.Type))
                 subject.Type = dto.Type;
+
+            if (!string.IsNullOrEmpty(dto.Description))
+                subject.Description = dto.Description;
+
+            if (dto.MaxMarks.HasValue)
+                subject.MaxMarks = dto.MaxMarks;
+
+            if (dto.DepartmentId.HasValue)
+            {
+                var department = await _context.Departments.FindAsync(dto.DepartmentId.Value);
+                if (department == null)
+                    return BadRequest(new { message = "Department not found" });
+                subject.DepartmentId = dto.DepartmentId;
+            }
 
             subject.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -775,6 +848,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpDelete("subjects/{id}")]
+        [Authorize(Roles = "Admin")] // Admin only - Deputy cannot delete subjects
         public async Task<IActionResult> DeleteSubject(int id)
         {
             var subject = await _context.Subjects
@@ -1044,6 +1118,7 @@ namespace School_Yathu.Controllers
         // ==================== SECONDARY ROLE MANAGEMENT ====================
 
         [HttpPost("assign-secondary-roles")]
+        [Authorize(Roles = "Admin")] // Admin only - Deputy cannot assign roles
         public async Task<IActionResult> AssignSecondaryRoles([FromBody] AssignSecondaryRolesDTO dto)
         {
             var user = await _context.Users.FindAsync(dto.UserId);
@@ -1064,6 +1139,7 @@ namespace School_Yathu.Controllers
         }
 
         [HttpGet("user-roles/{userId}")]
+        [Authorize(Roles = "Admin")] // Admin only - Deputy cannot view role assignments
         public async Task<IActionResult> GetUserRoles(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
