@@ -156,7 +156,7 @@ namespace School_Yathu.Controllers
             if (!string.IsNullOrEmpty(dto.Email))
             {
                 var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Id != id);
+                    .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Id != id && u.IsActive);
                 if (existingUser != null)
                     return BadRequest(new { message = "Email already exists" });
                 user.Email = dto.Email;
@@ -178,17 +178,30 @@ namespace School_Yathu.Controllers
         }
 
         /// <summary>
-        /// Delete/Deactivate a user
+        /// Delete a user - HARD DELETE with cascade
         /// </summary>
         [HttpDelete("{id}")]
-        [SwaggerOperation(Summary = "Delete user", Description = "Deactivates a user")]
-        [SwaggerResponse(200, "User deactivated successfully", typeof(object))]
+        [SwaggerOperation(Summary = "Delete user", Description = "Permanently deletes a user and all related records from the database")]
+        [SwaggerResponse(200, "User deleted successfully", typeof(object))]
         [SwaggerResponse(400, "Cannot delete default admin")]
         [SwaggerResponse(401, "Unauthorized")]
         [SwaggerResponse(404, "User not found")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Include(u => u.Notifications)
+                .Include(u => u.Students)
+                .Include(u => u.TeacherSubjects)
+                .Include(u => u.ClassSubjects)
+                .Include(u => u.StudentSubjects)
+                .Include(u => u.EnteredMarks)
+                .Include(u => u.ApprovedMarks)
+                .Include(u => u.DeputyAssignments)
+                .Include(u => u.FormTeacherClassAssignments)
+                .Include(u => u.ClassesAsTeacher)
+                .Include(u => u.FormTeacherClasses)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             if (user == null)
                 return NotFound(new { message = "User not found" });
 
@@ -196,10 +209,39 @@ namespace School_Yathu.Controllers
             if (user.Email == "ntcheu@gmail.com")
                 return BadRequest(new { message = "Cannot delete the default admin account" });
 
-            user.IsActive = false;
+            // Remove all related records
+            if (user.Notifications != null && user.Notifications.Any())
+                _context.Notifications.RemoveRange(user.Notifications);
+            
+            if (user.Students != null && user.Students.Any())
+                _context.Students.RemoveRange(user.Students);
+            
+            if (user.TeacherSubjects != null && user.TeacherSubjects.Any())
+                _context.TeacherSubjects.RemoveRange(user.TeacherSubjects);
+            
+            if (user.ClassSubjects != null && user.ClassSubjects.Any())
+                _context.ClassSubjects.RemoveRange(user.ClassSubjects);
+            
+            if (user.StudentSubjects != null && user.StudentSubjects.Any())
+                _context.StudentSubjects.RemoveRange(user.StudentSubjects);
+            
+            if (user.EnteredMarks != null && user.EnteredMarks.Any())
+                _context.Marks.RemoveRange(user.EnteredMarks);
+            
+            if (user.ApprovedMarks != null && user.ApprovedMarks.Any())
+                _context.Marks.RemoveRange(user.ApprovedMarks);
+            
+            if (user.DeputyAssignments != null && user.DeputyAssignments.Any())
+                _context.DeputyAssignments.RemoveRange(user.DeputyAssignments);
+
+            if (user.FormTeacherClassAssignments != null && user.FormTeacherClassAssignments.Any())
+                _context.FormTeacherClasses.RemoveRange(user.FormTeacherClassAssignments);
+
+            // Delete the user
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User deactivated successfully" });
+            return Ok(new { message = "User deleted successfully" });
         }
     }
 
