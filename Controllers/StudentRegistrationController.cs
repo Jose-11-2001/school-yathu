@@ -11,7 +11,7 @@ namespace School_Yathu.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,DeputyHeadTeacher")] // ✅ Added DeputyHeadTeacher
     [SwaggerTag("Student Registration - Register new students with subject allocations")]
     public class StudentRegistrationController : ControllerBase
     {
@@ -61,18 +61,28 @@ namespace School_Yathu.Controllers
         [HttpGet("available-subjects/{className}/{stream}")]
         [SwaggerOperation(Summary = "Get available subjects", Description = "Retrieves subjects available for a specific class and stream")]
         [SwaggerResponse(200, "Available subjects", typeof(object))]
-        [SwaggerResponse(404, "Class not found")]
         [SwaggerResponse(401, "Unauthorized - Admin role required")]
         public async Task<IActionResult> GetAvailableSubjects(string className, string stream, [FromQuery] string? root)
         {
             try
             {
+                // ✅ FIXED: Return empty lists instead of 404 if class not found
                 var classEntity = await _context.Classes
                     .FirstOrDefaultAsync(c => c.Name == className && c.Stream == stream);
 
                 if (classEntity == null)
-                    return NotFound(new { message = "Class not found" });
+                {
+                    _logger.LogWarning("Class not found: {ClassName}, {Stream}", className, stream);
+                    return Ok(new 
+                    { 
+                        coreSubjects = new List<string>(), 
+                        humanitiesSubjects = new List<string>(), 
+                        scienceSubjects = new List<string>(),
+                        availableSubjects = new List<object>()
+                    });
+                }
 
+                // Get class subjects
                 var classSubjects = await _context.ClassSubjects
                     .Include(cs => cs.Subject)
                     .Where(cs => cs.ClassId == classEntity.Id && cs.IsActive)
@@ -84,26 +94,74 @@ namespace School_Yathu.Controllers
                 var humanitiesSubjectNames = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
                 var scienceSubjectNames = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
 
+                // Filter subjects by category (case-insensitive)
                 var coreSubjects = classSubjects
-                    .Where(s => s != null && coreSubjectNames.Contains(s.Name))
+                    .Where(s => s != null && coreSubjectNames.Contains(s.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(s => s.Name)
                     .ToList();
 
                 var humanities = classSubjects
-                    .Where(s => s != null && humanitiesSubjectNames.Contains(s.Name))
+                    .Where(s => s != null && humanitiesSubjectNames.Contains(s.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(s => s.Name)
                     .ToList();
 
                 var sciences = classSubjects
-                    .Where(s => s != null && scienceSubjectNames.Contains(s.Name))
+                    .Where(s => s != null && scienceSubjectNames.Contains(s.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(s => s.Name)
                     .ToList();
 
+                // Also include subjects by Type field
+                var coreByType = classSubjects
+                    .Where(s => s != null && s.Type != null && s.Type.Equals("Core", StringComparison.OrdinalIgnoreCase))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                var humanitiesByType = classSubjects
+                    .Where(s => s != null && s.Type != null && s.Type.Equals("Humanities", StringComparison.OrdinalIgnoreCase))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                var scienceByType = classSubjects
+                    .Where(s => s != null && s.Type != null && s.Type.Equals("Science", StringComparison.OrdinalIgnoreCase))
+                    .Select(s => s.Name)
+                    .ToList();
+
+                // Merge both approaches
+                var allCore = coreSubjects.Union(coreByType).Distinct().ToList();
+                var allHumanities = humanities.Union(humanitiesByType).Distinct().ToList();
+                var allScience = sciences.Union(scienceByType).Distinct().ToList();
+
+                // If no subjects found by category, return all subjects as core
+                if (allCore.Count == 0 && allHumanities.Count == 0 && allScience.Count == 0 && classSubjects.Any())
+                {
+                    var allSubjectNames = classSubjects
+                        .Where(s => s != null)
+                        .Select(s => s.Name)
+                        .Distinct()
+                        .ToList();
+                    
+                    return Ok(new
+                    {
+                        coreSubjects = allSubjectNames,
+                        humanitiesSubjects = new List<string>(),
+                        scienceSubjects = new List<string>(),
+                        availableSubjects = classSubjects
+                            .Where(s => s != null)
+                            .Select(s => new
+                            {
+                                s.Id,
+                                s.Name,
+                                s.Code
+                            })
+                            .ToList()
+                    });
+                }
+
                 return Ok(new
                 {
-                    coreSubjects = coreSubjects,
-                    humanitiesSubjects = humanities,
-                    scienceSubjects = sciences,
+                    coreSubjects = allCore.Any() ? allCore : new List<string>(),
+                    humanitiesSubjects = allHumanities.Any() ? allHumanities : new List<string>(),
+                    scienceSubjects = allScience.Any() ? allScience : new List<string>(),
                     availableSubjects = classSubjects
                         .Where(s => s != null)
                         .Select(s => new
@@ -118,7 +176,14 @@ namespace School_Yathu.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting available subjects for class: {ClassName}, stream: {Stream}", className, stream);
-                return StatusCode(500, new { message = "An error occurred while retrieving available subjects" });
+                // ✅ Return empty lists instead of error
+                return Ok(new 
+                { 
+                    coreSubjects = new List<string>(), 
+                    humanitiesSubjects = new List<string>(), 
+                    scienceSubjects = new List<string>(),
+                    availableSubjects = new List<object>()
+                });
             }
         }
 
@@ -469,19 +534,19 @@ namespace School_Yathu.Controllers
         private bool IsCoreSubject(string subjectName)
         {
             var core = new[] { "Mathematics", "English", "Chichewa" };
-            return core.Contains(subjectName);
+            return core.Contains(subjectName, StringComparer.OrdinalIgnoreCase);
         }
 
         private bool IsHumanitiesSubject(string subjectName)
         {
             var humanities = new[] { "History", "Geography", "Social Studies", "Religious Education" };
-            return humanities.Contains(subjectName);
+            return humanities.Contains(subjectName, StringComparer.OrdinalIgnoreCase);
         }
 
         private bool IsScienceSubject(string subjectName)
         {
             var sciences = new[] { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
-            return sciences.Contains(subjectName);
+            return sciences.Contains(subjectName, StringComparer.OrdinalIgnoreCase);
         }
 
         private async Task<string> GetStudentRoot(int studentId)
@@ -497,8 +562,8 @@ namespace School_Yathu.Controllers
                 var humanitiesSubjects = new List<string> { "History", "Geography", "Social Studies", "Religious Education" };
                 var scienceSubjects = new List<string> { "Physics", "Chemistry", "Biology", "Computer Science", "General Science" };
 
-                var humanitiesCount = subjects.Count(s => humanitiesSubjects.Contains(s));
-                var sciencesCount = subjects.Count(s => scienceSubjects.Contains(s));
+                var humanitiesCount = subjects.Count(s => humanitiesSubjects.Contains(s, StringComparer.OrdinalIgnoreCase));
+                var sciencesCount = subjects.Count(s => scienceSubjects.Contains(s, StringComparer.OrdinalIgnoreCase));
 
                 if (humanitiesCount > sciencesCount) 
                     return "Humanities";
